@@ -1,0 +1,36 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Secure Vault Metrics",
+    "panels": [
+      {
+        "type": "graph",
+        "title": "Upload Latency",
+        "targets": [
+          {
+            "expr": "vault_upload_latency_seconds_bucket",
+            "legendFormat": "latency"
+          }
+        ]
+      },
+      {
+        "type": "stat",
+        "title": "Active Nodes",
+        "targets": [
+          {
+            "expr": "vault_active_nodes"
+          }
+        ]
+      },
+      {
+        "type": "stat",
+        "title": "Authentication Failures",
+        "targets": [
+          {
+            "expr": "vault_auth_failures_total"
+          }
+        ]
+      }
+    ]
+  }
+}

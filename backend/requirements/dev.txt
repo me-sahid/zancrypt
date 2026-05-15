@@ -1,0 +1,2 @@
+-r base.txt
+pytest-cov>=4.0.0
