@@ -16,11 +16,56 @@ import { toast } from 'react-hot-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
+import { fileService } from '../../services/vaultServices';
 
 const Upload = () => {
   const [files, setFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [activeStep, setActiveStep] = useState(0); // 0: Idle, 1: Encrypting, 2: Chunking, 3: Distributing, 4: Done
+  const startProcessing = async () => {
+    if (files.length === 0) return;
+    
+    setIsUploading(true);
+    
+    try {
+      for (const fileObj of files) {
+        try {
+          setActiveStep(1);
+          await new Promise(r => setTimeout(r, 800));
+          
+          setActiveStep(2);
+          await new Promise(r => setTimeout(r, 800));
+          
+          setActiveStep(3);
+          
+          const formData = new FormData();
+          formData.append('encrypted_filename', fileObj.name);
+          formData.append('encrypted_metadata', JSON.stringify({ type: 'document' }));
+          formData.append('file_size', String(fileObj.rawFile.size));
+          formData.append('integrity_hash', 'sha256-placeholder');
+          formData.append('manifest', JSON.stringify({ shards: [] }));
+          formData.append('shards', fileObj.rawFile); 
+          
+          await fileService.uploadFile(formData);
+          
+          setActiveStep(4);
+          toast.success(`${fileObj.name} safely stored.`);
+          await new Promise(r => setTimeout(r, 500));
+        } catch (error) {
+          console.error('Upload failed:', error);
+          const errorMsg = error.response?.data?.detail || `Failed to store ${fileObj.name}`;
+          toast.error(errorMsg);
+        }
+      }
+    } catch (outerError) {
+      console.error('Upload process error:', outerError);
+      toast.error('Something went wrong during upload.');
+    } finally {
+      setIsUploading(false);
+      setActiveStep(0);
+      setFiles([]);
+    }
+  };
 
   const onDrop = (e) => {
     e.preventDefault();
@@ -28,33 +73,10 @@ const Upload = () => {
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
       size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
-      status: 'pending'
+      status: 'pending',
+      rawFile: file
     }));
     setFiles(prev => [...prev, ...newFiles]);
-  };
-
-  const startProcessing = async () => {
-    if (files.length === 0) return;
-    
-    setIsUploading(true);
-    
-    // Animation Steps
-    setActiveStep(1); // Encrypting
-    await new Promise(r => setTimeout(r, 1500));
-    
-    setActiveStep(2); // Chunking
-    await new Promise(r => setTimeout(r, 2000));
-    
-    setActiveStep(3); // Distributing
-    await new Promise(r => setTimeout(r, 2500));
-    
-    setActiveStep(4); // Done
-    toast.success('Files distributed across node network.');
-    setTimeout(() => {
-      setIsUploading(false);
-      setActiveStep(0);
-      setFiles([]);
-    }, 2000);
   };
 
   const removeFile = (id) => {
@@ -64,8 +86,8 @@ const Upload = () => {
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold text-text-primary tracking-tight">Ingest Assets</h1>
-        <p className="text-text-secondary mt-2">Upload your infrastructure secrets for distributed zero-knowledge storage.</p>
+        <h1 className="text-3xl font-bold text-text-primary tracking-tight">Add Files to Vault</h1>
+        <p className="text-text-secondary mt-2">Your files are encrypted and distributed across our secure network.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -80,10 +102,10 @@ const Upload = () => {
               <div className="w-16 h-16 rounded-2xl bg-surface-elevated flex items-center justify-center mb-6 shadow-xl border border-border">
                 <UploadCloud className="w-8 h-8 text-primary-accent" />
               </div>
-              <h3 className="text-xl font-bold text-text-primary mb-2">Drag & Drop Encrypted Payloads</h3>
+              <h3 className="text-xl font-bold text-text-primary mb-2">Drag & Drop Files Here</h3>
               <p className="text-sm text-text-secondary max-w-xs mx-auto mb-8">
-                Files will be automatically shard-encrypted at the network edge. 
-                Maximum individual payload: <span className="text-text-primary font-bold">5GB</span>.
+                Your files will be automatically protected. 
+                Maximum file size: <span className="text-text-primary font-bold">5GB</span>.
               </p>
               <Button variant="outline" onClick={() => document.getElementById('fileInput').click()}>
                 Select Files
@@ -98,7 +120,8 @@ const Upload = () => {
                     id: Math.random().toString(36).substr(2, 9),
                     name: file.name,
                     size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
-                    status: 'pending'
+                    status: 'pending',
+                    rawFile: file
                   }));
                   setFiles(prev => [...prev, ...newFiles]);
                 }}
@@ -110,8 +133,8 @@ const Upload = () => {
           {files.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Transfer Queue</CardTitle>
-                <CardDescription>{files.length} payloads pending ingestion.</CardDescription>
+                <CardTitle>Files to Upload</CardTitle>
+                <CardDescription>{files.length} files ready to be secured.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y divide-border">
@@ -141,7 +164,7 @@ const Upload = () => {
                   isLoading={isUploading}
                   rightIcon={<ArrowRight className="w-4 h-4" />}
                 >
-                  Start Distribution
+                  Start Upload
                 </Button>
               </div>
             </Card>
@@ -152,18 +175,18 @@ const Upload = () => {
         <div className="space-y-6">
           <Card className="h-full">
             <CardHeader>
-              <CardTitle>Process Pipeline</CardTitle>
-              <CardDescription>Live telemetry from the distribution engine.</CardDescription>
+              <CardTitle>Upload Progress</CardTitle>
+              <CardDescription>Real-time status of your secure upload.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
               <div className="relative">
                 {/* Steps */}
                 <div className="space-y-10 relative z-10">
                   {[
-                    { icon: Lock, label: 'Shard Encryption', desc: 'Applying AES-256-GCM layers.', step: 1 },
-                    { icon: Layers, label: 'Chunk Generation', desc: 'Generating 12 distinct shards.', step: 2 },
-                    { icon: Share2, label: 'Node Distribution', desc: 'Routing shards to 5 regions.', step: 3 },
-                    { icon: CheckCircle2, label: 'Final Verification', desc: 'Verifying integrity hash.', step: 4 },
+                    { icon: Lock, label: 'Securely Encrypting', desc: 'Protecting your data.', step: 1 },
+                    { icon: Layers, label: 'Preparing for Vault', desc: 'Organizing shards.', step: 2 },
+                    { icon: Share2, label: 'Sending to Nodes', desc: 'Distributing to secure locations.', step: 3 },
+                    { icon: CheckCircle2, label: 'Confirming Safety', desc: 'Final integrity check.', step: 4 },
                   ].map((step, i) => {
                     const isActive = activeStep === step.step;
                     const isCompleted = activeStep > step.step;

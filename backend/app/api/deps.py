@@ -30,7 +30,7 @@ async def get_current_user(token: str = Depends(AuthService.oauth2_scheme), sess
         token_data = TokenData(user_id=user_id)
     except JWTError:
         raise credentials_exception
-    user = await UserRepository(session).get_by_id(token_data.user_id)
+    user = await UserRepository(session).get_by_id(int(token_data.user_id))
     if not user:
         raise credentials_exception
     return user

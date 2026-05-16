@@ -54,8 +54,10 @@ register_exception_handlers(app)
 async def on_startup() -> None:
     from app.models.base import Base
     from app.db import engine
+    from app.core.nodes import initialize_nodes
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    await initialize_nodes()
     instrument_app(app)
 
 @app.get("/", summary="Service root")

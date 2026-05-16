@@ -7,4 +7,11 @@ class AuditService:
         self.repo = AuditRepository(session)
 
     async def capture_event(self, user_id: int | None, event_type: str, resource_type: str, resource_id: str | None, details: dict) -> None:
-        await self.repo.create_log(user_id, event_type, resource_type, resource_id, details)
+        import json
+        await self.repo.create_log(
+            user_id=user_id,
+            action=event_type,
+            resource=resource_type,
+            status=resource_id or "success",
+            metadata=details
+        )

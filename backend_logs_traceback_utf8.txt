@@ -1,0 +1,64 @@
+﻿backend-1  | INFO:     Started server process [1]
+backend-1  | INFO:     Waiting for application startup.
+backend-1  | INFO:     Application startup complete.
+backend-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+backend-1  | INFO:     172.19.0.7:49232 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:49232 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:49234 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:49234 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:57012 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:57012 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:57012 - "POST /auth/login/start HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:57012 - "POST /auth/login/verify HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:57012 - "GET /files/list HTTP/1.1" 500 Internal Server Error
+backend-1  | INFO:     172.19.0.7:39140 - "GET /admin/node-health HTTP/1.1" 500 Internal Server Error
+backend-1  | INFO:     172.19.0.7:39140 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:39140 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:39140 - "GET /files/list HTTP/1.1" 500 Internal Server Error
+backend-1  | INFO:     172.19.0.7:41118 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:41118 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:41118 - "OPTIONS /files/upload HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:41132 - "POST /files/upload HTTP/1.1" 500 Internal Server Error
+backend-1  | INFO:     172.19.0.7:51960 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:51960 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:59430 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:59430 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:54258 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:54258 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:48698 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:48698 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:50250 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:50250 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:58646 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:58646 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:60520 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:60520 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:36854 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:36854 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:44642 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:44642 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     Shutting down
+backend-1  | INFO:     Waiting for application shutdown.
+backend-1  | INFO:     Application shutdown complete.
+backend-1  | INFO:     Finished server process [1]
+backend-1  | INFO:     Started server process [1]
+backend-1  | INFO:     Waiting for application startup.
+backend-1  | INFO:     Application startup complete.
+backend-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+backend-1  | INFO:     172.19.0.7:57652 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:57652 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:57652 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:57652 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:39152 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:39152 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:56024 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:56024 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:37680 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:37680 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:49262 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:49262 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     172.19.0.7:46162 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:46162 - "GET /health/ HTTP/1.1" 200 OK
+backend-1  | INFO:     127.0.0.1:54188 - "GET /admin/node-health HTTP/1.1" 401 Unauthorized
+backend-1  | INFO:     172.19.0.7:55210 - "GET /health HTTP/1.1" 307 Temporary Redirect
+backend-1  | INFO:     172.19.0.7:55210 - "GET /health/ HTTP/1.1" 200 OK

@@ -1,11 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-primary-bg: #0B1120;
+  --color-primary-bg: #030712;
+  --color-surface-primary: #030712;
+  --color-surface-secondary: #080C18;
+  --color-surface-elevated: #0F172A;
   --color-primary-accent: #3B82F6;
-  --color-surface-secondary: #111827;
-  --color-surface-elevated: #1E293B;
   --color-security: #06B6D4;
   --color-status-success: #10B981;
   --color-status-warning: #F59E0B;
@@ -15,40 +16,60 @@
   --color-border: rgba(255,255,255,0.06);
   
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 }
 
 @layer base {
   body {
-    @apply bg-primary-bg text-text-primary font-sans antialiased;
-    /* Custom scrollbar for webkit */
-    &::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    &::-webkit-scrollbar-track {
-      @apply bg-primary-bg;
-    }
-    &::-webkit-scrollbar-thumb {
-      @apply bg-surface-elevated rounded-full border border-border;
-    }
-    &::-webkit-scrollbar-thumb:hover {
-      @apply bg-surface-secondary;
-    }
+    @apply bg-surface-primary text-text-primary font-sans antialiased overflow-x-hidden;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
+  /* Custom Scrollbars */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full hover:bg-text-secondary/20 transition-colors;
+  }
+
+  selection {
+    @apply bg-primary-accent/30 text-primary-accent;
   }
 }
 
 @layer utilities {
   .glass-panel {
-    @apply bg-surface-secondary/80 backdrop-blur-md border border-border;
+    @apply bg-surface-secondary/40 backdrop-blur-xl border border-border/50;
   }
-  .glass-elevated {
-    @apply bg-surface-elevated/90 backdrop-blur-lg border border-border shadow-xl;
+  
+  .infrastructure-glow {
+    @apply shadow-[0_0_30px_rgba(59,130,246,0.1)];
   }
+
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-accent to-security;
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-white to-white/60;
   }
+
+  .animate-pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .5; }
+  }
+}
+
+/* Recharts Customization */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgba(255, 255, 255, 0.05);
+}
+
+.recharts-curve.recharts-area-curve {
+  filter: drop-shadow(0px 0px 8px rgba(59, 130, 246, 0.3));
 }

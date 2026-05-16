@@ -18,14 +18,10 @@ import {
 import { twMerge } from 'tailwind-merge';
 
 const menuItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-  { icon: Database, label: 'Vault', path: '/files' },
-  { icon: UploadCloud, label: 'Uploads', path: '/upload' },
-  { icon: Server, label: 'Nodes', path: '/nodes' },
+  { icon: LayoutDashboard, label: 'Overview', path: '/dashboard' },
+  { icon: Database, label: 'My Vault', path: '/vault' },
+  { icon: UploadCloud, label: 'Add Files', path: '/uploads' },
   { icon: ShieldCheck, label: 'Security', path: '/security' },
-  { icon: Activity, label: 'Monitoring', path: '/monitoring' },
-  { icon: PieChart, label: 'Analytics', path: '/analytics' },
-  { icon: History, label: 'Audit Logs', path: '/audit' },
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];
 
@@ -35,75 +31,103 @@ const Sidebar = () => {
   return (
     <motion.aside
       initial={false}
-      animate={{ width: isCollapsed ? 80 : 260 }}
-      className="relative flex flex-col h-screen border-r border-border bg-surface-secondary transition-all duration-300 z-50"
+      animate={{ width: isCollapsed ? 80 : 280 }}
+      className="relative flex flex-col h-screen border-r border-border bg-surface-secondary/50 backdrop-blur-xl transition-all duration-300 z-50"
     >
       {/* Logo Section */}
-      <div className="flex items-center h-20 px-6 border-b border-border">
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-accent shadow-lg shadow-primary-accent/20">
-          <Lock className="w-5 h-5 text-white" />
+      <div className="flex items-center h-20 px-6 border-b border-border/50">
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary-accent shadow-lg shadow-primary-accent/30 group cursor-pointer">
+          <Lock className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
         </div>
         <AnimatePresence>
           {!isCollapsed && (
-            <motion.span
+            <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
-              className="ml-3 font-bold text-lg tracking-tight text-text-primary whitespace-nowrap"
+              className="ml-4"
             >
-              Zan<span className="text-primary-accent">crypt</span>
-            </motion.span>
+              <h2 className="font-bold text-xl tracking-tight text-text-primary">
+                Zan<span className="text-primary-accent">crypt</span>
+              </h2>
+              <p className="text-[10px] text-text-secondary uppercase tracking-[0.2em] font-bold">Infrastructure</p>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+      <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto custom-scrollbar">
         {menuItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) => twMerge(
-              'flex items-center px-3 py-2.5 rounded-lg transition-all group relative',
+              'flex items-center px-4 py-3 rounded-xl transition-all group relative overflow-hidden',
               isActive 
-                ? 'bg-primary-accent/10 text-primary-accent border border-primary-accent/20' 
-                : 'text-text-secondary hover:bg-surface-elevated hover:text-text-primary'
+                ? 'text-primary-accent' 
+                : 'text-text-secondary hover:text-text-primary'
             )}
           >
-            <item.icon className={twMerge('w-5 h-5 min-w-[20px]', !isCollapsed && 'mr-3')} />
-            <AnimatePresence>
-              {!isCollapsed && (
-                <motion.span
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  className="whitespace-nowrap font-medium"
-                >
-                  {item.label}
-                </motion.span>
-              )}
-            </AnimatePresence>
-            {isCollapsed && (
-               <div className="absolute left-full ml-4 px-2 py-1 bg-surface-elevated border border-border text-text-primary text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-[60]">
-                {item.label}
-              </div>
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <motion.div
+                    layoutId="active-pill"
+                    className="absolute inset-0 bg-primary-accent/10 border border-primary-accent/20 rounded-xl"
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  />
+                )}
+                
+                <item.icon className={twMerge(
+                  'w-5 h-5 min-w-[20px] z-10 transition-colors',
+                  isActive ? 'text-primary-accent' : 'group-hover:text-text-primary'
+                )} />
+                
+                <AnimatePresence>
+                  {!isCollapsed && (
+                    <motion.span
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      className="ml-4 whitespace-nowrap font-semibold z-10"
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+
+                {isActive && !isCollapsed && (
+                   <motion.div 
+                    layoutId="active-indicator"
+                    className="absolute right-0 w-1 h-6 bg-primary-accent rounded-l-full"
+                  />
+                )}
+
+                {isCollapsed && (
+                   <div className="absolute left-full ml-6 px-3 py-2 bg-surface-elevated border border-border text-text-primary text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all transform translate-x-[-10px] group-hover:translate-x-0 shadow-2xl z-[60]">
+                    {item.label}
+                  </div>
+                )}
+              </>
             )}
           </NavLink>
         ))}
       </nav>
 
       {/* Collapse Toggle */}
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border/50">
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="flex items-center justify-center w-full h-10 rounded-lg bg-surface-elevated text-text-secondary hover:text-text-primary transition-colors border border-border"
+          className="flex items-center justify-center w-full h-12 rounded-xl bg-surface-elevated/50 text-text-secondary hover:text-text-primary transition-all border border-border/50 hover:border-primary-accent/30 group"
         >
           <motion.div
             animate={{ rotate: isCollapsed ? 180 : 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.4, ease: "backOut" }}
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-5 h-5 group-hover:scale-110" />
           </motion.div>
+          {!isCollapsed && <span className="ml-3 text-sm font-bold uppercase tracking-widest">Minimize</span>}
         </button>
       </div>
     </motion.aside>

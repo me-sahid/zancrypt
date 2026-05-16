@@ -1,12 +1,16 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import DashboardLayout from './components/layout/DashboardLayout';
+import Landing from './pages/Landing/Landing';
+import Dashboard from './pages/Dashboard/Dashboard';
+import { NetworkProvider } from './providers/NetworkProvider';
+import OfflineScreen from './components/network/OfflineScreen';
+import DegradedBanner from './components/network/DegradedBanner';
+import { Toaster } from 'react-hot-toast';
 
-// Lazy loading pages
-const Landing = lazy(() => import('./pages/Landing/Landing'));
+// Lazy loading other pages
 const Login = lazy(() => import('./pages/Auth/Login'));
 const Register = lazy(() => import('./pages/Auth/Register'));
-const Dashboard = lazy(() => import('./pages/Dashboard/Dashboard'));
 const Files = lazy(() => import('./pages/Files/Files'));
 const Upload = lazy(() => import('./pages/Upload/Upload'));
 const Nodes = lazy(() => import('./pages/Nodes/Nodes'));
@@ -30,30 +34,50 @@ const PageLoader = () => (
 
 function App() {
   return (
-    <Suspense fallback={<PageLoader />}>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+    <NetworkProvider>
+      <Suspense fallback={<PageLoader />}>
+        <DegradedBanner />
+        <OfflineScreen />
+        
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-        {/* Protected Dashboard Routes */}
-        <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
-        <Route path="/files" element={<DashboardLayout><Files /></DashboardLayout>} />
-        <Route path="/upload" element={<DashboardLayout><Upload /></DashboardLayout>} />
-        <Route path="/nodes" element={<DashboardLayout><Nodes /></DashboardLayout>} />
-        <Route path="/security" element={<DashboardLayout><Security /></DashboardLayout>} />
-        <Route path="/monitoring" element={<DashboardLayout><Monitoring /></DashboardLayout>} />
-        <Route path="/analytics" element={<DashboardLayout><Analytics /></DashboardLayout>} />
-        <Route path="/audit" element={<DashboardLayout><Audit /></DashboardLayout>} />
-        <Route path="/settings" element={<DashboardLayout><Settings /></DashboardLayout>} />
-        <Route path="/profile" element={<DashboardLayout><Profile /></DashboardLayout>} />
+          {/* Protected Dashboard Routes */}
+          <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
+          <Route path="/vault" element={<DashboardLayout><Files /></DashboardLayout>} />
+          <Route path="/uploads" element={<DashboardLayout><Upload /></DashboardLayout>} />
+          <Route path="/nodes" element={<DashboardLayout><Nodes /></DashboardLayout>} />
+          <Route path="/security" element={<DashboardLayout><Security /></DashboardLayout>} />
+          <Route path="/monitoring" element={<DashboardLayout><Monitoring /></DashboardLayout>} />
+          <Route path="/analytics" element={<DashboardLayout><Analytics /></DashboardLayout>} />
+          <Route path="/audit" element={<DashboardLayout><Audit /></DashboardLayout>} />
+          <Route path="/settings" element={<DashboardLayout><Settings /></DashboardLayout>} />
+          <Route path="/profile" element={<DashboardLayout><Profile /></DashboardLayout>} />
 
-        {/* 404 & Redirects */}
-        <Route path="/404" element={<NotFound />} />
-        <Route path="*" element={<Navigate to="/404" replace />} />
-      </Routes>
-    </Suspense>
+          {/* 404 & Redirects */}
+          <Route path="/404" element={<NotFound />} />
+          <Route path="*" element={<Navigate to="/404" replace />} />
+        </Routes>
+      </Suspense>
+
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: '#0F172A',
+            color: '#F8FAFC',
+            border: '1px solid rgba(255,255,255,0.06)',
+            fontSize: '12px',
+            fontWeight: '600',
+            borderRadius: '12px',
+            padding: '12px 16px',
+          },
+        }}
+      />
+    </NetworkProvider>
   );
 }
 

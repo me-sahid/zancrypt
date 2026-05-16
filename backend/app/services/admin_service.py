@@ -29,3 +29,9 @@ class AdminService:
             "pending_tasks": 0,
             "average_upload_latency_ms": 0.0,
         }
+
+    async def toggle_node(self, node_id: int, status: bool) -> dict:
+        if not self.node_repo:
+            return {"status": "error"}
+        node = await self.node_repo.update_node(node_id, {"healthy": status})
+        return {"status": "success", "node_id": node_id, "healthy": status}

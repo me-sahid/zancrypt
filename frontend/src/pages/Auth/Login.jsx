@@ -22,37 +22,37 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     // Biometric Flow
     if (!showFallback) {
       toast.loading("Initiating zero-knowledge challenge...", { id: 'auth-toast' });
-      
+
       try {
         const startResponse = await api.post('/auth/login/start', { email: email });
         const { options, session_id } = startResponse.data;
-        
+
         toast.loading("Awaiting biometric confirmation...", { id: 'auth-toast' });
         const assertion = await authenticatePasskey(options);
-        
+
         toast.loading("Verifying cryptographic signature...", { id: 'auth-toast' });
         const verifyResponse = await api.post('/auth/login/verify', {
           session_id: session_id,
           response: assertion
         });
-        
+
         const { access_token, user } = verifyResponse.data;
         setAuth(user, access_token);
         toast.success('Access granted via Biometrics.', { id: 'auth-toast' });
         navigate('/dashboard');
-    } catch (error) {
-      console.error('Login failed:', error);
-      const errorMsg = error.response?.data?.detail || error.message || 'Authentication failed';
-      toast.error(`${errorMsg}. Switching to Access Key.`, { id: 'auth-toast' });
-      setShowFallback(true);
-    } finally {
-      setIsLoading(false);
+      } catch (error) {
+        console.error('Login failed:', error);
+        const errorMsg = error.response?.data?.detail || error.message || 'Authentication failed';
+        toast.error(`${errorMsg}. Switching to Access Key.`, { id: 'auth-toast' });
+        setShowFallback(true);
+      } finally {
+        setIsLoading(false);
+      }
     }
-    } 
     // Fallback Access Key Flow
     else {
       toast.loading("Verifying identity via Access Key...", { id: 'auth-toast' });
@@ -61,7 +61,7 @@ const Login = () => {
           email: email,
           access_key: accessKey
         });
-        
+
         const { access_token, user } = response.data;
         setAuth(user, access_token);
         toast.success('Access granted via Security Key.', { id: 'auth-toast' });
@@ -99,12 +99,12 @@ const Login = () => {
         <div className="glass-elevated rounded-2xl p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
-              label="Engineering Email"
+              label="Email"
               name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="robert@delos.com"
+              placeholder="example@email.com"
               required
               leftIcon={<Mail className="w-4 h-4" />}
             />
@@ -156,9 +156,9 @@ const Login = () => {
             >
               {showFallback ? 'Verify Security Key' : 'Verify Identity'}
             </Button>
-            
+
             {showFallback && (
-              <button 
+              <button
                 type="button"
                 onClick={() => setShowFallback(false)}
                 className="w-full text-[10px] text-text-secondary hover:text-primary-accent uppercase tracking-widest font-bold transition-colors"
