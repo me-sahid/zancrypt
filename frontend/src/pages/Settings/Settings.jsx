@@ -65,7 +65,7 @@ export const Settings = () => {
             <CardDescription>Manage keys and access policies.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-             <Input label="Admin API Key" value="yuu_live_sk_8273xXyZ9283" readOnly type="password" rightIcon={<Button variant="ghost" size="sm">Copy</Button>} />
+             <Input label="Admin API Key" value="zan_live_sk_8273xXyZ9283" readOnly type="password" rightIcon={<Button variant="ghost" size="sm">Copy</Button>} />
              <div className="pt-4 flex justify-between items-center border-t border-border">
                 <div>
                    <p className="text-sm font-bold text-text-primary">Destroy Vault Instance</p>
@@ -108,7 +108,7 @@ export const Profile = () => {
             <CardContent className="space-y-4">
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input label="Engineering Handle" value="jane_edge_01" />
-                  <Input label="Email Address" value="jane@yuuvault.io" />
+                  <Input label="Email Address" value="jane@zancrypt.com" />
                </div>
                <Input label="Primary Region" value="Tokyo (ap-northeast-1)" readOnly />
                <div className="pt-6">

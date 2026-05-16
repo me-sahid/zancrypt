@@ -8,7 +8,7 @@ const ApiDeveloper = () => {
   const [activeTab, setActiveTab] = useState('upload');
 
   const snippets = {
-    upload: `curl -X POST "https://api.yuuvault.com/v1/files/upload" \\
+    upload: `curl -X POST "https://api.zancrypt.com/v1/files/upload" \\
   -H "Authorization: Bearer <TOKEN>" \\
   -F "file=@/path/to/data.pdf" \\
   -F "encryption_mode=AES-GCM-256" \\
@@ -25,7 +25,7 @@ const ApiDeveloper = () => {
 
 headers = {"Authorization": f"Bearer {API_KEY}"}
 response = requests.get(
-    "https://api.yuuvault.com/v1/files/file_9x8c7v6b/download",
+    "https://api.zancrypt.com/v1/files/file_9x8c7v6b/download",
     headers=headers,
     stream=True
 )
@@ -33,7 +33,7 @@ response = requests.get(
 with open("decrypted_data.pdf", "wb") as f:
     for chunk in response.iter_content(chunk_size=8192):
         f.write(decrypt_chunk(chunk, LOCAL_KEY))`,
-    status: `const response = await fetch('https://api.yuuvault.com/v1/network/health');
+    status: `const response = await fetch('https://api.zancrypt.com/v1/network/health');
 const data = await response.json();
 
 console.log(\`Global Uptime: \${data.uptime_percentage}%\`);

@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 // Import all sections
+import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import TrustedInfrastructure from './components/TrustedInfrastructure';
 import SecurityArchitecture from './components/SecurityArchitecture';
@@ -66,6 +67,7 @@ const Landing = () => {
 
   return (
     <div ref={containerRef} className="min-h-screen bg-[#0a0a0c] text-white selection:bg-primary-accent/30 selection:text-white font-sans overflow-hidden">
+      <Navbar />
       <HeroSection />
       <TrustedInfrastructure />
       <SecurityArchitecture />

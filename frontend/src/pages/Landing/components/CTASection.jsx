@@ -88,7 +88,7 @@ const CTASection = () => {
         </h2>
         
         <p className="text-xl text-text-secondary mb-12 max-w-2xl mx-auto">
-          Join the elite engineering teams migrating to zero-knowledge distributed storage. Deploy your first vault in seconds.
+          Join the elite engineering teams migrating to zero-knowledge distributed storage. Deploy your first Zancrypt instance in seconds.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">

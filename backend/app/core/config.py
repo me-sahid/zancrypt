@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = Field(7, env="REFRESH_TOKEN_EXPIRE_DAYS")
     DOMAIN: str = Field("localhost", env="DOMAIN")
     RP_ID: str = Field("localhost", env="RP_ID")
-    RP_NAME: str = Field("YuuVault", env="RP_NAME")
+    RP_NAME: str = Field("Zancrypt", env="RP_NAME")
 
     # Security
     RATE_LIMIT: str = Field("100/minute", env="RATE_LIMIT")

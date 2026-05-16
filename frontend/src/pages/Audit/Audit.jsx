@@ -17,12 +17,12 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 
 const auditEvents = [
-  { id: 'EVT-001', event: 'File Shard Upload', user: 'jane@yuuvault.io', node: 'Tokyo-Alpha', time: '2026-05-14 10:45:22', status: 'Success', icon: File },
-  { id: 'EVT-002', event: 'MFA Authentication', user: 'jane@yuuvault.io', node: 'Edge Gateway', time: '2026-05-14 10:42:01', status: 'Success', icon: Shield },
-  { id: 'EVT-003', event: 'Node Synchronized', user: 'System', node: 'Mumbai-01', time: '2026-05-14 10:30:15', status: 'Success', icon: Server },
+  { id: 'EVT-001', event: 'File Shard Upload', user: 'jane@zancrypt.com', node: 'Tokyo-Alpha', time: '2026-05-14 10:45:22', status: 'Success', icon: File },
+  { id: 'EVT-002', event: 'MFA Authentication', user: 'jane@zancrypt.com', node: 'Edge Gateway', time: '2026-05-14 10:42:01', status: 'Success', icon: Shield },
+  { id: 'EVT-003', event: 'API Key Created', user: 'jane@zancrypt.com', node: 'Tokyo-Alpha', time: '2026-05-14 10:30:11', status: 'Success', icon: Key },
   { id: 'EVT-004', event: 'Encryption Key Rotation', user: 'Admin-Root', node: 'Global-Vault', time: '2026-05-14 09:12:44', status: 'Success', icon: Lock },
-  { id: 'EVT-005', event: 'Failed Access Attempt', user: 'unknown-ip-45.2', node: 'Edge Gateway', time: '2026-05-14 08:55:12', status: 'Blocked', icon: Shield },
-  { id: 'EVT-006', event: 'File Permanent Deletion', user: 'jane@yuuvault.io', node: 'Tokyo-Alpha', time: '2026-05-14 08:30:00', status: 'Success', icon: File },
+  { id: 'EVT-005', event: 'New Shard Replication', user: 'System', node: 'Azure-SG', time: '2026-05-14 08:45:00', status: 'Success', icon: Share2 },
+  { id: 'EVT-006', event: 'File Permanent Deletion', user: 'jane@zancrypt.com', node: 'Tokyo-Alpha', time: '2026-05-14 08:30:00', status: 'Success', icon: File },
 ];
 
 const Audit = () => {

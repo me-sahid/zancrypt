@@ -51,7 +51,7 @@ const Sidebar = () => {
               exit={{ opacity: 0, x: -10 }}
               className="ml-3 font-bold text-lg tracking-tight text-text-primary whitespace-nowrap"
             >
-              Yuu<span className="text-primary-accent">Vault</span>
+              Zan<span className="text-primary-accent">crypt</span>
             </motion.span>
           )}
         </AnimatePresence>

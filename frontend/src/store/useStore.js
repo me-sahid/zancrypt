@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export const useAuthStore = create(
   persist(
@@ -14,11 +14,12 @@ export const useAuthStore = create(
       }),
       logout: () => {
         set({ user: null, token: null, isAuthenticated: false });
-        localStorage.removeItem('yuuvault-auth');
+        localStorage.removeItem('zancrypt-auth');
       },
     }),
     {
-      name: 'yuuvault-auth',
+      name: 'zancrypt-auth',
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );

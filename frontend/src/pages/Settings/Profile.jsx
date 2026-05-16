@@ -37,7 +37,7 @@ const Profile = () => {
             <CardContent className="space-y-4">
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input label="Engineering Handle" value="jane_edge_01" leftIcon={<User className="w-4 h-4" />} />
-                  <Input label="Email Address" value="jane@yuuvault.io" leftIcon={<Mail className="w-4 h-4" />} />
+                  <Input label="Email Address" value="jane@zancrypt.com" leftIcon={<Mail className="w-4 h-4" />} />
                </div>
                <Input label="Primary Region" value="Tokyo (ap-northeast-1)" readOnly leftIcon={<Globe className="w-4 h-4" />} />
                <div className="pt-6">

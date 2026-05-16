@@ -17,7 +17,7 @@ const Footer = () => {
                 <Lock className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold text-white tracking-tight">
-                Yuu<span className="text-primary-accent">Vault</span>
+                Zan<span className="text-primary-accent">crypt</span>
               </span>
             </Link>
             <p className="text-sm text-text-secondary mb-8 pr-4 leading-relaxed">
@@ -85,7 +85,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between">
           <p className="text-xs text-text-secondary mb-4 md:mb-0">
-            © {new Date().getFullYear()} YuuVault Infrastructure Inc. All rights reserved.
+            © {new Date().getFullYear()} Zancrypt Infrastructure Inc. All rights reserved.
           </p>
           
           <div className="flex items-center space-x-6">

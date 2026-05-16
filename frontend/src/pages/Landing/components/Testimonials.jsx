@@ -55,7 +55,7 @@ const Testimonials = () => {
         <div className="text-center mb-20">
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Trusted by Elite Engineering Teams</h2>
           <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-            From financial institutions to healthcare providers, organizations that require absolute data sovereignty rely on YuuVault.
+            From financial institutions to healthcare providers, organizations that require absolute data sovereignty rely on Zancrypt.
           </p>
         </div>
 
