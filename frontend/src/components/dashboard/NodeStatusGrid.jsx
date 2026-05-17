@@ -38,7 +38,7 @@ const NodeStatusGrid = ({ nodes }) => {
               
               <div className="flex items-center space-x-3 text-[10px] text-text-secondary uppercase font-bold tracking-tight">
                 <span className="flex items-center"><Globe className="w-3 h-3 mr-1" /> {node.region}</span>
-                <span className="flex items-center"><Cpu className="w-3 h-3 mr-1" /> {node.load.toFixed(0)}% Load</span>
+                <span className="flex items-center"><Cpu className="w-3 h-3 mr-1" /> {typeof node.load === 'number' ? node.load.toFixed(0) : '0'}% Load</span>
               </div>
             </div>
           </div>
@@ -47,7 +47,7 @@ const NodeStatusGrid = ({ nodes }) => {
           <div className="mt-4 grid grid-cols-3 gap-2">
             <div className="px-2 py-1.5 rounded-lg bg-surface-primary/50 border border-border/50">
               <p className="text-[8px] text-text-secondary uppercase font-bold mb-0.5">Shards</p>
-              <p className="text-xs font-bold text-text-primary">{node.shards.toLocaleString()}</p>
+              <p className="text-xs font-bold text-text-primary">{(node.shards || 0).toLocaleString()}</p>
             </div>
              <div className="px-2 py-1.5 rounded-lg bg-surface-primary/50 border border-border/50">
               <p className="text-[8px] text-text-secondary uppercase font-bold mb-0.5">Uptime</p>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -16,6 +16,7 @@ import {
   Lock
 } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
+import { useDashboardStore } from '../../store/useDashboardStore';
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Overview', path: '/dashboard' },
@@ -27,12 +28,30 @@ const menuItems = [
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isSidebarOpenMobile, setSidebarOpenMobile } = useDashboardStore();
+  const [isMobileView, setIsMobileView] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 1024);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <motion.aside
       initial={false}
-      animate={{ width: isCollapsed ? 80 : 280 }}
-      className="relative flex flex-col h-screen border-r border-border bg-surface-secondary/50 backdrop-blur-xl transition-all duration-300 z-50"
+      animate={{ 
+        width: isMobileView ? 280 : (isCollapsed ? 80 : 280),
+        x: isMobileView ? (isSidebarOpenMobile ? 0 : -280) : 0
+      }}
+      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      className={twMerge(
+        "z-50 flex flex-col h-screen border-r border-border bg-surface-secondary/95 backdrop-blur-xl transition-shadow duration-300 safari-hardware-accel",
+        isMobileView ? "fixed top-0 left-0 shadow-2xl" : "relative"
+      )}
     >
       {/* Logo Section */}
       <div className="flex items-center h-20 px-6 border-b border-border/50">
@@ -40,7 +59,7 @@ const Sidebar = () => {
           <Lock className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
         </div>
         <AnimatePresence>
-          {!isCollapsed && (
+          {(!isCollapsed || isMobileView) && (
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
@@ -62,6 +81,9 @@ const Sidebar = () => {
           <NavLink
             key={item.path}
             to={item.path}
+            onClick={() => {
+              if (isMobileView) setSidebarOpenMobile(false);
+            }}
             className={({ isActive }) => twMerge(
               'flex items-center px-4 py-3 rounded-xl transition-all group relative overflow-hidden',
               isActive 
@@ -85,7 +107,7 @@ const Sidebar = () => {
                 )} />
                 
                 <AnimatePresence>
-                  {!isCollapsed && (
+                  {(!isCollapsed || isMobileView) && (
                     <motion.span
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -97,14 +119,14 @@ const Sidebar = () => {
                   )}
                 </AnimatePresence>
 
-                {isActive && !isCollapsed && (
+                {isActive && (!isCollapsed || isMobileView) && (
                    <motion.div 
                     layoutId="active-indicator"
                     className="absolute right-0 w-1 h-6 bg-primary-accent rounded-l-full"
                   />
                 )}
 
-                {isCollapsed && (
+                {isCollapsed && !isMobileView && (
                    <div className="absolute left-full ml-6 px-3 py-2 bg-surface-elevated border border-border text-text-primary text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all transform translate-x-[-10px] group-hover:translate-x-0 shadow-2xl z-[60]">
                     {item.label}
                   </div>
@@ -117,18 +139,28 @@ const Sidebar = () => {
 
       {/* Collapse Toggle */}
       <div className="p-4 border-t border-border/50">
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="flex items-center justify-center w-full h-12 rounded-xl bg-surface-elevated/50 text-text-secondary hover:text-text-primary transition-all border border-border/50 hover:border-primary-accent/30 group"
-        >
-          <motion.div
-            animate={{ rotate: isCollapsed ? 180 : 0 }}
-            transition={{ duration: 0.4, ease: "backOut" }}
+        {isMobileView ? (
+          <button
+            onClick={() => setSidebarOpenMobile(false)}
+            className="flex items-center justify-center w-full h-12 rounded-xl bg-surface-elevated/50 text-text-secondary hover:text-text-primary transition-all border border-border/50 hover:border-primary-accent/30 group font-bold text-xs uppercase tracking-widest"
           >
-            <ChevronLeft className="w-5 h-5 group-hover:scale-110" />
-          </motion.div>
-          {!isCollapsed && <span className="ml-3 text-sm font-bold uppercase tracking-widest">Minimize</span>}
-        </button>
+            <ChevronLeft className="w-5 h-5 mr-3 group-hover:scale-110" />
+            <span>Close Menu</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="flex items-center justify-center w-full h-12 rounded-xl bg-surface-elevated/50 text-text-secondary hover:text-text-primary transition-all border border-border/50 hover:border-primary-accent/30 group"
+          >
+            <motion.div
+              animate={{ rotate: isCollapsed ? 180 : 0 }}
+              transition={{ duration: 0.4, ease: "backOut" }}
+            >
+              <ChevronLeft className="w-5 h-5 group-hover:scale-110" />
+            </motion.div>
+            {!isCollapsed && <span className="ml-3 text-sm font-bold uppercase tracking-widest">Minimize</span>}
+          </button>
+        )}
       </div>
     </motion.aside>
   );

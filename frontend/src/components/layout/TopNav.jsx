@@ -10,14 +10,15 @@ import {
   Settings, 
   LogOut, 
   Shield, 
-  ChevronDown 
+  ChevronDown,
+  Menu
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const TopNav = () => {
   const { user, logout } = useAuthStore();
-  const { searchQuery, setSearchQuery } = useDashboardStore();
+  const { searchQuery, setSearchQuery, isSidebarOpenMobile, setSidebarOpenMobile } = useDashboardStore();
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -49,7 +50,15 @@ const TopNav = () => {
   };
 
   return (
-    <header className="h-20 border-b border-border bg-surface-secondary/50 backdrop-blur-md sticky top-0 z-40 flex items-center justify-between px-8">
+    <header className="h-20 border-b border-border bg-surface-secondary/50 backdrop-blur-md sticky top-0 z-40 flex items-center justify-between px-4 sm:px-8">
+      {/* Mobile Drawer Hamburger Menu Button */}
+      <button 
+        onClick={() => setSidebarOpenMobile(!isSidebarOpenMobile)}
+        className="lg:hidden p-2 text-text-secondary hover:text-text-primary transition-colors hover:bg-surface-elevated rounded-xl mr-3 shrink-0"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
       {/* Search Bar */}
       <div className="flex-1 max-w-xl">
         <div className="relative group">
@@ -102,7 +111,7 @@ const TopNav = () => {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
-                className="absolute right-0 mt-2 w-56 bg-surface-elevated border border-border rounded-2xl shadow-2xl overflow-hidden py-2 z-50 backdrop-blur-xl"
+                className="absolute right-0 mt-2 w-56 bg-surface-elevated/95 border border-border rounded-2xl shadow-2xl overflow-hidden py-2 z-50 backdrop-blur-xl safari-hardware-accel safari-backdrop-blur"
               >
                 <div className="px-4 py-3 border-b border-border/50 mb-1">
                   <p className="text-[10px] text-text-secondary font-bold uppercase tracking-widest">Active Identity</p>
