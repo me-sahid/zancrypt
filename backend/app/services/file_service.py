@@ -97,6 +97,21 @@ class FileService:
         await self.audit_service.capture_event(user_id, "delete", "files", str(file_id), {})
         await self.session.commit()
 
+    async def rename_file(self, file_id: int, user_id: int, new_filename: str) -> File:
+        file = await self.repo.update_file_record(file_id, user_id, encrypted_filename=new_filename)
+        if not file:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+        
+        await self.audit_service.capture_event(
+            user_id=user_id,
+            event_type="modify",
+            resource_type="files",
+            resource_id=str(file_id),
+            details={"action": "rename", "new_name": new_filename}
+        )
+        await self.session.commit()
+        return file
+
     async def list_user_files(self, user_id: int) -> List[File]:
         return await self.repo.list_files_for_user(user_id)
 

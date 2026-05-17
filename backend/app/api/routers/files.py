@@ -69,3 +69,13 @@ async def list_files(current_user=Depends(get_current_user), session: AsyncSessi
 @router.get("/{file_id}/manifest", response_model=FileManifestResponse)
 async def get_manifest(file_id: int, current_user=Depends(get_current_user), session: AsyncSession = Depends(get_async_session)) -> FileManifestResponse:
     return await FileService(session).get_manifest(file_id, current_user.id)
+
+@router.put("/{file_id}")
+async def update_file(
+    file_id: int, 
+    new_filename: str = Form(...),
+    current_user=Depends(get_current_user), 
+    session: AsyncSession = Depends(get_async_session)
+):
+    file = await FileService(session).rename_file(file_id, current_user.id, new_filename)
+    return {"id": file.id, "encrypted_filename": file.encrypted_filename}

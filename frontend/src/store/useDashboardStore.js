@@ -33,8 +33,10 @@ export const useDashboardStore = create((set) => ({
   ],
   
   files: [],
+  searchQuery: "",
 
   // Actions
+  setSearchQuery: (query) => set({ searchQuery: query }),
   setFiles: (files) => set({ files }),
   setNodes: (nodes) => set({ nodes }),
   updateMetrics: (newMetrics) => set((state) => ({ 
@@ -50,4 +52,21 @@ export const useDashboardStore = create((set) => ({
   })),
 
   setHistory: (history) => set({ history }),
+  
+  reset: () => set({
+    metrics: {
+      throughput: 0,
+      requestVolume: 0,
+      latency: 0,
+      activeShards: 0,
+      totalStorage: 0,
+      networkHealth: 0,
+      securityScore: 0,
+    },
+    history: { throughput: [], requests: [] },
+    nodes: [],
+    events: [],
+    files: [],
+    searchQuery: ""
+  })
 }));

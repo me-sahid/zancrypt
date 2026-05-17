@@ -41,3 +41,13 @@ class FileRepository:
         file = result.scalar_one_or_none()
         if file:
             await self.session.delete(file)
+
+    async def update_file_record(self, file_id: int, owner_id: int, **kwargs) -> File | None:
+        file = await self.get_owned_file(file_id, owner_id)
+        if not file:
+            return None
+        for key, value in kwargs.items():
+            if hasattr(file, key):
+                setattr(file, key, value)
+        await self.session.flush()
+        return file

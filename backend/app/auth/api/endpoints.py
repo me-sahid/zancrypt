@@ -139,7 +139,14 @@ async def register_verify(
             access_token=access_token,
             refresh_token=refresh_token,
             expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-            user={"email": user.email, "id": user.id}
+            user={
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+                "full_name": user.full_name,
+                "role": user.role,
+                "region": user.region
+            }
         )
     except Exception as e:
         print(f"Registration verification failed: {e}")
@@ -231,7 +238,15 @@ async def login_verify(
             access_token=access_token,
             refresh_token=refresh_token,
             expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-            user={"email": user.email, "id": user.id, "master_key_salt": user.master_key_salt}
+            user={
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+                "full_name": user.full_name,
+                "role": user.role,
+                "region": user.region,
+                "master_key_salt": user.master_key_salt
+            }
         )
 
     except Exception as e:
@@ -270,5 +285,13 @@ async def login_fallback(
         access_token=access_token,
         refresh_token=refresh_token,
         expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        user={"email": user.email, "id": user.id, "master_key_salt": user.master_key_salt}
+        user={
+            "id": user.id,
+            "email": user.email,
+            "username": user.username,
+            "full_name": user.full_name,
+            "role": user.role,
+            "region": user.region,
+            "master_key_salt": user.master_key_salt
+        }
     )

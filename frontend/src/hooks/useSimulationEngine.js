@@ -19,17 +19,13 @@ export const useSimulationEngine = () => {
       // 1. Update Metrics based on REAL data from store
       const hasFiles = files.length > 0;
       
-      // Keep metrics stable for "Enterprise" feel
+      // Keep metrics stable for "Enterprise" feel, only simulate throughput and latency
       const newThroughput = hasFiles ? 450 + Math.floor(Math.random() * 20) : 0; 
-      const newLatency = hasFiles ? 32 + Math.floor(Math.random() * 5) : 0;
       
       updateMetrics({
         throughput: newThroughput,
-        latency: newLatency,
-        activeShards: hasFiles ? (files.length * 4) : 0, // Realistic shard count (4x replication)
-        totalStorage: hasFiles ? files.reduce((acc, f) => acc + (parseFloat(f.size) || 0), 0) : 0,
-        securityScore: hasFiles ? 100 : 95, // High score for enterprise
-        networkHealth: 100,
+        latency: metrics.latency || (hasFiles ? 32 : 0),
+        // Storage, Shards, and NetworkHealth are now updated via fetchStats in Dashboard.jsx
       });
 
       // 2. Randomly update a node health (but rarely)
