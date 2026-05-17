@@ -9,8 +9,16 @@ import { twMerge } from 'tailwind-merge';
 import { toast } from 'react-hot-toast';
 
 const Nodes = () => {
-  const { nodes, setNodes } = useDashboardStore();
+  const { nodes, setNodes, searchQuery } = useDashboardStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const formatStorage = (bytes) => {
+    if (!bytes) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
   const fetchNodes = async () => {
     setIsRefreshing(true);
@@ -25,6 +33,7 @@ const Nodes = () => {
           load: Math.floor(Math.random() * 30) + (n.healthy ? 10 : 0),
           latency: n.healthy ? Math.floor(Math.random() * 100) + 20 : 0,
           shards: (n.shards || []).length,
+          storageUsed: n.storage_used || 0,
           provider: n.provider,
           status: n.healthy ? 'success' : 'danger',
           isHealthy: n.healthy
@@ -55,6 +64,13 @@ const Nodes = () => {
   };
 
   const healthyCount = nodes.filter(n => n.isHealthy).length;
+
+  const filteredNodes = nodes.filter(node => 
+    (node.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (node.region || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (node.provider || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (node.id || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="space-y-8 pb-10">
@@ -108,9 +124,9 @@ const Nodes = () => {
 
       {/* Node Grid */}
       <div className="grid grid-cols-1 gap-6">
-        {nodes.map((node, i) => (
+        {filteredNodes.length > 0 ? filteredNodes.map((node, i) => (
           <motion.div
-            key={node.id}
+            key={node.id || node.name}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.1 }}
@@ -172,6 +188,11 @@ const Nodes = () => {
                     </div>
                     <div className="w-px h-8 bg-border" />
                     <div>
+                      <p className="text-[10px] text-text-secondary font-bold uppercase mb-1">Storage Used</p>
+                      <p className="text-xl font-black text-text-primary">{node.isHealthy ? formatStorage(node.storageUsed) : '--'}</p>
+                    </div>
+                    <div className="w-px h-8 bg-border" />
+                    <div>
                       <p className="text-[10px] text-text-secondary font-bold uppercase mb-1">Local Latency</p>
                       <p className="text-xl font-black text-text-primary">{node.isHealthy ? `${node.latency}ms` : 'Inf'}</p>
                     </div>
@@ -194,7 +215,13 @@ const Nodes = () => {
               </div>
             </div>
           </motion.div>
-        ))}
+        )) : (
+          <div className="text-center py-20 bg-surface-secondary/40 border border-border/50 rounded-3xl text-text-secondary opacity-50">
+            <Server className="w-12 h-12 mx-auto mb-4 animate-pulse text-primary-accent/20" />
+            <p className="font-bold text-lg">No matching nodes found</p>
+            <p className="text-sm">Try modifying your search query.</p>
+          </div>
+        )}
       </div>
     </div>
   );

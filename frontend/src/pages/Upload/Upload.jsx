@@ -16,9 +16,11 @@ import { toast } from 'react-hot-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
-import { fileService } from '../../services/vaultServices';
+import { fileService, adminService } from '../../services/vaultServices';
+import { useDashboardStore } from '../../store/useDashboardStore';
 
 const Upload = () => {
+  const { setFiles: setFilesStore, setNodes, updateMetrics } = useDashboardStore();
   const [files, setFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [activeStep, setActiveStep] = useState(0); // 0: Idle, 1: Encrypting, 2: Chunking, 3: Distributing, 4: Done
@@ -47,6 +49,41 @@ const Upload = () => {
           formData.append('shards', fileObj.rawFile); 
           
           await fileService.uploadFile(formData);
+          
+          try {
+            const [filesRes, nodesRes, metricsRes] = await Promise.all([
+              fileService.listFiles(),
+              adminService.getNodes(),
+              adminService.getSystemMetrics()
+            ]);
+            if (filesRes?.data) setFilesStore(filesRes.data);
+            if (nodesRes?.data) {
+              const mappedNodes = nodesRes.data.map(n => ({
+                id: n.id,
+                name: n.node_name,
+                region: n.region,
+                health: n.healthy ? 'Healthy' : 'Offline',
+                load: Math.floor(Math.random() * 30) + (n.healthy ? 10 : 0),
+                latency: n.healthy ? Math.floor(Math.random() * 100) + 20 : 0,
+                shards: (n.shards || []).length,
+                storageUsed: n.storage_used || 0,
+                provider: n.provider,
+                status: n.healthy ? 'success' : 'danger',
+                isHealthy: n.healthy
+              }));
+              setNodes(mappedNodes);
+            }
+            if (metricsRes?.data) {
+              updateMetrics({
+                totalStorage: metricsRes.data.total_storage_bytes || 0,
+                securityScore: 100,
+                networkHealth: metricsRes.data.network_health_score,
+                activeShards: metricsRes.data.total_files * 4,
+              });
+            }
+          } catch (updateErr) {
+            console.error('Failed to sync telemetry post-upload:', updateErr);
+          }
           
           setActiveStep(4);
           toast.success(`${fileObj.name} safely stored.`);

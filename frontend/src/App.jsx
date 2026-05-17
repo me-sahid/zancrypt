@@ -23,6 +23,7 @@ const Audit = lazy(() => import('./pages/Audit/Audit'));
 const Settings = lazy(() => import('./pages/Settings/Settings'));
 const Profile = lazy(() => import('./pages/Settings/Profile'));
 const NotFound = lazy(() => import('./pages/Errors/NotFound'));
+const DownloadPage = lazy(() => import('./pages/Download/Download'));
 
 // Loading Placeholder
 const PageLoader = () => (
@@ -46,14 +47,9 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Landing />} />
-          <Route 
-            path="/login" 
-            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} 
-          />
-          <Route 
-            path="/register" 
-            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />} 
-          />
+          <Route path="/download" element={<DownloadPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
           {/* Protected Dashboard Routes */}
           <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />

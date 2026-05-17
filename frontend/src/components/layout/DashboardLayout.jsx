@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopNav from './TopNav';
 import { motion, AnimatePresence } from 'framer-motion';
+import ContentSkeleton from './Skeletons';
 
 const DashboardLayout = ({ children }) => {
   const location = useLocation();
@@ -22,7 +23,9 @@ const DashboardLayout = ({ children }) => {
               transition={{ duration: 0.3, ease: 'circOut' }}
               className="p-6 lg:p-10 max-w-[1600px] mx-auto w-full"
             >
-              {children}
+              <Suspense fallback={<ContentSkeleton />}>
+                {children}
+              </Suspense>
             </motion.div>
           </AnimatePresence>
           

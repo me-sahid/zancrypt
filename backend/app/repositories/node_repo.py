@@ -8,7 +8,12 @@ class NodeRepository:
         self.session = session
 
     async def list_nodes(self) -> list[NodeRegistry]:
-        result = await self.session.execute(select(NodeRegistry).order_by(NodeRegistry.node_name))
+        from sqlalchemy.orm import selectinload
+        result = await self.session.execute(
+            select(NodeRegistry)
+            .options(selectinload(NodeRegistry.shards))
+            .order_by(NodeRegistry.node_name)
+        )
         return result.scalars().all()
 
     async def update_node(self, node_id: int, updates: dict) -> NodeRegistry:

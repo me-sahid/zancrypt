@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Mail, Shield, Globe, Cpu, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
@@ -34,7 +34,13 @@ const Register = () => {
   });
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
-  const setAuth = useAuthStore(state => state.setAuth);
+  const { isAuthenticated, setAuth } = useAuthStore();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

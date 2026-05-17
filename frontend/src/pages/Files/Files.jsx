@@ -24,13 +24,12 @@ import Input from '../../components/ui/Input';
 import Badge from '../../components/ui/Badge';
 
 import { useDashboardStore } from '../../store/useDashboardStore';
-import { fileService } from '../../services/vaultServices';
+import { fileService, adminService } from '../../services/vaultServices';
 import { toast } from 'react-hot-toast';
 import FileThumbnail from '../../components/vault/FileThumbnail';
 
 const Files = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const { files, setFiles } = useDashboardStore();
+  const { files, setFiles, searchQuery, setSearchQuery, setNodes, updateMetrics } = useDashboardStore();
   const [isLoading, setIsLoading] = useState(false);
   const [processingId, setProcessingId] = useState(null);
   const [editingFile, setEditingFile] = useState(null);
@@ -93,6 +92,39 @@ const Files = () => {
       await fileService.deleteFile(fileId);
       setFiles(files.filter(f => f.id !== fileId));
       toast.success('File deleted successfully', { id: toastId });
+
+      try {
+        const [nodesRes, metricsRes] = await Promise.all([
+          adminService.getNodes(),
+          adminService.getSystemMetrics()
+        ]);
+        if (nodesRes?.data) {
+          const mappedNodes = nodesRes.data.map(n => ({
+            id: n.id,
+            name: n.node_name,
+            region: n.region,
+            health: n.healthy ? 'Healthy' : 'Offline',
+            load: Math.floor(Math.random() * 30) + (n.healthy ? 10 : 0),
+            latency: n.healthy ? Math.floor(Math.random() * 100) + 20 : 0,
+            shards: (n.shards || []).length,
+            storageUsed: n.storage_used || 0,
+            provider: n.provider,
+            status: n.healthy ? 'success' : 'danger',
+            isHealthy: n.healthy
+          }));
+          setNodes(mappedNodes);
+        }
+        if (metricsRes?.data) {
+          updateMetrics({
+            totalStorage: metricsRes.data.total_storage_bytes || 0,
+            securityScore: 100,
+            networkHealth: metricsRes.data.network_health_score,
+            activeShards: metricsRes.data.total_files * 4,
+          });
+        }
+      } catch (updateErr) {
+        console.error('Failed to sync telemetry post-delete:', updateErr);
+      }
     } catch (error) {
       console.error('Delete failed:', error);
       toast.error('Failed to delete file', { id: toastId });

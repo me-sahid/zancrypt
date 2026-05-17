@@ -17,7 +17,6 @@ import { useSimulationEngine } from '../../hooks/useSimulationEngine';
 import MetricCard from '../../components/dashboard/MetricCard';
 import TrafficChart from '../../components/dashboard/TrafficChart';
 import NodeStatusGrid from '../../components/dashboard/NodeStatusGrid';
-import SecurityFeed from '../../components/dashboard/SecurityFeed';
 import ShardMap from '../../components/dashboard/ShardMap';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import { twMerge } from 'tailwind-merge';
@@ -39,6 +38,15 @@ const Dashboard = () => {
   
   const { metrics, nodes, events, files, setFiles, setNodes, updateMetrics } = useDashboardStore();
 
+  const formatStorage = (bytes) => {
+    if (!bytes) return { value: 0, suffix: ' Bytes' };
+    const k = 1024;
+    const sizes = [' Bytes', ' KB', ' MB', ' GB', ' TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const val = parseFloat((bytes / Math.pow(k, i)));
+    return { value: val, suffix: sizes[i] };
+  };
+
   useEffect(() => {
     let isMounted = true;
     const fetchStats = async () => {
@@ -53,7 +61,7 @@ const Dashboard = () => {
           if (filesRes?.data) setFiles(filesRes.data);
           if (metricsRes?.data) {
             updateMetrics({
-              totalStorage: metricsRes.data.total_storage_gb,
+              totalStorage: metricsRes.data.total_storage_bytes || 0,
               securityScore: 100,
               networkHealth: metricsRes.data.network_health_score,
               activeShards: metricsRes.data.total_files * 4,
@@ -97,6 +105,7 @@ const Dashboard = () => {
   };
 
   const { user } = useAuthStore();
+  const { value: storageVal, suffix: storageSuffix } = formatStorage(safeMetrics.totalStorage);
 
   return (
     <div className="space-y-8 pb-10">
@@ -124,8 +133,8 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard 
           label="Total Storage" 
-          value={safeMetrics.totalStorage} 
-          suffix=" GB" 
+          value={storageVal} 
+          suffix={storageSuffix} 
           icon={HardDrive} 
           trend="In Use" 
           isPositive={true} 
@@ -225,17 +234,6 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
-
-      {/* Activity Feed */}
-      <Card>
-        <CardHeader>
-          <CardTitle>System Activity</CardTitle>
-          <CardDescription>Latest security and synchronization events.</CardDescription>
-        </CardHeader>
-        <CardContent className="p-6">
-            <SecurityFeed events={events || []} />
-        </CardContent>
-      </Card>
     </div>
   );
 };

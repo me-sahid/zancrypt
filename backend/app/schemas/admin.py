@@ -25,12 +25,25 @@ class SecurityEventResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class ShardInfoSchema(BaseModel):
+    shard_id: str
+    file_id: int
+    shard_size: int
+    status: str
+
+    model_config = ConfigDict(from_attributes=True)
+
 class NodeHealthResponse(BaseModel):
+    id: int
     node_name: str
     healthy: bool
     last_check_in: datetime
     region: str
     provider: str
+    storage_used: int = 0
+    shards: list[ShardInfoSchema] = []
+
+    model_config = ConfigDict(from_attributes=True)
 
 class SystemMetricsResponse(BaseModel):
     active_nodes: int
@@ -38,4 +51,5 @@ class SystemMetricsResponse(BaseModel):
     pending_tasks: int
     average_upload_latency_ms: float
     total_storage_gb: float
+    total_storage_bytes: int = 0
     network_health_score: float

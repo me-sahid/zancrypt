@@ -2,9 +2,11 @@ import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ShieldCheck } from 'lucide-react';
+import { useAuthStore } from '../../../store/useStore';
 
 const CTASection = () => {
   const containerRef = useRef(null);
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     let ctx = gsap.context(() => {
@@ -92,13 +94,23 @@ const CTASection = () => {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-          <Link to="/register" className="magnetic-btn group relative inline-flex items-center justify-center px-10 py-5 bg-primary-accent text-white font-medium rounded-xl overflow-hidden transition-all shadow-[0_0_40px_rgba(0,112,243,0.4)] w-full sm:w-auto">
-            <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-            <span className="relative flex items-center text-lg">
-              Launch Vault
-              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-            </span>
-          </Link>
+          {isAuthenticated ? (
+            <Link to="/dashboard" className="magnetic-btn group relative inline-flex items-center justify-center px-10 py-5 bg-primary-accent text-white font-medium rounded-xl overflow-hidden transition-all shadow-[0_0_40px_rgba(0,112,243,0.4)] w-full sm:w-auto">
+              <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+              <span className="relative flex items-center text-lg">
+                Open Your Vault
+                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              </span>
+            </Link>
+          ) : (
+            <Link to="/register" className="magnetic-btn group relative inline-flex items-center justify-center px-10 py-5 bg-primary-accent text-white font-medium rounded-xl overflow-hidden transition-all shadow-[0_0_40px_rgba(0,112,243,0.4)] w-full sm:w-auto">
+              <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+              <span className="relative flex items-center text-lg">
+                Launch Vault
+                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              </span>
+            </Link>
+          )}
           
           <Link to="/architecture" className="magnetic-btn group relative inline-flex items-center justify-center px-10 py-5 bg-surface-elevated/50 border border-white/10 text-white font-medium rounded-xl overflow-hidden transition-all hover:bg-surface-elevated hover:border-white/20 backdrop-blur-md w-full sm:w-auto">
             <span className="relative flex items-center text-lg">

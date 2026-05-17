@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import Boolean, Column, DateTime, Enum as SqlEnum, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Enum as SqlEnum, Integer, String, BigInteger
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
@@ -18,6 +18,7 @@ class User(Base, TimestampMixin):
     username = Column(String(128), unique=True, nullable=False, index=True)
     full_name = Column(String(255), nullable=True)
     region = Column(String(128), nullable=True)
+    storage_used = Column(BigInteger, default=0, nullable=False)
     
     # Zero-Knowledge / Identity Verification
     master_key_salt = Column(String(255), nullable=True) # Used for local key derivation
