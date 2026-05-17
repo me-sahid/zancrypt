@@ -82,7 +82,7 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop Links (Optimized spacing for tablet widths) */}
-        <div className="hidden md:flex items-center space-x-5 lg:space-x-8">
+        <div className="hidden lg:flex items-center space-x-8">
           {navLinks.map((link) => (
             <a 
               key={link.name} 
@@ -96,7 +96,7 @@ const Navbar = () => {
         </div>
 
         {/* Auth Buttons / Dropdown Section (Responsive adjustments) */}
-        <div className="hidden md:flex items-center space-x-3 lg:space-x-5">
+        <div className="hidden lg:flex items-center space-x-5">
           <Globe className="w-4 h-4 lg:w-5 lg:h-5 text-text-secondary hover:text-white transition-colors cursor-pointer" />
           
           {isAuthenticated ? (
@@ -131,7 +131,7 @@ const Navbar = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     transition={{ duration: 0.12, ease: 'easeOut' }}
-                    className="absolute right-0 top-full mt-2 w-64 bg-[#18181c] border border-white/5 rounded-xl shadow-2xl p-2 z-[200] backdrop-blur-xl"
+                    className="absolute right-0 top-full mt-2 w-64 bg-[#18181c]/95 border border-white/5 rounded-xl shadow-2xl p-2 z-[200] backdrop-blur-xl safari-hardware-accel safari-backdrop-blur"
                   >
                     <div className="px-3 py-2 text-[10px] font-black text-[#5F6368] uppercase tracking-[0.2em] mb-1">
                       Vaults & Storage
@@ -241,7 +241,7 @@ const Navbar = () => {
 
         {/* Mobile Menu Toggle */}
         <button 
-          className="md:hidden text-white p-2 hover:bg-white/5 rounded-lg transition-colors"
+          className="lg:hidden text-white p-2 hover:bg-white/5 rounded-lg transition-colors"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
           {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -255,7 +255,7 @@ const Navbar = () => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full left-0 w-full bg-[#0a0a0c] border-b border-white/5 px-6 py-8 md:hidden shadow-2xl z-[150]"
+            className="absolute top-full left-0 w-full bg-[#0a0a0c] border-b border-white/5 px-6 py-8 lg:hidden shadow-2xl z-[150]"
           >
             <div className="flex flex-col space-y-6">
               {navLinks.map((link) => (

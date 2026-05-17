@@ -74,7 +74,7 @@ const Nodes = () => {
 
   return (
     <div className="space-y-8 pb-10">
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
         <div>
           <h1 className="text-4xl font-black text-text-primary tracking-tight">Infrastructure Management</h1>
           <p className="text-text-secondary mt-1 font-medium">Control and monitor your local distributed Zancrypt cluster.</p>
@@ -82,7 +82,7 @@ const Nodes = () => {
         <button 
           onClick={fetchNodes}
           className={twMerge(
-            "p-2 rounded-xl bg-surface-secondary border border-border hover:bg-surface-elevated transition-all",
+            "p-2 rounded-xl bg-surface-secondary border border-border hover:bg-surface-elevated transition-all w-fit",
             isRefreshing && "animate-spin"
           )}
         >
@@ -181,28 +181,28 @@ const Nodes = () => {
                     </div>
                  </div>
 
-                 <div className="flex items-center space-x-8">
+                 <div className="flex flex-wrap items-center gap-6 sm:gap-8">
                     <div>
                       <p className="text-[10px] text-text-secondary font-bold uppercase mb-1">Stored Shards</p>
                       <p className="text-xl font-black text-text-primary">{node.isHealthy ? node.shards : '--'}</p>
                     </div>
-                    <div className="w-px h-8 bg-border" />
+                    <div className="hidden sm:block w-px h-8 bg-border" />
                     <div>
                       <p className="text-[10px] text-text-secondary font-bold uppercase mb-1">Storage Used</p>
                       <p className="text-xl font-black text-text-primary">{node.isHealthy ? formatStorage(node.storageUsed) : '--'}</p>
                     </div>
-                    <div className="w-px h-8 bg-border" />
+                    <div className="hidden sm:block w-px h-8 bg-border" />
                     <div>
                       <p className="text-[10px] text-text-secondary font-bold uppercase mb-1">Local Latency</p>
                       <p className="text-xl font-black text-text-primary">{node.isHealthy ? `${node.latency}ms` : 'Inf'}</p>
                     </div>
                  </div>
 
-                 <div className="flex items-center justify-end space-x-4">
+                 <div className="flex items-center xl:justify-end w-full xl:w-auto">
                     <button 
                       onClick={() => handleToggleNode(node.id, node.isHealthy)}
                       className={twMerge(
-                        "flex items-center space-x-2 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-xl",
+                        "flex items-center justify-center space-x-2 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-xl w-full xl:w-auto",
                         node.isHealthy 
                           ? "bg-status-danger/10 text-status-danger border border-status-danger/20 hover:bg-status-danger/20" 
                           : "bg-status-success/10 text-status-success border border-status-success/20 hover:bg-status-success/20"
