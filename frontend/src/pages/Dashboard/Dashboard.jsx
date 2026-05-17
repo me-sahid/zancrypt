@@ -12,6 +12,7 @@ import {
   Zap
 } from 'lucide-react';
 import { useDashboardStore } from '../../store/useDashboardStore';
+import { useAuthStore } from '../../store/useStore';
 import { useSimulationEngine } from '../../hooks/useSimulationEngine';
 import MetricCard from '../../components/dashboard/MetricCard';
 import TrafficChart from '../../components/dashboard/TrafficChart';
@@ -20,7 +21,7 @@ import SecurityFeed from '../../components/dashboard/SecurityFeed';
 import ShardMap from '../../components/dashboard/ShardMap';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import { twMerge } from 'tailwind-merge';
-import { fileService, nodeService } from '../../services/vaultServices';
+import { fileService, adminService } from '../../services/vaultServices';
 
 const metricsData = [
   { name: '00:00', throughput: 400, requests: 2400 },
@@ -36,19 +37,28 @@ const Dashboard = () => {
   // Start the simulation engine
   useSimulationEngine();
   
-  const { metrics, nodes, events, files, setFiles, setNodes } = useDashboardStore();
+  const { metrics, nodes, events, files, setFiles, setNodes, updateMetrics } = useDashboardStore();
 
   useEffect(() => {
     let isMounted = true;
     const fetchStats = async () => {
       try {
-        const [filesRes, nodesRes] = await Promise.all([
+        const [filesRes, nodesRes, metricsRes] = await Promise.all([
           fileService.listFiles(),
-          nodeService.getNodes()
+          adminService.getNodes(),
+          adminService.getSystemMetrics()
         ]);
 
         if (isMounted) {
           if (filesRes?.data) setFiles(filesRes.data);
+          if (metricsRes?.data) {
+            updateMetrics({
+              totalStorage: metricsRes.data.total_storage_gb,
+              securityScore: 100,
+              networkHealth: metricsRes.data.network_health_score,
+              activeShards: metricsRes.data.total_files * 4,
+            });
+          }
           if (nodesRes?.data) {
             // Map backend data to frontend structure
             const mappedNodes = nodesRes.data.map(n => ({
@@ -86,15 +96,19 @@ const Dashboard = () => {
     activeShards: 0
   };
 
+  const { user } = useAuthStore();
+
   return (
     <div className="space-y-8 pb-10">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-black text-text-primary tracking-tight">System Status</h1>
+          <h1 className="text-4xl font-black text-text-primary tracking-tight">
+            Welcome back, <span className="text-primary-accent">{user?.full_name?.split(' ')[0] || user?.username || 'Commander'}</span>
+          </h1>
           <p className="text-text-secondary mt-1 font-medium flex items-center text-sm">
             <span className="w-2 h-2 rounded-full bg-status-success mr-2" />
-            Your vault is <span className="text-status-success ml-1">protected and online</span>
+            System status: <span className="text-status-success ml-1 font-bold">Optimal & Encrypted</span>
           </p>
         </div>
         
@@ -156,22 +170,37 @@ const Dashboard = () => {
           <CardContent className="flex-1 pt-6">
             {files.length > 0 ? (
               <div className="space-y-4">
-                {files.slice(0, 5).map((file, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-surface-secondary/50 border border-border/50">
-                    <div className="flex items-center space-x-4">
-                      <div className="p-2 rounded-lg bg-primary-accent/10">
-                        <Database className="w-5 h-5 text-primary-accent" />
+                {files.slice(0, 5).map((file, i) => {
+                  const getFileIcon = (filename) => {
+                    const ext = filename?.split('.').pop()?.toLowerCase();
+                    switch (ext) {
+                      case 'pdf': return <Database className="w-5 h-5 text-status-danger" />;
+                      case 'png': case 'jpg': case 'jpeg': return <Globe className="w-5 h-5 text-security" />;
+                      default: return <Database className="w-5 h-5 text-primary-accent" />;
+                    }
+                  };
+
+                  return (
+                    <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-surface-secondary/50 border border-border/50">
+                      <div className="flex items-center space-x-4">
+                        <div className="p-2 rounded-lg bg-primary-accent/10">
+                          {getFileIcon(file.encrypted_filename)}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-text-primary truncate max-w-[200px]">
+                            {file.encrypted_filename || file.filename || file.name}
+                          </p>
+                          <p className="text-[10px] text-text-secondary uppercase font-bold tracking-tight">
+                            {file.file_size ? (file.file_size / 1024 / 1024).toFixed(2) + ' MB' : '0 MB'} • Synced
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-text-primary">{file.filename || file.name}</p>
-                        <p className="text-[10px] text-text-secondary uppercase font-bold tracking-tight">{file.size} • Synced</p>
-                      </div>
+                      <Link to="/vault" className="p-2 text-text-secondary hover:text-primary-accent transition-colors">
+                        <Zap className="w-4 h-4" />
+                      </Link>
                     </div>
-                    <button className="p-2 text-text-secondary hover:text-primary-accent transition-colors">
-                      <Globe className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-center opacity-50">

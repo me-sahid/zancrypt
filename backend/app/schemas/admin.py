@@ -37,3 +37,5 @@ class SystemMetricsResponse(BaseModel):
     total_files: int
     pending_tasks: int
     average_upload_latency_ms: float
+    total_storage_gb: float
+    network_health_score: float

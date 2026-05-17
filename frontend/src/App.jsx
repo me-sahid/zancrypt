@@ -7,6 +7,8 @@ import { NetworkProvider } from './providers/NetworkProvider';
 import OfflineScreen from './components/network/OfflineScreen';
 import DegradedBanner from './components/network/DegradedBanner';
 import { Toaster } from 'react-hot-toast';
+import { useAuthStore } from './store/useStore';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 // Lazy loading other pages
 const Login = lazy(() => import('./pages/Auth/Login'));
@@ -33,6 +35,8 @@ const PageLoader = () => (
 );
 
 function App() {
+  const { isAuthenticated } = useAuthStore();
+
   return (
     <NetworkProvider>
       <Suspense fallback={<PageLoader />}>
@@ -42,20 +46,26 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route 
+            path="/login" 
+            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} 
+          />
+          <Route 
+            path="/register" 
+            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />} 
+          />
 
           {/* Protected Dashboard Routes */}
-          <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
-          <Route path="/vault" element={<DashboardLayout><Files /></DashboardLayout>} />
-          <Route path="/uploads" element={<DashboardLayout><Upload /></DashboardLayout>} />
-          <Route path="/nodes" element={<DashboardLayout><Nodes /></DashboardLayout>} />
-          <Route path="/security" element={<DashboardLayout><Security /></DashboardLayout>} />
-          <Route path="/monitoring" element={<DashboardLayout><Monitoring /></DashboardLayout>} />
-          <Route path="/analytics" element={<DashboardLayout><Analytics /></DashboardLayout>} />
-          <Route path="/audit" element={<DashboardLayout><Audit /></DashboardLayout>} />
-          <Route path="/settings" element={<DashboardLayout><Settings /></DashboardLayout>} />
-          <Route path="/profile" element={<DashboardLayout><Profile /></DashboardLayout>} />
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/vault" element={<ProtectedRoute><DashboardLayout><Files /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/uploads" element={<ProtectedRoute><DashboardLayout><Upload /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/nodes" element={<ProtectedRoute><DashboardLayout><Nodes /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/security" element={<ProtectedRoute><DashboardLayout><Security /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/monitoring" element={<ProtectedRoute><DashboardLayout><Monitoring /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/analytics" element={<ProtectedRoute><DashboardLayout><Analytics /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/audit" element={<ProtectedRoute><DashboardLayout><Audit /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><DashboardLayout><Settings /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><DashboardLayout><Profile /></DashboardLayout></ProtectedRoute>} />
 
           {/* 404 & Redirects */}
           <Route path="/404" element={<NotFound />} />

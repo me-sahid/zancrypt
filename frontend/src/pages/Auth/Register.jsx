@@ -113,8 +113,8 @@ const Register = () => {
         className="w-full max-w-xl relative z-10"
       >
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Deploy Node Identity</h1>
-          <p className="text-text-secondary mt-2">Initialize your administrative instance on the vault network.</p>
+          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Vault Identity</h1>
+          <p className="text-text-secondary mt-2">Initialize your secure instance on the YuuVault network.</p>
         </div>
 
         <div className="glass-elevated rounded-2xl p-8">
@@ -196,12 +196,12 @@ const Register = () => {
             isLoading={isLoading}
             rightIcon={<ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
           >
-            Register Instance
+            Register Identity
           </Button>
 
           <p className="mt-4 text-[10px] text-text-secondary text-center leading-relaxed">
             <Shield className="w-3 h-3 inline-block mr-1 text-primary-accent" />
-            After clicking Register, your browser will prompt you to initialize a **Biometric Passkey** (TouchID, FaceID, or Windows Hello) to secure your administrator identity.
+            After clicking Register, your browser will prompt you to initialize a **Biometric Passkey** (TouchID, FaceID, or Windows Hello) to secure your vault identity.
           </p>
             </div>
           </form>

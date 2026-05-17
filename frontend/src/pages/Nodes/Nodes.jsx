@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Server, ShieldCheck, Activity, Globe, Cpu, HardDrive, RefreshCw, Power, AlertTriangle, Zap } from 'lucide-react';
 import { useDashboardStore } from '../../store/useDashboardStore';
-import { nodeService } from '../../services/vaultServices';
+import { adminService } from '../../services/vaultServices';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import { twMerge } from 'tailwind-merge';
@@ -15,7 +15,7 @@ const Nodes = () => {
   const fetchNodes = async () => {
     setIsRefreshing(true);
     try {
-      const res = await nodeService.getNodes();
+      const res = await adminService.getNodes();
       if (res?.data) {
         const mappedNodes = res.data.map(n => ({
           id: n.id,
@@ -46,7 +46,7 @@ const Nodes = () => {
 
   const handleToggleNode = async (nodeId, currentStatus) => {
     try {
-      await nodeService.toggleNode(nodeId, !currentStatus);
+      await adminService.toggleNode(nodeId, !currentStatus);
       toast.success(`Infrastructure Node ${!currentStatus ? 'Activated' : 'Suspended'}`);
       fetchNodes();
     } catch (error) {
