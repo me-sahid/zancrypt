@@ -9,8 +9,16 @@ import { twMerge } from 'tailwind-merge';
 import { toast } from 'react-hot-toast';
 
 const Nodes = () => {
-  const { nodes, setNodes } = useDashboardStore();
+  const { nodes, setNodes, searchQuery } = useDashboardStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const formatStorage = (bytes) => {
+    if (!bytes) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
   const fetchNodes = async () => {
     setIsRefreshing(true);
@@ -25,6 +33,7 @@ const Nodes = () => {
           load: Math.floor(Math.random() * 30) + (n.healthy ? 10 : 0),
           latency: n.healthy ? Math.floor(Math.random() * 100) + 20 : 0,
           shards: (n.shards || []).length,
+          storageUsed: n.storage_used || 0,
           provider: n.provider,
           status: n.healthy ? 'success' : 'danger',
           isHealthy: n.healthy
@@ -56,9 +65,16 @@ const Nodes = () => {
 
   const healthyCount = nodes.filter(n => n.isHealthy).length;
 
+  const filteredNodes = nodes.filter(node => 
+    (node.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (node.region || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (node.provider || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (node.id || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="space-y-8 pb-10">
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
         <div>
           <h1 className="text-4xl font-black text-text-primary tracking-tight">Infrastructure Management</h1>
           <p className="text-text-secondary mt-1 font-medium">Control and monitor your local distributed Zancrypt cluster.</p>
@@ -66,7 +82,7 @@ const Nodes = () => {
         <button 
           onClick={fetchNodes}
           className={twMerge(
-            "p-2 rounded-xl bg-surface-secondary border border-border hover:bg-surface-elevated transition-all",
+            "p-2 rounded-xl bg-surface-secondary border border-border hover:bg-surface-elevated transition-all w-fit",
             isRefreshing && "animate-spin"
           )}
         >
@@ -108,9 +124,9 @@ const Nodes = () => {
 
       {/* Node Grid */}
       <div className="grid grid-cols-1 gap-6">
-        {nodes.map((node, i) => (
+        {filteredNodes.length > 0 ? filteredNodes.map((node, i) => (
           <motion.div
-            key={node.id}
+            key={node.id || node.name}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.1 }}
@@ -165,23 +181,28 @@ const Nodes = () => {
                     </div>
                  </div>
 
-                 <div className="flex items-center space-x-8">
+                 <div className="flex flex-wrap items-center gap-6 sm:gap-8">
                     <div>
                       <p className="text-[10px] text-text-secondary font-bold uppercase mb-1">Stored Shards</p>
                       <p className="text-xl font-black text-text-primary">{node.isHealthy ? node.shards : '--'}</p>
                     </div>
-                    <div className="w-px h-8 bg-border" />
+                    <div className="hidden sm:block w-px h-8 bg-border" />
+                    <div>
+                      <p className="text-[10px] text-text-secondary font-bold uppercase mb-1">Storage Used</p>
+                      <p className="text-xl font-black text-text-primary">{node.isHealthy ? formatStorage(node.storageUsed) : '--'}</p>
+                    </div>
+                    <div className="hidden sm:block w-px h-8 bg-border" />
                     <div>
                       <p className="text-[10px] text-text-secondary font-bold uppercase mb-1">Local Latency</p>
                       <p className="text-xl font-black text-text-primary">{node.isHealthy ? `${node.latency}ms` : 'Inf'}</p>
                     </div>
                  </div>
 
-                 <div className="flex items-center justify-end space-x-4">
+                 <div className="flex items-center xl:justify-end w-full xl:w-auto">
                     <button 
                       onClick={() => handleToggleNode(node.id, node.isHealthy)}
                       className={twMerge(
-                        "flex items-center space-x-2 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-xl",
+                        "flex items-center justify-center space-x-2 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-xl w-full xl:w-auto",
                         node.isHealthy 
                           ? "bg-status-danger/10 text-status-danger border border-status-danger/20 hover:bg-status-danger/20" 
                           : "bg-status-success/10 text-status-success border border-status-success/20 hover:bg-status-success/20"
@@ -194,7 +215,13 @@ const Nodes = () => {
               </div>
             </div>
           </motion.div>
-        ))}
+        )) : (
+          <div className="text-center py-20 bg-surface-secondary/40 border border-border/50 rounded-3xl text-text-secondary opacity-50">
+            <Server className="w-12 h-12 mx-auto mb-4 animate-pulse text-primary-accent/20" />
+            <p className="font-bold text-lg">No matching nodes found</p>
+            <p className="text-sm">Try modifying your search query.</p>
+          </div>
+        )}
       </div>
     </div>
   );

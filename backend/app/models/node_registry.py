@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, String
+from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, String, BigInteger
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
@@ -14,6 +14,7 @@ class NodeRegistry(Base, TimestampMixin):
     region = Column(String(128), nullable=False)
     node_metadata = Column("metadata", JSON, nullable=True)
     healthy = Column(Boolean, default=True, nullable=False)
+    storage_used = Column(BigInteger, default=0, nullable=False)
     last_check_in = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     shards = relationship("ShardRegistry", back_populates="node")

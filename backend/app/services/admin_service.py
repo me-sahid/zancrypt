@@ -25,28 +25,19 @@ class AdminService:
         return await self.node_repo.list_nodes() if self.node_repo else []
 
     async def system_metrics(self) -> dict:
-        nodes = await self.node_repo.list_nodes() if self.node_repo else []
-        active_nodes = len([n for n in nodes if n.healthy])
-        
-        # This is a bit inefficient for a large DB, but for this simulation it's fine
-        # In production we'd use a dedicated metrics table or Redis
-        all_files = []
         if self.session:
-            from sqlalchemy import select
-            from app.models.file import File
-            result = await self.session.execute(select(File))
-            all_files = result.scalars().all()
+            from app.services.metrics_service import MetricsService
+            metrics_service = MetricsService(self.session)
+            return await metrics_service.get_dashboard_metrics()
         
-        total_storage_bytes = sum(f.file_size for f in all_files)
-        total_storage_gb = total_storage_bytes / (1024 * 1024 * 1024)
-
         return {
-            "active_nodes": active_nodes,
-            "total_files": len(all_files),
-            "pending_tasks": 0, # Could be real with Celery/Redis
-            "average_upload_latency_ms": 42.5, # semi-static for realistic feel
-            "total_storage_gb": round(total_storage_gb, 4),
-            "network_health_score": (active_nodes / len(nodes) * 100) if nodes else 0
+            "active_nodes": 0,
+            "total_files": 0,
+            "pending_tasks": 0,
+            "average_upload_latency_ms": 0.0,
+            "total_storage_gb": 0.0,
+            "total_storage_bytes": 0,
+            "network_health_score": 0.0
         }
 
     async def toggle_node(self, node_id: int, status: bool) -> dict:

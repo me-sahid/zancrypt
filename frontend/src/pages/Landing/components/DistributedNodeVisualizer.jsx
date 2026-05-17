@@ -1,11 +1,15 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import { Server, Activity, Database, ShieldCheck } from 'lucide-react';
+
+gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
 
 const DistributedNodeVisualizer = () => {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   const nodes = [
     { id: 'aws-us', x: 20, y: 35, label: 'AWS US-East', status: 'Healthy', shards: '2.4M', latency: '12ms' },
@@ -16,6 +20,24 @@ const DistributedNodeVisualizer = () => {
   ];
 
   useEffect(() => {
+    if (!mapRef.current) return;
+    
+    const updateSize = () => {
+      if (!mapRef.current) return;
+      setDimensions({
+        width: mapRef.current.clientWidth,
+        height: mapRef.current.clientHeight
+      });
+    };
+
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
+
+  useEffect(() => {
+    if (dimensions.width === 0) return;
+
     let ctx = gsap.context(() => {
       // Reveal nodes
       gsap.fromTo('.map-node',
@@ -59,7 +81,7 @@ const DistributedNodeVisualizer = () => {
     }, containerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [dimensions.width]);
 
   return (
     <section ref={containerRef} className="py-32 px-8 bg-primary-bg overflow-hidden border-b border-white/5 relative">
@@ -98,15 +120,22 @@ const DistributedNodeVisualizer = () => {
               </filter>
             </defs>
 
-            {/* Draw lines between nodes */}
-            {nodes.map((node, i) => (
+            {/* Draw lines between nodes in absolute coordinates */}
+            {dimensions.width > 0 && nodes.map((node, i) => (
               nodes.map((target, j) => {
                 if (i < j) {
+                  const x1 = (node.x * dimensions.width) / 100;
+                  const y1 = (node.y * dimensions.height) / 100;
+                  const x2 = (target.x * dimensions.width) / 100;
+                  const y2 = (target.y * dimensions.height) / 100;
+                  const cx = dimensions.width / 2;
+                  const cy = dimensions.height / 2;
+
                   return (
                     <path
                       key={`${i}-${j}`}
                       className="map-connection"
-                      d={`M ${node.x}% ${node.y}% Q ${50}% ${50}% ${target.x}% ${target.y}%`}
+                      d={`M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`}
                       fill="none"
                       stroke="url(#lineGrad)"
                       strokeWidth="1.5"

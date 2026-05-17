@@ -10,12 +10,16 @@ const AnimatedCounter = ({ value, suffix = '' }) => {
     
     const controls = animate(displayValue, value, {
       duration: 1.5,
-      onUpdate: (latest) => setDisplayValue(Math.floor(latest)),
+      onUpdate: (latest) => setDisplayValue(latest),
     });
     return () => controls.stop();
   }, [value]);
 
-  return <>{displayValue.toLocaleString()}{suffix}</>;
+  const formattedValue = typeof value === 'number' && value % 1 !== 0 
+    ? displayValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : Math.floor(displayValue).toLocaleString();
+
+  return <>{formattedValue}{suffix}</>;
 };
 
 const MetricCard = ({ label, value, suffix, icon: Icon, trend, isPositive, className }) => {

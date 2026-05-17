@@ -55,8 +55,13 @@ async def on_startup() -> None:
     from app.models.base import Base
     from app.db import engine
     from app.core.nodes import initialize_nodes
+    from sqlalchemy import text
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS storage_used BIGINT DEFAULT 0;"))
+        await conn.execute(text("ALTER TABLE node_registry ADD COLUMN IF NOT EXISTS storage_used BIGINT DEFAULT 0;"))
+        await conn.execute(text("ALTER TABLE shard_registry ADD COLUMN IF NOT EXISTS shard_size INT DEFAULT 0;"))
+        await conn.execute(text("ALTER TABLE files ALTER COLUMN file_size TYPE BIGINT;"))
     await initialize_nodes()
     instrument_app(app)
 

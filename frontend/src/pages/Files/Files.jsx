@@ -25,7 +25,7 @@ import Input from '../../components/ui/Input';
 import Badge from '../../components/ui/Badge';
 
 import { useDashboardStore } from '../../store/useDashboardStore';
-import { fileService } from '../../services/vaultServices';
+import { fileService, adminService } from '../../services/vaultServices';
 import { toast } from 'react-hot-toast';
 
 const getMimeType = (filename) => {
@@ -56,9 +56,8 @@ const getMimeType = (filename) => {
 };
 
 const Files = () => {
-  const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('');
-  const { files, setFiles } = useDashboardStore();
+  const { files, setFiles, searchQuery, setSearchQuery, setNodes, updateMetrics } = useDashboardStore();
   const [isLoading, setIsLoading] = useState(false);
   const [previewData, setPreviewData] = useState(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);

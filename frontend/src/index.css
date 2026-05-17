@@ -62,6 +62,19 @@
     0%, 100% { opacity: 1; }
     50% { opacity: .5; }
   }
+
+  .safari-hardware-accel {
+    -webkit-transform: translate3d(0, 0, 0) !important;
+    transform: translate3d(0, 0, 0) !important;
+    -webkit-backface-visibility: hidden !important;
+    backface-visibility: hidden !important;
+    perspective: 1000px !important;
+  }
+
+  .safari-backdrop-blur {
+    -webkit-backdrop-filter: blur(24px) !important;
+    backdrop-filter: blur(24px) !important;
+  }
 }
 
 /* Recharts Customization */
@@ -72,4 +85,24 @@
 
 .recharts-curve.recharts-area-curve {
   filter: drop-shadow(0px 0px 8px rgba(59, 130, 246, 0.3));
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.01) 25%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.01) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-anim 1.5s infinite linear;
+}
+
+@keyframes shimmer-anim {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }

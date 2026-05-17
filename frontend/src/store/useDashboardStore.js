@@ -34,9 +34,11 @@ export const useDashboardStore = create((set) => ({
   
   files: [],
   searchQuery: "",
+  isSidebarOpenMobile: false,
 
   // Actions
   setSearchQuery: (query) => set({ searchQuery: query }),
+  setSidebarOpenMobile: (open) => set({ isSidebarOpenMobile: open }),
   setFiles: (files) => set({ files }),
   setNodes: (nodes) => set({ nodes }),
   updateMetrics: (newMetrics) => set((state) => ({ 
@@ -67,6 +69,7 @@ export const useDashboardStore = create((set) => ({
     nodes: [],
     events: [],
     files: [],
-    searchQuery: ""
+    searchQuery: "",
+    isSidebarOpenMobile: false
   })
 }));

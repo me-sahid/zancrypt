@@ -1,15 +1,33 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopNav from './TopNav';
 import { motion, AnimatePresence } from 'framer-motion';
+import ContentSkeleton from './Skeletons';
+import { useDashboardStore } from '../../store/useDashboardStore';
 
 const DashboardLayout = ({ children }) => {
   const location = useLocation();
+  const { isSidebarOpenMobile, setSidebarOpenMobile } = useDashboardStore();
 
   return (
     <div className="flex h-screen bg-surface-primary text-text-primary overflow-hidden font-sans antialiased selection:bg-primary-accent/30 selection:text-primary-accent">
       <Sidebar />
+      
+      {/* Mobile Sidebar Backdrop Overlay */}
+      <AnimatePresence>
+        {isSidebarOpenMobile && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setSidebarOpenMobile(false)}
+            className="fixed inset-0 bg-[#000000]/60 backdrop-blur-sm z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       <div className="flex-1 flex flex-col min-w-0 relative">
         <TopNav />
         <main className="flex-1 overflow-y-auto custom-scrollbar relative">
@@ -22,7 +40,9 @@ const DashboardLayout = ({ children }) => {
               transition={{ duration: 0.3, ease: 'circOut' }}
               className="p-6 lg:p-10 max-w-[1600px] mx-auto w-full"
             >
-              {children}
+              <Suspense fallback={<ContentSkeleton />}>
+                {children}
+              </Suspense>
             </motion.div>
           </AnimatePresence>
           
