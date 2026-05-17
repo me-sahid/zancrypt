@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const TopNav = () => {
   const { user, logout } = useAuthStore();
+  const { searchQuery, setSearchQuery } = useDashboardStore();
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -55,6 +56,8 @@ const TopNav = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary group-focus-within:text-primary-accent transition-colors" />
           <input
             type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search resources, files, or nodes..."
             className="w-full h-10 pl-10 pr-4 bg-surface-elevated/50 border border-border rounded-lg text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-primary-accent focus:border-primary-accent transition-all"
           />

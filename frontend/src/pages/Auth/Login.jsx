@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { Lock, Mail, ArrowRight, ShieldCheck, Globe, AlertCircle } from 'lucide-react';
@@ -17,7 +17,13 @@ const Login = () => {
   const [accessKey, setAccessKey] = useState('');
   const [showFallback, setShowFallback] = useState(false);
   const navigate = useNavigate();
-  const setAuth = useAuthStore(state => state.setAuth);
+  const { isAuthenticated, setAuth } = useAuthStore();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

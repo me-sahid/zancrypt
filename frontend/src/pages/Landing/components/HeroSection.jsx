@@ -3,11 +3,13 @@ import { motion } from 'framer-motion';
 import { gsap } from 'gsap';
 import { ArrowRight, Cpu, Activity, Server, Lock, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuthStore } from '../../../store/useStore';
 
 const HeroSection = () => {
   const containerRef = useRef(null);
   const graphRef = useRef(null);
   const textRef = useRef(null);
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     let ctx = gsap.context(() => {
@@ -91,13 +93,23 @@ const HeroSection = () => {
           </div>
           
           <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-            <Link to="/register" className="hero-btn group relative inline-flex items-center justify-center px-8 py-3.5 bg-primary-accent text-white font-medium rounded-lg overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(var(--primary-accent-rgb),0.4)]">
-              <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-              <span className="relative flex items-center">
-                Launch Vault
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </span>
-            </Link>
+            {isAuthenticated ? (
+              <Link to="/dashboard" className="hero-btn group relative inline-flex items-center justify-center px-8 py-3.5 bg-primary-accent text-white font-medium rounded-lg overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(59,130,246,0.4)]">
+                <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                <span className="relative flex items-center">
+                  Open Your Vault
+                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </Link>
+            ) : (
+              <Link to="/register" className="hero-btn group relative inline-flex items-center justify-center px-8 py-3.5 bg-primary-accent text-white font-medium rounded-lg overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(59,130,246,0.4)]">
+                <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                <span className="relative flex items-center">
+                  Launch Vault
+                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </Link>
+            )}
             
             <a href="#architecture" className="hero-btn group relative inline-flex items-center justify-center px-8 py-3.5 bg-surface-elevated/50 border border-white/10 text-white font-medium rounded-lg overflow-hidden transition-all hover:bg-surface-elevated hover:border-white/20 backdrop-blur-md">
               <Cpu className="w-5 h-5 mr-2 text-text-secondary group-hover:text-white transition-colors" />

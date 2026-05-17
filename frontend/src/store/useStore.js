@@ -14,7 +14,6 @@ export const useAuthStore = create(
       }),
       logout: () => {
         set({ user: null, token: null, isAuthenticated: false });
-        localStorage.removeItem('zancrypt-auth');
       },
     }),
     {

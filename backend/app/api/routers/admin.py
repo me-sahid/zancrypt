@@ -22,8 +22,11 @@ async def get_node_health(current_user=Depends(get_current_user), session: Async
     return await AdminService(session).node_health()
 
 @router.get("/system-metrics", response_model=SystemMetricsResponse)
-async def get_system_metrics(current_user=Depends(get_current_user)) -> SystemMetricsResponse:
-    return await AdminService().system_metrics()
+async def get_system_metrics(
+    current_user=Depends(get_current_user), 
+    session: AsyncSession = Depends(get_async_session)
+) -> SystemMetricsResponse:
+    return await AdminService(session).system_metrics()
 
 @router.post("/nodes/{node_id}/toggle")
 async def toggle_node(
