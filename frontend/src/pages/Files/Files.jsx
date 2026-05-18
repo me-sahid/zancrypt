@@ -135,76 +135,11 @@ const Files = () => {
   const [playbackSpeed, setPlaybackSpeed] = useState('1');
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const [thumbnails, setThumbnails] = useState({});
-  const [decryptingIds, setDecryptingIds] = useState({});
 
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState({});
 
-  React.useEffect(() => {
-    // Clean up old object URLs on unmount
-    return () => {
-      Object.values(thumbnails).forEach(url => {
-        if (url) window.URL.revokeObjectURL(url);
-      });
-    };
-  }, [thumbnails]);
 
-  React.useEffect(() => {
-    const decryptThumbnails = async () => {
-      for (const file of files) {
-        const category = getFileCategory(file.encrypted_filename);
-        
-        if ((category === 'image' || category === 'video') && !file.thumbnail && !thumbnails[file.id] && !decryptingIds[file.id]) {
-          setDecryptingIds(prev => ({ ...prev, [file.id]: true }));
-          
-          try {
-            const res = await fileService.downloadFile(file.id);
-            if (res.data && Array.isArray(res.data)) {
-              const sortedShards = res.data;
-              const fullHex = sortedShards.map(s => s.data).join('');
-              const bytes = new Uint8Array(fullHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-              const mime = getMimeType(file.encrypted_filename);
-              const blob = new Blob([bytes], { type: mime });
-              const objectUrl = window.URL.createObjectURL(blob);
-              
-              if (category === 'video') {
-                const video = document.createElement('video');
-                video.src = objectUrl;
-                video.muted = true;
-                video.playsInline = true;
-                video.onloadeddata = () => { video.currentTime = 1; };
-                video.onseeked = () => {
-                  const canvas = document.createElement('canvas');
-                  const MAX_WIDTH = 160;
-                  const scale = Math.min(MAX_WIDTH / video.videoWidth, 1);
-                  canvas.width = video.videoWidth * scale;
-                  canvas.height = video.videoHeight * scale;
-                  const ctx = canvas.getContext('2d');
-                  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                  setThumbnails(prev => ({ ...prev, [file.id]: canvas.toDataURL('image/jpeg', 0.6) }));
-                  window.URL.revokeObjectURL(objectUrl);
-                };
-                video.onerror = () => {
-                  setThumbnails(prev => ({ ...prev, [file.id]: objectUrl }));
-                };
-              } else {
-                setThumbnails(prev => ({ ...prev, [file.id]: objectUrl }));
-              }
-            }
-          } catch (err) {
-            console.error(`Failed background decrypt for file ${file.id}:`, err);
-          } finally {
-            setDecryptingIds(prev => ({ ...prev, [file.id]: false }));
-          }
-        }
-      }
-    };
-    
-    if (files.length > 0) {
-      decryptThumbnails();
-    }
-  }, [files]);
 
   React.useEffect(() => {
     const fetchFiles = async () => {
@@ -610,16 +545,12 @@ const Files = () => {
                     <td className="py-4.5 px-6">
                       <div className="flex items-center space-x-3.5">
                         <div className="w-12 h-12 rounded-xl border border-white/10 overflow-hidden bg-slate-950 flex items-center justify-center shrink-0 relative group-hover:border-blue-500/40 transition-colors shadow-lg">
-                          {(thumbnails[file.id] || file.thumbnail) ? (
+                          {file.thumbnail ? (
                             <img 
-                              src={thumbnails[file.id] || file.thumbnail} 
+                              src={file.thumbnail} 
                               alt="thumbnail" 
                               className="w-full h-full object-cover select-none"
                             />
-                          ) : decryptingIds[file.id] ? (
-                            <div className="flex items-center justify-center w-full h-full">
-                              <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
-                            </div>
                           ) : (
                             <div className="p-2.5 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center">
                               {getFileCategory(file.encrypted_filename) === 'video' ? <FileVideo className="w-5 h-5" /> :

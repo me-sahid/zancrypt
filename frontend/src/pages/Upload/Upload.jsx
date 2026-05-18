@@ -97,14 +97,19 @@ const Upload = () => {
           
           setActiveStep(3);
           
+          let thumbnail = fileObj.thumbnailDataUrl;
+          if (!thumbnail) {
+            thumbnail = await extractThumbnail(fileObj.rawFile);
+          }
+
           const formData = new FormData();
           formData.append('encrypted_filename', fileObj.name);
           formData.append('encrypted_metadata', JSON.stringify({ type: 'document' }));
           formData.append('file_size', String(fileObj.rawFile.size));
           formData.append('integrity_hash', 'sha256-placeholder');
           formData.append('manifest', JSON.stringify({ shards: [] }));
-          if (fileObj.thumbnailDataUrl) {
-            formData.append('thumbnail', fileObj.thumbnailDataUrl);
+          if (thumbnail) {
+            formData.append('thumbnail', thumbnail);
           }
           formData.append('shards', fileObj.rawFile); 
           
