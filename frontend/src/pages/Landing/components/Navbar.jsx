@@ -127,11 +127,11 @@ const Navbar = () => {
               <AnimatePresence>
                 {isDropdownOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    transition={{ duration: 0.12, ease: 'easeOut' }}
-                    className="absolute right-0 top-full mt-2 w-64 bg-[#18181c]/95 border border-white/5 rounded-xl shadow-2xl p-2 z-[200] backdrop-blur-xl safari-hardware-accel safari-backdrop-blur"
+                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                    transition={{ duration: 0.1, ease: 'easeOut' }}
+                    className="absolute right-0 top-full mt-2 w-64 bg-[#18181c] border border-white/5 rounded-xl shadow-2xl p-2 z-[200] safari-hardware-accel"
                   >
                     <div className="px-3 py-2 text-[10px] font-black text-[#5F6368] uppercase tracking-[0.2em] mb-1">
                       Vaults & Storage

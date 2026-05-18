@@ -13,26 +13,26 @@ const HeroSection = () => {
 
   useEffect(() => {
     let ctx = gsap.context(() => {
-      // Staggered text reveal
+      // Snappy and ultra-fast staggered text reveal
       gsap.fromTo('.hero-text-line', 
-        { y: 50, opacity: 0 }, 
-        { y: 0, opacity: 1, duration: 1, stagger: 0.15, ease: 'power4.out', delay: 0.2 }
+        { y: 30, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 0.4, stagger: 0.05, ease: 'power3.out', delay: 0 }
       );
       
       gsap.fromTo('.hero-badge', 
-        { scale: 0.8, opacity: 0 }, 
-        { scale: 1, opacity: 1, duration: 0.8, ease: 'back.out(1.5)', delay: 0.1 }
+        { scale: 0.9, opacity: 0 }, 
+        { scale: 1, opacity: 1, duration: 0.3, ease: 'power2.out', delay: 0 }
       );
 
       gsap.fromTo('.hero-btn',
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: 'power3.out', delay: 0.8 }
+        { y: 15, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.4, stagger: 0.05, ease: 'power2.out', delay: 0.1 }
       );
 
       // Node animation on the right
       gsap.fromTo('.hero-node',
-        { scale: 0, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 1, stagger: 0.1, ease: 'back.out(1.2)', delay: 0.5 }
+        { scale: 0.8, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.4, stagger: 0.05, ease: 'power2.out', delay: 0.1 }
       );
 
       gsap.to('.hero-node-pulse', {
@@ -81,7 +81,7 @@ const HeroSection = () => {
             Zero-Knowledge Architecture
           </div>
           
-          <h1 className="text-5xl lg:text-7xl font-bold leading-[1.05] mb-6 text-white tracking-tighter">
+          <h1 className="text-5xl lg:text-7xl font-bold leading-[1.15] mb-6 text-white tracking-tighter">
             <div className="overflow-hidden"><div className="hero-text-line">Enterprise Distributed</div></div>
             <div className="overflow-hidden"><div className="hero-text-line text-transparent bg-clip-text bg-gradient-to-r from-primary-accent via-blue-400 to-security">Zancrypt Infrastructure</div></div>
           </h1>

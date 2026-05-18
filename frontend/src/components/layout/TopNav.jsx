@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import NotificationBell from './NotificationBell';
 
 const TopNav = () => {
   const { user, logout } = useAuthStore();
@@ -81,10 +82,7 @@ const TopNav = () => {
           <div className="ml-2 w-1.5 h-1.5 rounded-full bg-status-success animate-pulse" />
         </div>
 
-        <button className="relative p-2 text-text-secondary hover:text-text-primary transition-colors hover:bg-surface-elevated rounded-lg">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-status-danger rounded-full border-2 border-surface-secondary" />
-        </button>
+        <NotificationBell />
 
         <div className="h-8 w-[1px] bg-border" />
 

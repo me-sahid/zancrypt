@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopNav from './TopNav';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -34,21 +34,21 @@ const DashboardLayout = ({ children }) => {
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
-              initial={{ opacity: 0, y: 10, filter: 'blur(10px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, y: -10, filter: 'blur(10px)' }}
-              transition={{ duration: 0.3, ease: 'circOut' }}
-              className="p-6 lg:p-10 max-w-[1600px] mx-auto w-full"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: 'circOut' }}
+              className="p-6 lg:p-10 max-w-[1600px] mx-auto w-full safari-hardware-accel"
             >
               <Suspense fallback={<ContentSkeleton />}>
-                {children}
+                {children || <Outlet />}
               </Suspense>
             </motion.div>
           </AnimatePresence>
           
           {/* Global Background Glows */}
-          <div className="fixed top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary-accent/5 rounded-full blur-[120px] pointer-events-none" />
-          <div className="fixed bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-status-success/5 rounded-full blur-[120px] pointer-events-none" />
+          <div className="fixed top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary-accent/5 rounded-full blur-[120px] pointer-events-none safari-hardware-accel" />
+          <div className="fixed bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-status-success/5 rounded-full blur-[120px] pointer-events-none safari-hardware-accel" />
         </main>
       </div>
     </div>
