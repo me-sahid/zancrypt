@@ -63,20 +63,28 @@ const DistributedNodeVisualizer = () => {
         }
       );
 
-      // Data packets moving along lines
-      gsap.to('.data-packet', {
-        motionPath: {
-          path: "path.map-connection",
-          align: "path.map-connection",
-          alignOrigin: [0.5, 0.5],
-          autoRotate: true
-        },
-        duration: 3,
-        repeat: -1,
-        ease: 'linear',
-        stagger: 0.5,
-        opacity: 1
-      });
+      // Safe data packet animation
+      const paths = document.querySelectorAll('path.map-connection');
+      const packets = document.querySelectorAll('.data-packet');
+      
+      if (paths.length > 0 && packets.length > 0) {
+        packets.forEach((packet, index) => {
+          const targetPath = paths[index % paths.length];
+          gsap.to(packet, {
+            motionPath: {
+              path: targetPath,
+              align: targetPath,
+              alignOrigin: [0.5, 0.5],
+              autoRotate: true
+            },
+            duration: 3 + Math.random() * 2,
+            repeat: -1,
+            ease: 'linear',
+            delay: index * 0.6,
+            opacity: 1
+          });
+        });
+      }
       
     }, containerRef);
 

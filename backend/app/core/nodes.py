@@ -5,6 +5,7 @@ from app.models.node_registry import NodeRegistry
 from app.db import async_session_maker
 
 DEFAULT_NODES = [
+    {"node_name": "Backblaze-Node1", "region": "us-west-004", "provider": "S3"},
     {"node_name": "Tokyo-Alpha", "region": "ap-northeast-1", "provider": "AWS"},
     {"node_name": "Frankfurt-01", "region": "eu-central-1", "provider": "GCP"},
     {"node_name": "Mumbai-Primary", "region": "ap-south-1", "provider": "DigitalOcean"},

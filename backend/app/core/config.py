@@ -43,6 +43,12 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE: int = Field(104857600, env="MAX_UPLOAD_SIZE")  # 100MB
     TMP_STAGING_DIR: str = Field("/dev/shm/vault_staging", env="TMP_STAGING_DIR")
 
+    # Cloud Storage (B2 / S3)
+    B2_KEY_ID: str = Field(None, env="B2_KEY_ID")
+    B2_APP_KEY: str = Field(None, env="B2_APP_KEY")
+    B2_BUCKET: str = Field(None, env="B2_BUCKET")
+    B2_ENDPOINT: str = Field(None, env="B2_ENDPOINT")
+
     # Observability
     ENABLE_OTEL: bool = Field(True, env="ENABLE_OTEL")
     PROMETHEUS_METRICS_ENABLED: bool = Field(True, env="PROMETHEUS_METRICS_ENABLED")
