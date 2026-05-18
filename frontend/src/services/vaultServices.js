@@ -8,9 +8,12 @@ export const authService = {
 
 export const fileService = {
   listFiles: () => api.get('/files/list'),
-  uploadFile: (formData) => api.post('/files/upload', formData),
+  uploadFile: (formData, config = {}) => api.post('/files/upload', formData, config),
   downloadFile: (id) => api.get(`/files/download/${id}`), // Changed to default as we reassemble hex
   deleteFile: (id) => api.delete(`/files/${id}`),
+  listBinFiles: () => api.get('/files/bin'),
+  restoreFile: (id) => api.post(`/files/${id}/restore`),
+  purgeFile: (id) => api.delete(`/files/${id}/purge`),
   updateFile: (id, newName) => {
     const formData = new FormData();
     formData.append('new_filename', newName);

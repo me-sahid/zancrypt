@@ -19,6 +19,60 @@ import Badge from '../../components/ui/Badge';
 import { fileService, adminService } from '../../services/vaultServices';
 import { useDashboardStore } from '../../store/useDashboardStore';
 
+const extractThumbnail = (file) => {
+  return new Promise((resolve) => {
+    if (!file.type.startsWith('video/') && !file.type.startsWith('image/')) {
+      resolve(null);
+      return;
+    }
+    
+    if (file.type.startsWith('image/')) {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 160;
+        const scale = Math.min(MAX_WIDTH / img.width, 1);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(null);
+      };
+      img.src = url;
+    } else if (file.type.startsWith('video/')) {
+      const video = document.createElement('video');
+      const url = URL.createObjectURL(file);
+      video.muted = true;
+      video.playsInline = true;
+      video.onloadeddata = () => {
+        video.currentTime = 1; // Seek to 1 second
+      };
+      video.onseeked = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 160;
+        const scale = Math.min(MAX_WIDTH / video.videoWidth, 1);
+        canvas.width = video.videoWidth * scale;
+        canvas.height = video.videoHeight * scale;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
+      };
+      video.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(null);
+      };
+      video.src = url;
+    }
+  });
+};
+
 const Upload = () => {
   const { setFiles: setFilesStore, setNodes, updateMetrics } = useDashboardStore();
   const [files, setFiles] = useState([]);
@@ -32,6 +86,9 @@ const Upload = () => {
     try {
       for (const fileObj of files) {
         try {
+          setFiles(prevFiles => prevFiles.map(f => 
+            f.id === fileObj.id ? { ...f, status: 'uploading', progress: 0 } : f
+          ));
           setActiveStep(1);
           await new Promise(r => setTimeout(r, 800));
           
@@ -40,15 +97,32 @@ const Upload = () => {
           
           setActiveStep(3);
           
+          let thumbnail = fileObj.thumbnailDataUrl;
+          if (!thumbnail) {
+            thumbnail = await extractThumbnail(fileObj.rawFile);
+          }
+
           const formData = new FormData();
           formData.append('encrypted_filename', fileObj.name);
           formData.append('encrypted_metadata', JSON.stringify({ type: 'document' }));
           formData.append('file_size', String(fileObj.rawFile.size));
           formData.append('integrity_hash', 'sha256-placeholder');
           formData.append('manifest', JSON.stringify({ shards: [] }));
+          if (thumbnail) {
+            formData.append('thumbnail', thumbnail);
+          }
           formData.append('shards', fileObj.rawFile); 
           
-          await fileService.uploadFile(formData);
+          await fileService.uploadFile(formData, {
+            onUploadProgress: (progressEvent) => {
+              if (progressEvent.total) {
+                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                setFiles(prevFiles => prevFiles.map(f => 
+                  f.id === fileObj.id ? { ...f, progress: percentCompleted } : f
+                ));
+              }
+            }
+          });
           
           try {
             const [filesRes, nodesRes, metricsRes] = await Promise.all([
@@ -85,6 +159,9 @@ const Upload = () => {
             console.error('Failed to sync telemetry post-upload:', updateErr);
           }
           
+          setFiles(prevFiles => prevFiles.map(f => 
+            f.id === fileObj.id ? { ...f, status: 'completed', progress: 100 } : f
+          ));
           setActiveStep(4);
           toast.success(`${fileObj.name} safely stored.`);
           await new Promise(r => setTimeout(r, 500));
@@ -104,16 +181,33 @@ const Upload = () => {
     }
   };
 
-  const onDrop = (e) => {
-    e.preventDefault();
-    const newFiles = Array.from(e.dataTransfer.files).map(file => ({
+  const handleFilesAdded = (selectedFiles) => {
+    const newFiles = selectedFiles.map(file => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
       size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
       status: 'pending',
-      rawFile: file
+      progress: 0,
+      rawFile: file,
+      thumbnailDataUrl: null
     }));
+    
     setFiles(prev => [...prev, ...newFiles]);
+
+    // Asynchronously generate thumbnails after UI updates
+    newFiles.forEach(async (fileObj) => {
+      const thumbnailDataUrl = await extractThumbnail(fileObj.rawFile);
+      if (thumbnailDataUrl) {
+        setFiles(prev => prev.map(f => 
+          f.id === fileObj.id ? { ...f, thumbnailDataUrl } : f
+        ));
+      }
+    });
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    handleFilesAdded(Array.from(e.dataTransfer.files));
   };
 
   const removeFile = (id) => {
@@ -152,16 +246,7 @@ const Upload = () => {
                 type="file" 
                 multiple 
                 className="hidden" 
-                onChange={(e) => {
-                   const newFiles = Array.from(e.target.files).map(file => ({
-                    id: Math.random().toString(36).substr(2, 9),
-                    name: file.name,
-                    size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
-                    status: 'pending',
-                    rawFile: file
-                  }));
-                  setFiles(prev => [...prev, ...newFiles]);
-                }}
+                onChange={(e) => handleFilesAdded(Array.from(e.target.files))}
               />
             </CardContent>
           </Card>
@@ -184,12 +269,37 @@ const Upload = () => {
                           <p className="text-[10px] text-text-secondary uppercase">{file.size}</p>
                         </div>
                       </div>
-                      <button 
-                        onClick={() => removeFile(file.id)}
-                        className="p-1 text-text-secondary hover:text-status-danger transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                      {file.status === 'completed' ? (
+                        <div className="w-6 h-6 rounded-full bg-status-success/20 flex items-center justify-center text-status-success">
+                          <CheckCircle2 className="w-4 h-4" />
+                        </div>
+                      ) : file.status === 'uploading' ? (
+                        <div className="relative w-6 h-6 flex items-center justify-center">
+                          <svg className="w-6 h-6 transform -rotate-90">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="transparent" className="text-border" />
+                            <circle 
+                              cx="12" cy="12" r="10" 
+                              stroke="currentColor" 
+                              strokeWidth="2" 
+                              fill="transparent" 
+                              strokeDasharray={`${2 * Math.PI * 10}`}
+                              strokeDashoffset={`${2 * Math.PI * 10 * (1 - (file.progress || 0) / 100)}`}
+                              className="text-status-success transition-all duration-300" 
+                            />
+                          </svg>
+                          <span className="absolute text-[6px] tracking-tighter font-bold text-text-primary">
+                            {file.progress || 0}%
+                          </span>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => removeFile(file.id)}
+                          className="p-1 text-text-secondary hover:text-status-danger transition-colors disabled:opacity-50"
+                          disabled={isUploading}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>

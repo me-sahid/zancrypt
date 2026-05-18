@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, 
@@ -13,7 +13,9 @@ import {
   Settings,
   ChevronLeft,
   Menu,
-  Lock
+  Lock,
+  Share2,
+  Trash2
 } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 import { useDashboardStore } from '../../store/useDashboardStore';
@@ -22,6 +24,8 @@ const menuItems = [
   { icon: LayoutDashboard, label: 'Overview', path: '/dashboard' },
   { icon: Database, label: 'My Vault', path: '/vault' },
   { icon: UploadCloud, label: 'Add Files', path: '/uploads' },
+  { icon: Share2, label: 'Shared Links', path: '/shares' },
+  { icon: Trash2, label: 'Recycle Bin', path: '/bin' },
   { icon: ShieldCheck, label: 'Security', path: '/security' },
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];
@@ -47,15 +51,15 @@ const Sidebar = () => {
         width: isMobileView ? 280 : (isCollapsed ? 80 : 280),
         x: isMobileView ? (isSidebarOpenMobile ? 0 : -280) : 0
       }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      transition={{ duration: 0.2, ease: "easeInOut" }}
       className={twMerge(
-        "z-50 flex flex-col h-screen border-r border-border bg-surface-secondary/95 backdrop-blur-xl transition-shadow duration-300 safari-hardware-accel",
+        "z-50 flex flex-col h-screen border-r border-border bg-surface-secondary transition-shadow duration-300 safari-hardware-accel",
         isMobileView ? "fixed top-0 left-0 shadow-2xl" : "relative"
       )}
     >
       {/* Logo Section */}
-      <div className="flex items-center h-20 px-6 border-b border-border/50">
-        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary-accent shadow-lg shadow-primary-accent/30 group cursor-pointer">
+      <Link to="/" className="flex items-center h-20 px-6 border-b border-border/50 hover:opacity-90 transition-opacity cursor-pointer">
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary-accent shadow-lg shadow-primary-accent/30 group">
           <Lock className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
         </div>
         <AnimatePresence>
@@ -73,7 +77,7 @@ const Sidebar = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </Link>
 
       {/* Navigation */}
       <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto custom-scrollbar">
@@ -95,9 +99,10 @@ const Sidebar = () => {
               <>
                 {isActive && (
                   <motion.div
-                    layoutId="active-pill"
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.15, ease: 'easeOut' }}
                     className="absolute inset-0 bg-primary-accent/10 border border-primary-accent/20 rounded-xl"
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   />
                 )}
                 
@@ -109,9 +114,10 @@ const Sidebar = () => {
                 <AnimatePresence>
                   {(!isCollapsed || isMobileView) && (
                     <motion.span
-                      initial={{ opacity: 0, x: -10 }}
+                      initial={{ opacity: 0, x: -6 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
+                      exit={{ opacity: 0, x: -6 }}
+                      transition={{ duration: 0.15 }}
                       className="ml-4 whitespace-nowrap font-semibold z-10"
                     >
                       {item.label}
@@ -121,8 +127,10 @@ const Sidebar = () => {
 
                 {isActive && (!isCollapsed || isMobileView) && (
                    <motion.div 
-                    layoutId="active-indicator"
-                    className="absolute right-0 w-1 h-6 bg-primary-accent rounded-l-full"
+                    initial={{ opacity: 0, scaleY: 0 }}
+                    animate={{ opacity: 1, scaleY: 1 }}
+                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                    className="absolute right-0 w-1 h-6 bg-primary-accent rounded-l-full origin-center"
                   />
                 )}
 

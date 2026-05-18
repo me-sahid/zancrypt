@@ -17,14 +17,15 @@ class FileMetadataResponse(BaseModel):
     version_count: int
     upload_time: datetime
     integrity_hash: str
+    thumbnail: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
 class FileManifestResponse(BaseModel):
     file_id: int
     manifest_payload: dict
-    node_assignments: dict
-    replication_mapping: dict
+    node_assignments: List[str]
+    replication_mapping: List[dict]
     version_reference: int
 
 class UploadProgressResponse(BaseModel):

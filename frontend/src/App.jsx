@@ -24,6 +24,9 @@ const Settings = lazy(() => import('./pages/Settings/Settings'));
 const Profile = lazy(() => import('./pages/Settings/Profile'));
 const NotFound = lazy(() => import('./pages/Errors/NotFound'));
 const DownloadPage = lazy(() => import('./pages/Download/Download'));
+const SharedFile = lazy(() => import('./pages/Download/SharedFile'));
+const SharesPage = lazy(() => import('./pages/Shares/Shares'));
+const RecycleBin = lazy(() => import('./pages/RecycleBin/RecycleBin'));
 
 // Loading Placeholder
 const PageLoader = () => (
@@ -48,20 +51,25 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<Landing />} />
           <Route path="/download" element={<DownloadPage />} />
+          <Route path="/share/:token" element={<SharedFile />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Protected Dashboard Routes */}
-          <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
-          <Route path="/vault" element={<ProtectedRoute><DashboardLayout><Files /></DashboardLayout></ProtectedRoute>} />
-          <Route path="/uploads" element={<ProtectedRoute><DashboardLayout><Upload /></DashboardLayout></ProtectedRoute>} />
-          <Route path="/nodes" element={<ProtectedRoute><DashboardLayout><Nodes /></DashboardLayout></ProtectedRoute>} />
-          <Route path="/security" element={<ProtectedRoute><DashboardLayout><Security /></DashboardLayout></ProtectedRoute>} />
-          <Route path="/monitoring" element={<ProtectedRoute><DashboardLayout><Monitoring /></DashboardLayout></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute><DashboardLayout><Analytics /></DashboardLayout></ProtectedRoute>} />
-          <Route path="/audit" element={<ProtectedRoute><DashboardLayout><Audit /></DashboardLayout></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><DashboardLayout><Settings /></DashboardLayout></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><DashboardLayout><Profile /></DashboardLayout></ProtectedRoute>} />
+          {/* Protected Dashboard Routes - Single Shared Layout instance for instant page loads */}
+          <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/vault" element={<Files />} />
+            <Route path="/bin" element={<RecycleBin />} />
+            <Route path="/shares" element={<SharesPage />} />
+            <Route path="/uploads" element={<Upload />} />
+            <Route path="/nodes" element={<Nodes />} />
+            <Route path="/security" element={<Security />} />
+            <Route path="/monitoring" element={<Monitoring />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/audit" element={<Audit />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/profile" element={<Profile />} />
+          </Route>
 
           {/* 404 & Redirects */}
           <Route path="/404" element={<NotFound />} />

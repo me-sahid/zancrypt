@@ -20,22 +20,25 @@ class FileService:
         self.router = StorageRouter()
 
     async def store_encrypted_upload(
-        self, 
-        user_id: int, 
-        encrypted_filename: str,
-        encrypted_metadata: str,
-        file_size: int,
-        integrity_hash: str,
-        manifest_payload: dict, 
-        shards: List[Tuple[str, bytes]]
+        self, user_id: int, encrypted_filename: str, encrypted_metadata: str, file_size: int, integrity_hash: str, manifest_payload: dict, shards: List[Tuple[str, bytes]], thumbnail: str = None
     ) -> int:
+        
+        # Verify node availability before accepting file
+        available_nodes = await self.session.execute(
+            select(NodeRegistry).filter(NodeRegistry.healthy == True, NodeRegistry.is_active == True)
+        )
+        nodes = available_nodes.scalars().all()
+        if not nodes:
+            raise HTTPException(status_code=503, detail="No healthy storage nodes available for distribution")
+
         # 1. Create file record
         file = await self.repo.create_file_record(
             owner_id=user_id,
             encrypted_filename=encrypted_filename,
             encrypted_metadata=encrypted_metadata,
             file_size=file_size,
-            integrity_hash=integrity_hash
+            integrity_hash=integrity_hash,
+            thumbnail=thumbnail
         )
 
         # 2. Distribute shards across nodes
@@ -131,6 +134,27 @@ class FileService:
         if not file:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
         
+        await self.repo.update_file_record(file_id, user_id, is_deleted=True)
+        await self.audit_service.capture_event(user_id, "soft_delete", "files", str(file_id), {})
+        await self.session.commit()
+
+    async def restore_file(self, file_id: int, user_id: int) -> None:
+        file = await self.repo.get_owned_file(file_id, user_id)
+        if not file or file.is_deleted == False:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found in Bin")
+        
+        await self.repo.update_file_record(file_id, user_id, is_deleted=False)
+        await self.audit_service.capture_event(user_id, "restore", "files", str(file_id), {})
+        await self.session.commit()
+
+    async def list_deleted_files(self, user_id: int) -> List[File]:
+        return await self.repo.list_deleted_files_for_user(user_id)
+
+    async def purge_file(self, file_id: int, user_id: int) -> None:
+        file = await self.repo.get_owned_file(file_id, user_id)
+        if not file:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+        
         manifest = await self.manifest_repo.get_manifest_by_file(file_id)
         if manifest:
             for shard_info in manifest.replication_mapping:
@@ -174,7 +198,7 @@ class FileService:
         )
 
         await self.repo.delete_file(file_id)
-        await self.audit_service.capture_event(user_id, "delete", "files", str(file_id), {})
+        await self.audit_service.capture_event(user_id, "purge", "files", str(file_id), {})
         await self.session.commit()
 
     async def rename_file(self, file_id: int, user_id: int, new_filename: str) -> File:

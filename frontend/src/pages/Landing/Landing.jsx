@@ -1,27 +1,28 @@
-import React, { useEffect, useRef } from 'react';
-import Lenis from 'lenis';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-// Import all sections
+// Synchronous critical-path imports
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
-import TrustedInfrastructure from './components/TrustedInfrastructure';
-import SecurityArchitecture from './components/SecurityArchitecture';
-import DistributedNodeVisualizer from './components/DistributedNodeVisualizer';
-import ZeroKnowledgeFlow from './components/ZeroKnowledgeFlow';
-import FeaturesGrid from './components/FeaturesGrid';
-import EncryptionWorkflow from './components/EncryptionWorkflow';
-import InfrastructureMetrics from './components/InfrastructureMetrics';
-import RealTimeMonitoring from './components/RealTimeMonitoring';
-import EnterpriseSecurity from './components/EnterpriseSecurity';
-import PerformanceSection from './components/PerformanceSection';
-import AuthenticationShowcase from './components/AuthenticationShowcase';
-import ApiDeveloper from './components/ApiDeveloper';
-import Testimonials from './components/Testimonials';
-import FAQSection from './components/FAQSection';
-import CTASection from './components/CTASection';
-import Footer from './components/Footer';
+
+// Lazy below-the-fold imports
+const TrustedInfrastructure = lazy(() => import('./components/TrustedInfrastructure'));
+const SecurityArchitecture = lazy(() => import('./components/SecurityArchitecture'));
+const DistributedNodeVisualizer = lazy(() => import('./components/DistributedNodeVisualizer'));
+const ZeroKnowledgeFlow = lazy(() => import('./components/ZeroKnowledgeFlow'));
+const FeaturesGrid = lazy(() => import('./components/FeaturesGrid'));
+const EncryptionWorkflow = lazy(() => import('./components/EncryptionWorkflow'));
+const InfrastructureMetrics = lazy(() => import('./components/InfrastructureMetrics'));
+const RealTimeMonitoring = lazy(() => import('./components/RealTimeMonitoring'));
+const EnterpriseSecurity = lazy(() => import('./components/EnterpriseSecurity'));
+const PerformanceSection = lazy(() => import('./components/PerformanceSection'));
+const AuthenticationShowcase = lazy(() => import('./components/AuthenticationShowcase'));
+const ApiDeveloper = lazy(() => import('./components/ApiDeveloper'));
+const Testimonials = lazy(() => import('./components/Testimonials'));
+const FAQSection = lazy(() => import('./components/FAQSection'));
+const CTASection = lazy(() => import('./components/CTASection'));
+const Footer = lazy(() => import('./components/Footer'));
 
 // Register ScrollTrigger
 gsap.registerPlugin(ScrollTrigger);
@@ -30,61 +31,32 @@ const Landing = () => {
   const containerRef = useRef(null);
 
   useEffect(() => {
-    // Initialize Lenis for smooth scrolling
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      direction: 'vertical',
-      gestureDirection: 'vertical',
-      smooth: true,
-      mouseMultiplier: 1,
-      smoothTouch: false,
-      touchMultiplier: 2,
-      infinite: false,
-    });
-
-    function raf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-
-    requestAnimationFrame(raf);
-
-    // Sync Lenis with GSAP ScrollTrigger
-    lenis.on('scroll', ScrollTrigger.update);
-
-    gsap.ticker.add((time) => {
-      lenis.raf(time * 1000);
-    });
-
-    gsap.ticker.lagSmoothing(0);
-
-    return () => {
-      lenis.destroy();
-      gsap.ticker.remove(lenis.raf);
-    };
+    // Initial ScrollTrigger update
+    ScrollTrigger.refresh();
   }, []);
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#0a0a0c] text-white selection:bg-primary-accent/30 selection:text-white font-sans overflow-hidden">
+    <div ref={containerRef} className="min-h-screen bg-[#0a0a0c] text-white selection:bg-primary-accent/30 selection:text-white font-sans overflow-y-auto scroll-smooth">
       <Navbar />
       <HeroSection />
-      <TrustedInfrastructure />
-      <SecurityArchitecture />
-      <DistributedNodeVisualizer />
-      <ZeroKnowledgeFlow />
-      <FeaturesGrid />
-      <EncryptionWorkflow />
-      <InfrastructureMetrics />
-      <RealTimeMonitoring />
-      <EnterpriseSecurity />
-      <PerformanceSection />
-      <AuthenticationShowcase />
-      <ApiDeveloper />
-      <Testimonials />
-      <FAQSection />
-      <CTASection />
-      <Footer />
+      <Suspense fallback={<div className="h-40 flex items-center justify-center text-text-secondary/40 text-xs">Loading Zancrypt Infrastructure...</div>}>
+        <TrustedInfrastructure />
+        <SecurityArchitecture />
+        <DistributedNodeVisualizer />
+        <ZeroKnowledgeFlow />
+        <FeaturesGrid />
+        <EncryptionWorkflow />
+        <InfrastructureMetrics />
+        <RealTimeMonitoring />
+        <EnterpriseSecurity />
+        <PerformanceSection />
+        <AuthenticationShowcase />
+        <ApiDeveloper />
+        <Testimonials />
+        <FAQSection />
+        <CTASection />
+        <Footer />
+      </Suspense>
     </div>
   );
 };

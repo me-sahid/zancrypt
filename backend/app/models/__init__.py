@@ -8,6 +8,9 @@ from app.models.node_registry import NodeRegistry
 from app.models.audit import AuditLog, SecurityEvent
 from app.models.session import Session
 from app.models.credential import WebAuthnCredential
+from app.models.share import Share
+from app.models.pending_deletion import PendingDeletion
+from app.models.notification import Notification
 
 __all__ = [
     "Base",
@@ -22,4 +25,7 @@ __all__ = [
     "SecurityEvent",
     "Session",
     "WebAuthnCredential",
+    "Share",
+    "PendingDeletion",
+    "Notification",
 ]

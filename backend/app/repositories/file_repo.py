@@ -15,7 +15,8 @@ class FileRepository:
         encrypted_filename: str, 
         encrypted_metadata: str, 
         file_size: int,
-        integrity_hash: str
+        integrity_hash: str,
+        thumbnail: str = None
     ) -> File:
         file = File(
             owner_id=owner_id,
@@ -23,6 +24,7 @@ class FileRepository:
             encrypted_metadata=encrypted_metadata,
             file_size=file_size,
             integrity_hash=integrity_hash,
+            thumbnail=thumbnail,
         )
         self.session.add(file)
         await self.session.flush()
@@ -33,7 +35,11 @@ class FileRepository:
         return result.scalar_one_or_none()
 
     async def list_files_for_user(self, owner_id: int) -> List[File]:
-        result = await self.session.execute(select(File).where(File.owner_id == owner_id))
+        result = await self.session.execute(select(File).where(File.owner_id == owner_id, File.is_deleted == False))
+        return list(result.scalars().all())
+
+    async def list_deleted_files_for_user(self, owner_id: int) -> List[File]:
+        result = await self.session.execute(select(File).where(File.owner_id == owner_id, File.is_deleted == True))
         return list(result.scalars().all())
 
     async def delete_file(self, file_id: int) -> None:

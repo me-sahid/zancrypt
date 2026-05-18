@@ -19,6 +19,7 @@ async def upload_file(
     file_size: int = Form(...),
     integrity_hash: str = Form(...),
     manifest: str = Form(...),  # JSON string
+    thumbnail: str = Form(None),
     shards: List[UploadFile] = File(...),
     current_user=Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
@@ -40,7 +41,8 @@ async def upload_file(
         file_size=file_size,
         integrity_hash=integrity_hash,
         manifest_payload=manifest_payload,
-        shards=shard_data
+        shards=shard_data,
+        thumbnail=thumbnail
     )
     return {"file_id": str(file_id)}
 
@@ -61,6 +63,19 @@ async def download_file(
 @router.delete("/{file_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_file(file_id: int, current_user=Depends(get_current_user), session: AsyncSession = Depends(get_async_session)) -> None:
     await FileService(session).delete_file(file_id, current_user.id)
+
+@router.get("/bin", response_model=List[FileMetadataResponse])
+async def list_bin_files(current_user=Depends(get_current_user), session: AsyncSession = Depends(get_async_session)) -> List[FileMetadataResponse]:
+    return await FileService(session).list_deleted_files(current_user.id)
+
+@router.post("/{file_id}/restore", status_code=status.HTTP_200_OK)
+async def restore_file(file_id: int, current_user=Depends(get_current_user), session: AsyncSession = Depends(get_async_session)) -> dict[str, str]:
+    await FileService(session).restore_file(file_id, current_user.id)
+    return {"status": "restored"}
+
+@router.delete("/{file_id}/purge", status_code=status.HTTP_204_NO_CONTENT)
+async def purge_file(file_id: int, current_user=Depends(get_current_user), session: AsyncSession = Depends(get_async_session)) -> None:
+    await FileService(session).purge_file(file_id, current_user.id)
 
 @router.get("/list", response_model=List[FileMetadataResponse])
 async def list_files(current_user=Depends(get_current_user), session: AsyncSession = Depends(get_async_session)) -> List[FileMetadataResponse]:

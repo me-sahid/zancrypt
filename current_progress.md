@@ -6,6 +6,14 @@ This document tracks all completed features, active developments, and pending sy
 
 ## ✅ Completed Milestones
 
+### 🧪 Zero-Knowledge Passkey & Fallback Test Harness Stabilization
+- **100% Passing Test Harness**: Fully resolved long-standing test suite regressions due to legacy `/auth/register` and `/auth/login` pathways by rewiring unit testing to standard WebAuthn challenge setups and secure `/auth/login/fallback` verification.
+- **Unified Session Event Loop**: Standardized `pytest-asyncio` loop scopes inside `conftest.py` and `pytest.ini` to enforce a single session-wide event loop, completely eliminating all `attached to a different loop` errors.
+- **NullPool Engine Isolation**: Engineered dynamic database engine swapping utilizing `NullPool` inside the conftest execution pipeline. This guarantees concurrent safety, loop isolation, and automatic connection teardown for all mock endpoints, repositories, and background node tasks (resolving `InterfaceError: another operation is in progress`).
+- **Pydantic Schema Realignment**: Resolved schema validation mismatches on the `/files/{file_id}/manifest` endpoint by updating `FileManifestResponse` fields (`node_assignments` and `replication_mapping`) to handle dynamic list formats instead of static dict definitions.
+- **SQL Cascade Relationship Integrity**: Fixed foreign-key constraint violations on file deletion by mapping `cascade="all, delete-orphan"` relationships across `File` to `Manifest`, `FileVersion`, and `ShardRegistry` models in SQLAlchemy.
+- **Docker Context Rebuild Speedups**: Integrated highly optimized `.dockerignore` files for both `/backend` and `/frontend` modules, preventing massive `venv` and `node_modules` folders from inflating the Docker context transfer size.
+
 ### 🛡️ Core Infrastructure & Telemetry
 - **Zancrypt Brand Identity Integration**: Completed a unified brand overhaul across all frontend pages and backend endpoints.
 - **Observational Telemetry Schema**: Programmed self-healing SQL migrations in `main.py` to support `storage_used` telemetry tracking in active databases.

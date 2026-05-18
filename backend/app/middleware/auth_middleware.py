@@ -8,7 +8,13 @@ class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Whitelist public endpoints
         public_paths = ["/auth/login", "/auth/register", "/auth/refresh", "/health", "/docs", "/openapi.json"]
-        if any(request.url.path.startswith(path) for path in public_paths):
+        is_public = any(request.url.path.startswith(path) for path in public_paths)
+        
+        # Whitelist GET /api/share/{token} anonymous downloads
+        if request.url.path.startswith("/api/share/") and request.method == "GET" and not request.url.path.startswith("/api/share/list"):
+            is_public = True
+
+        if is_public:
             return await call_next(request)
 
         auth_header = request.headers.get("Authorization")

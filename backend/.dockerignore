@@ -1,0 +1,13 @@
+venv/
+venv_mac/
+__pycache__/
+*.pyc
+*.pyo
+mypy_output.txt
+trace.txt
+storage/
+backend_logs_traceback.txt
+backend_logs_traceback_utf8.txt
+scratch_backend_logs.txt
+.git/
+.env
