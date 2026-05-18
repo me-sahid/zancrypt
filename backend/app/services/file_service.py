@@ -2,6 +2,7 @@ from typing import AsyncIterator, List, Tuple
 import json
 
 from fastapi import HTTPException, UploadFile, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.file import File
@@ -58,6 +59,7 @@ class FileService:
         )
 
         # 4. Insert ShardRegistry entries and update NodeRegistry.storage_used
+
 
         shard_sizes = {}
         for shard_name, data in shards:

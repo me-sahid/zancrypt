@@ -11,6 +11,7 @@ from app.models.credential import WebAuthnCredential
 from app.models.share import Share
 from app.models.pending_deletion import PendingDeletion
 from app.models.notification import Notification
+from app.models.wrapper_destruction import WrapperDestruction
 
 __all__ = [
     "Base",
@@ -28,4 +29,5 @@ __all__ = [
     "Share",
     "PendingDeletion",
     "Notification",
+    "WrapperDestruction",
 ]

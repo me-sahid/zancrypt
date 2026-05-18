@@ -30,6 +30,16 @@ import api from '../../services/api';
 import { toast } from 'react-hot-toast';
 import Button from '../../components/ui/Button';
 
+const hexToBytes = (hex) => {
+  if (!hex) return new Uint8Array(0);
+  const len = hex.length;
+  const bytes = new Uint8Array(len / 2);
+  for (let i = 0; i < len; i += 2) {
+    bytes[i >> 1] = parseInt(hex.substring(i, i + 2), 16);
+  }
+  return bytes;
+};
+
 const SharedFile = () => {
   const { token } = useParams();
   const [key, setKey] = useState('');
@@ -234,11 +244,28 @@ const SharedFile = () => {
           }
           
           const fullHex = shards.map(s => s.data).join('');
-          const bytes = new Uint8Array(fullHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+          const bytes = hexToBytes(fullHex);
           
           const category = getFileCategory(detail.encrypted_filename);
           const mime = getMimeType(detail.encrypted_filename);
-          const blob = new Blob([bytes], { type: mime });
+          let blob = new Blob([bytes], { type: mime });
+          
+          const ext = (detail.encrypted_filename || '').split('.').pop().toLowerCase();
+          if (ext === 'heic' || ext === 'heif') {
+            try {
+              const heicToModule = await import('heic-to');
+              const heicTo = heicToModule.heicTo;
+              const converted = await heicTo({
+                blob,
+                type: 'image/jpeg',
+                quality: 0.8
+              });
+              blob = Array.isArray(converted) ? converted[0] : converted;
+            } catch (heicErr) {
+              console.error('Failed to convert HEIC in multi-share decryption:', heicErr);
+            }
+          }
+          
           const objectUrl = window.URL.createObjectURL(blob);
           
           let textVal = '';
@@ -266,11 +293,28 @@ const SharedFile = () => {
         }
         
         const fullHex = shards.map(s => s.data).join('');
-        const bytes = new Uint8Array(fullHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+        const bytes = hexToBytes(fullHex);
         
         const category = getFileCategory(fileDetails.encrypted_filename);
         const mime = getMimeType(fileDetails.encrypted_filename);
-        const blob = new Blob([bytes], { type: mime });
+        let blob = new Blob([bytes], { type: mime });
+        
+        const ext = (fileDetails.encrypted_filename || '').split('.').pop().toLowerCase();
+        if (ext === 'heic' || ext === 'heif') {
+          try {
+            const heicToModule = await import('heic-to');
+            const heicTo = heicToModule.heicTo;
+            const converted = await heicTo({
+              blob,
+              type: 'image/jpeg',
+              quality: 0.8
+            });
+            blob = Array.isArray(converted) ? converted[0] : converted;
+          } catch (heicErr) {
+            console.error('Failed to convert HEIC in single-share decryption:', heicErr);
+          }
+        }
+        
         const objectUrl = window.URL.createObjectURL(blob);
         
         let textVal = '';

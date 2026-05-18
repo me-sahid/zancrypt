@@ -19,7 +19,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db import async_session_factory
 from app.models.pending_deletion import PendingDeletion
 from app.models.share import Share
-from app.services.ephemeral_service import delete_share_and_shards
 from app.workers.celery_app import celery_app
 
 import httpx
@@ -68,21 +67,10 @@ async def _run_expire_shares() -> int:
         logger.info("[expire_shares] Found %d expired shares to process", len(expired_shares))
 
         for share in expired_shares:
-            try:
-                await delete_share_and_shards(
-                    share_id=share.share_id,
-                    session=session,
-                    delete_source_file=share.delete_original,
-                    trigger="ttl_expiry",
-                )
-                processed += 1
-            except Exception as exc:
-                logger.error(
-                    "[expire_shares] Failed to process share %s: %s",
-                    share.share_id, exc, exc_info=True,
-                )
-            # 50ms delay between each to avoid DB contention
-            await asyncio.sleep(0.05)
+            share.is_active = False
+            processed += 1
+
+        await session.commit()
 
     elapsed = time.monotonic() - start
     logger.info(

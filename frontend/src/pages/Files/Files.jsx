@@ -42,6 +42,7 @@ import { useDashboardStore } from '../../store/useDashboardStore';
 import { fileService, adminService } from '../../services/vaultServices';
 import { toast } from 'react-hot-toast';
 import ShareModal from '../../components/ShareModal';
+import FileThumbnail from '../../components/vault/FileThumbnail';
 
 // Category Sniffer
 const getFileCategory = (filename) => {
@@ -116,6 +117,16 @@ const getMimeType = (filename) => {
   return mimeTypes[ext] || 'video/mp4';
 };
 
+const hexToBytes = (hex) => {
+  if (!hex) return new Uint8Array(0);
+  const len = hex.length;
+  const bytes = new Uint8Array(len / 2);
+  for (let i = 0; i < len; i += 2) {
+    bytes[i >> 1] = parseInt(hex.substring(i, i + 2), 16);
+  }
+  return bytes;
+};
+
 const Files = () => {
   const [shareFile, setShareFile] = useState(null);
   const [dateFilter, setDateFilter] = useState('');
@@ -176,7 +187,7 @@ const Files = () => {
       if (res.data && Array.isArray(res.data)) {
         const sortedShards = res.data;
         const fullHex = sortedShards.map(s => s.data).join('');
-        const bytes = new Uint8Array(fullHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+        const bytes = hexToBytes(fullHex);
         
         const blob = new Blob([bytes], { type: 'application/octet-stream' });
         const url = window.URL.createObjectURL(blob);
@@ -205,7 +216,7 @@ const Files = () => {
       if (res.data && Array.isArray(res.data)) {
         const sortedShards = res.data;
         const fullHex = sortedShards.map(s => s.data).join('');
-        const bytes = new Uint8Array(fullHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+        const bytes = hexToBytes(fullHex);
         
         const filename = file.encrypted_filename || file.filename || file.name || 'unnamed';
         const mimeType = getMimeType(filename);
@@ -218,7 +229,24 @@ const Files = () => {
         if (category === 'text') {
           textContent = new TextDecoder().decode(bytes);
         } else {
-          const blob = new Blob([bytes], { type: mimeType });
+          let blob = new Blob([bytes], { type: mimeType });
+          const ext = filename.split('.').pop().toLowerCase();
+          if (ext === 'heic' || ext === 'heif') {
+            try {
+              // Dynamically import heic-to for highly updated WASM HEIC decoding
+              const heicToModule = await import('heic-to');
+              const heicTo = heicToModule.heicTo;
+              const converted = await heicTo({
+                blob,
+                type: 'image/jpeg',
+                quality: 0.8 // High quality for large modal previews!
+              });
+              blob = Array.isArray(converted) ? converted[0] : converted;
+              finalMimeType = 'image/jpeg';
+            } catch (heicErr) {
+              console.error('Failed to convert HEIC preview:', heicErr);
+            }
+          }
           objectUrl = window.URL.createObjectURL(blob);
         }
         
@@ -552,11 +580,10 @@ const Files = () => {
                               className="w-full h-full object-cover select-none"
                             />
                           ) : (
-                            <div className="p-2.5 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center">
-                              {getFileCategory(file.encrypted_filename) === 'video' ? <FileVideo className="w-5 h-5" /> :
-                               getFileCategory(file.encrypted_filename) === 'image' ? <FileImage className="w-5 h-5" /> :
-                               <FileText className="w-5 h-5" />}
-                            </div>
+                            <FileThumbnail 
+                              file={file} 
+                              className="w-full h-full object-cover"
+                            />
                           )}
                         </div>
                         <div className="min-w-0 max-w-[200px] sm:max-w-xs md:max-w-md">
