@@ -3,13 +3,33 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from app.db import get_async_session
 
+from app.utils.redis import redis_client
+
 router = APIRouter()
 
+@router.get("", summary="Readiness check")
 @router.get("/", summary="Readiness check")
-async def health_root() -> dict[str, str]:
-    return {"status": "ok", "detail": "Secure Distributed File Vault is ready"}
+async def health_root(session: AsyncSession = Depends(get_async_session)) -> dict:
+    redis_status = "connected"
+    try:
+        await redis_client.client.ping()
+    except Exception:
+        redis_status = "disconnected"
 
-from app.utils.redis import redis_client
+    db_status = "connected"
+    try:
+        await session.execute(text("SELECT 1"))
+    except Exception:
+        db_status = "disconnected"
+
+    return {
+        "status": "ok",
+        "detail": "Secure Distributed File Vault is ready",
+        "redis": redis_status,
+        "nodes": "healthy" if db_status == "connected" else "degraded",
+        "postgres": db_status
+    }
+
 
 @router.get("/redis")
 async def health_redis() -> dict[str, str]:
