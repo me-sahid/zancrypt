@@ -2,10 +2,12 @@ from typing import AsyncIterator, List, Tuple
 import json
 
 from fastapi import HTTPException, UploadFile, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.file import File
 from app.models.manifest import Manifest
+from app.models.node_registry import NodeRegistry
 from app.repositories.file_repo import FileRepository
 from app.repositories.manifest_repo import ManifestRepository
 from app.services.audit_service import AuditService
@@ -25,7 +27,7 @@ class FileService:
         
         # Verify node availability before accepting file
         available_nodes = await self.session.execute(
-            select(NodeRegistry).filter(NodeRegistry.healthy == True, NodeRegistry.is_active == True)
+            select(NodeRegistry).filter(NodeRegistry.healthy == True)
         )
         nodes = available_nodes.scalars().all()
         if not nodes:
@@ -55,8 +57,6 @@ class FileService:
 
         # 4. Insert ShardRegistry entries and update NodeRegistry.storage_used
         from app.models.shard_registry import ShardRegistry
-        from app.models.node_registry import NodeRegistry
-        from sqlalchemy import select
 
         shard_sizes = {}
         for shard_name, data in shards:

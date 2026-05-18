@@ -22,8 +22,7 @@ class ShareCreateRequest(BaseModel):
     ttl_hours: Optional[float] = None  # None or 0 = Never
     max_downloads: Optional[int] = None  # None or 0 = Unlimited
     label: Optional[str] = None
-    delete_original: bool = False
-    notify_on_expire: bool = True
+
 
 class ShareCreateResponse(BaseModel):
     share_token: str
@@ -94,8 +93,7 @@ async def create_share(
         download_count=0,
         is_active=True,
         label=payload.label,
-        delete_original=payload.delete_original,
-        notify_on_expire=payload.notify_on_expire,
+
     )
     
     session.add(db_share)
@@ -222,11 +220,8 @@ async def get_shared_file(
 
     # Increment download counter (commit later, after successfully reading shards to be safe)
     db_share.download_count += 1
-    trigger_deletion = False
-    
     if db_share.max_downloads and db_share.download_count >= db_share.max_downloads:
         db_share.is_active = False
-        trigger_deletion = True
 
     # Load manifest and nodes assignment
     manifest_stmt = select(Manifest).where(Manifest.file_id == db_share.file_id)
@@ -271,9 +266,7 @@ async def get_shared_file(
         "version_reference": db_manifest.version_reference,
     }
 
-    # Trigger async auto-deletion if max downloads hit
-    if trigger_deletion:
-        background_tasks.add_task(_trigger_async_deletion, db_share.share_id, db_share.delete_original)
+
 
     return SharedFileResponse(
         file_id=file.id,
@@ -285,22 +278,154 @@ async def get_shared_file(
         shards=shards_list
     )
 
-async def _trigger_async_deletion(share_id, delete_original: bool):
+
+
+
+from fastapi import Request, Response
+from app.services.wrapper_generator_service import generate_self_destruct_wrapper
+from app.models.wrapper_destruction import WrapperDestruction
+from app.models.audit import AuditLog
+
+class WrapperGenerateRequest(BaseModel):
+    file_id: int
+    timer_seconds: int
+    share_token: str
+    file_name: Optional[str] = None
+    mime_type: Optional[str] = None
+
+class WrapperDestroyedRequest(BaseModel):
+    file_id: str
+    destroyed_at: int
+
+@router.post("/generate-wrapper")
+async def generate_wrapper(
+    payload: WrapperGenerateRequest,
+    request: Request,
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session)
+):
     """
-    Wrapper for background task to call the ephemeral service.
-    FastAPI BackgroundTasks require a new DB session since the request one is closed.
+    Fetches shards, reassembles them, and wraps the AES ciphertext bytes
+    into a secure self-destructing HTML wrapper.
     """
-    from app.db import async_session_factory
-    from app.services.ephemeral_service import delete_share_and_shards
-    try:
-        async with async_session_factory() as local_session:
-            await delete_share_and_shards(
-                share_id=share_id,
-                session=local_session,
-                delete_source_file=delete_original,
-                trigger="download_limit"
+    # 1. Verify file ownership
+    file_stmt = select(File).where(File.id == payload.file_id, File.owner_id == current_user.id)
+    file_result = await session.execute(file_stmt)
+    db_file = file_result.scalar_one_or_none()
+    if not db_file:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied or file not found"
+        )
+
+    # 2. Check file size limit (maximum 50MB for in-browser memory buffers)
+    MAX_WRAPPER_SIZE = 50 * 1024 * 1024
+    if db_file.file_size and db_file.file_size > MAX_WRAPPER_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="File too large for wrapper generation. Maximum size is 50MB."
+        )
+
+    # 3. Verify share token matches file
+    share_stmt = select(Share).where(Share.share_token == payload.share_token, Share.file_id == payload.file_id)
+    share_result = await session.execute(share_stmt)
+    db_share = share_result.scalar_one_or_none()
+    if not db_share:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Valid share link not found for this file"
+        )
+
+    # 4. Fetch manifest
+    manifest_stmt = select(Manifest).where(Manifest.file_id == payload.file_id)
+    manifest_result = await session.execute(manifest_stmt)
+    db_manifest = manifest_result.scalar_one_or_none()
+    if not db_manifest:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="File manifest not found"
+        )
+
+    # 5. Reassemble storage shards
+    storage_router = StorageRouter()
+    file_bytes = b""
+    for shard_info in db_manifest.replication_mapping:
+        shard_id = shard_info["shard_id"]
+        target_nodes = shard_info["nodes"]
+        shard_bytes = await storage_router.fetch_shard(shard_id, target_nodes)
+        
+        if not shard_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Shard registry error: {shard_id} offline across all replication layers"
             )
-    except Exception as exc:
-        import logging
-        logging.error("Failed to execute async deletion trigger: %s", exc)
+        file_bytes += shard_bytes
+
+    # 6. Generate wrapper HTML string
+    wrapper_options = {
+        "file_bytes": file_bytes,
+        "file_name": payload.file_name or db_file.encrypted_filename,
+        "mime_type": payload.mime_type or "application/octet-stream",
+        "timer_seconds": payload.timer_seconds,
+        "file_id": payload.file_id,
+        "share_token": payload.share_token,
+        "owner_name": current_user.username or "Anonymous User",
+    }
+    wrapper_html_bytes = generate_self_destruct_wrapper(wrapper_options)
+
+    # 7. Record to Audit Log
+    audit = AuditLog(
+        user_id=current_user.id,
+        action="WRAPPER_GENERATED",
+        resource=str(payload.file_id),
+        status="success",
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent", ""),
+        metadata_json={
+            "timer_seconds": payload.timer_seconds,
+            "file_name": payload.file_name or db_file.encrypted_filename
+        }
+    )
+    session.add(audit)
+    await session.commit()
+
+    # 8. Stream as dynamic attachment file download
+    filename = payload.file_name or db_file.encrypted_filename
+    safe_filename = filename.replace("'", "")
+    headers = {
+        "Content-Disposition": f"attachment; filename='{safe_filename}_zancrypt_protected.html'"
+    }
+    return Response(
+        content=wrapper_html_bytes,
+        media_type="text/html",
+        headers=headers
+    )
+
+@router.post("/destroyed")
+async def wrapper_destroyed(
+    payload: WrapperDestroyedRequest,
+    request: Request,
+    session: AsyncSession = Depends(get_async_session)
+):
+    """
+    Best-effort callback receiver when wrapper client-side self-destructs.
+    Inserts record into wrapper_destructions.
+    """
+    user_agent = request.headers.get("user-agent", "")[:500]
+    
+    file_int_id = None
+    try:
+        file_int_id = int(payload.file_id)
+    except ValueError:
+        pass
+
+    destruction = WrapperDestruction(
+        file_id=file_int_id,
+        client_timestamp=payload.destroyed_at,
+        user_agent=user_agent
+    )
+    session.add(destruction)
+    await session.commit()
+    return Response(status_code=204)
+
 

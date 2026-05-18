@@ -65,7 +65,7 @@ const HeroSection = () => {
   }, []);
 
   return (
-    <section ref={containerRef} className="relative h-screen px-8 overflow-hidden flex items-center">
+    <section ref={containerRef} className="relative min-h-screen overflow-hidden flex items-center pt-24 lg:pt-28 pb-16 lg:pb-0">
       {/* Background Gradients */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[800px] bg-primary-accent/15 blur-[150px] rounded-full pointer-events-none opacity-60" />
       <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-blue-500/10 blur-[150px] rounded-full pointer-events-none" />
@@ -73,7 +73,7 @@ const HeroSection = () => {
       {/* Grid Pattern Background */}
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-10 pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto w-full relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 relative z-10 grid lg:grid-cols-2 gap-12 items-center">
         {/* LEFT COLUMN: Copy & CTA */}
         <div ref={textRef} className="max-w-xl">
           <div className="hero-badge inline-flex items-center px-3 py-1.5 rounded-full bg-primary-accent/10 border border-primary-accent/30 text-primary-accent text-xs font-bold uppercase tracking-widest mb-6 backdrop-blur-md">
