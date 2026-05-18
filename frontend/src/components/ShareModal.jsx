@@ -16,6 +16,7 @@ import api from '../services/api';
 import { toast } from 'react-hot-toast';
 import Button from './ui/Button';
 import Input from './ui/Input';
+import SelfDestructToggle from './SelfDestructToggle';
 
 /**
  * ShareModal component for creating secure Zero-Knowledge shares.
@@ -23,15 +24,10 @@ import Input from './ui/Input';
  */
 const ShareModal = ({ file, onClose }) => {
   const [ttl, setTtl] = useState(24); // Default 24 Hours
-  const [customHours, setCustomHours] = useState('0');
-  const [customMins, setCustomMins] = useState('30'); // Default 30 Minutes
+
   const [maxDownloads, setMaxDownloads] = useState(0); // Default Unlimited
   const [customDownloads, setCustomDownloads] = useState('3'); // Default 3
   const [label, setLabel] = useState('');
-  
-  // Ephemeral Auto-Deletion settings
-  const [deleteOriginal, setDeleteOriginal] = useState(false);
-  const [notifyOnExpire, setNotifyOnExpire] = useState(true);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
@@ -68,20 +64,8 @@ const ShareModal = ({ file, onClose }) => {
     setIsSubmitting(true);
     
     try {
-      let finalTtl = 0;
-      if (ttl === 'custom') {
-        const hrs = parseFloat(customHours) || 0;
-        const mins = parseFloat(customMins) || 0;
-        finalTtl = hrs + mins / 60;
-        
-        if (finalTtl <= 0) {
-          toast.error('Expiration must be greater than 0 minutes');
-          setIsSubmitting(false);
-          return;
-        }
-      } else {
-        finalTtl = parseFloat(ttl);
-      }
+      let finalTtl = parseFloat(ttl);
+
 
       let finalMaxDownloads = 0;
       if (maxDownloads === 'custom') {
@@ -115,9 +99,7 @@ const ShareModal = ({ file, onClose }) => {
             file_id: parseInt(itemFileId, 10),
             ttl_hours: finalTtl,
             max_downloads: finalMaxDownloads,
-            label: label.trim() ? `${label.trim()} (${item.encrypted_filename || item.filename || 'asset'})` : undefined,
-            delete_original: deleteOriginal,
-            notify_on_expire: notifyOnExpire
+            label: label.trim() ? `${label.trim()} (${item.encrypted_filename || item.filename || 'asset'})` : undefined
           });
           
           tokens.push(res.data.share_token);
@@ -134,9 +116,7 @@ const ShareModal = ({ file, onClose }) => {
           file_id: parseInt(fileId, 10),
           ttl_hours: finalTtl,
           max_downloads: finalMaxDownloads,
-          label: label.trim() || undefined,
-          delete_original: deleteOriginal,
-          notify_on_expire: notifyOnExpire
+          label: label.trim() || undefined
         });
         
         const token = res.data.share_token;
@@ -197,7 +177,7 @@ const ShareModal = ({ file, onClose }) => {
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="w-full max-w-lg bg-[#0d121f] border border-[#1e293b]/70 rounded-2xl shadow-2xl relative overflow-hidden text-white z-10"
+        className={`w-full ${shareUrl ? 'max-w-4xl' : 'max-w-lg'} bg-[#0d121f] border border-[#1e293b]/70 rounded-2xl shadow-2xl relative overflow-hidden text-white z-10 transition-all duration-300`}
       >
         {/* Glowing Top Border Accent */}
         <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-indigo-500 to-cyan-400" />
@@ -268,46 +248,8 @@ const ShareModal = ({ file, onClose }) => {
                     <option value={24}>24 Hours (1 Day)</option>
                     <option value={168}>7 Days (1 Week)</option>
                     <option value={720}>30 Days (1 Month)</option>
-                    <option value="custom">Custom Duration...</option>
-                    <option value={0}>Never Expires</option>
                   </select>
                 </div>
-
-                {/* Custom Time Selector Panel */}
-                {ttl === 'custom' && (
-                  <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    className="grid grid-cols-2 gap-4 p-4 bg-[#0f172a] border border-[#1e293b] rounded-xl overflow-hidden"
-                  >
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        Hours
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="8760"
-                        value={customHours}
-                        onChange={(e) => setCustomHours(e.target.value)}
-                        className="w-full bg-[#070913] border border-[#1e293b] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 font-medium"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        Minutes
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="59"
-                        value={customMins}
-                        onChange={(e) => setCustomMins(e.target.value)}
-                        className="w-full bg-[#070913] border border-[#1e293b] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 font-medium"
-                      />
-                    </div>
-                  </motion.div>
-                )}
 
                 {/* Max Downloads Selector */}
                 <div className="space-y-1.5">
@@ -349,64 +291,6 @@ const ShareModal = ({ file, onClose }) => {
                   </motion.div>
                 )}
 
-                {/* Ephemeral Auto-Deletion Controls */}
-                <div className="space-y-4 pt-2 border-t border-[#1e293b]/50">
-                  <label className="flex items-start space-x-3 cursor-pointer group">
-                    <div className="mt-0.5 shrink-0">
-                      <input
-                        type="checkbox"
-                        checked={deleteOriginal}
-                        onChange={(e) => {
-                          setDeleteOriginal(e.target.checked);
-                          if (!e.target.checked) setNotifyOnExpire(true);
-                        }}
-                        className="w-4 h-4 rounded border-[#1e293b] bg-slate-900 text-rose-500 focus:ring-rose-500 cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors">
-                        Delete original file when link expires
-                      </p>
-                      <p className="text-[10px] text-slate-400 mt-1">
-                        Permanently destroy the source file and all distributed shards when the TTL or download limit is reached.
-                      </p>
-                    </div>
-                  </label>
-
-                  <AnimatePresence>
-                    {deleteOriginal && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="flex items-start space-x-3 p-3 bg-rose-500/10 border border-rose-500/25 rounded-xl text-rose-200 mb-3">
-                          <AlertTriangle className="w-5 h-5 shrink-0 text-rose-500 mt-0.5" />
-                          <div className="text-xs leading-relaxed">
-                            <p className="font-bold text-rose-400">Warning:</p>
-                            <p className="mt-1">
-                              Enabling this permanently deletes the file from your vault when the link expires or the download limit is reached. This cannot be undone.
-                            </p>
-                          </div>
-                        </div>
-
-                        <label className="flex items-center space-x-3 cursor-pointer group pl-7">
-                          <input
-                            type="checkbox"
-                            checked={notifyOnExpire}
-                            onChange={(e) => setNotifyOnExpire(e.target.checked)}
-                            className="w-4 h-4 rounded border-[#1e293b] bg-slate-900 text-blue-500 focus:ring-blue-500 cursor-pointer"
-                          />
-                          <p className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
-                            Notify me when auto-deleted
-                          </p>
-                        </label>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
                 {/* Submit Action Button */}
                 <div className="pt-2">
                   <Button
@@ -420,67 +304,94 @@ const ShareModal = ({ file, onClose }) => {
                 </div>
               </motion.form>
             ) : (
-              // STEP 2: Link Generated Successfully (Displays URL, Copy Button, QR Code, and ZK Warning)
+              // STEP 2: Link Generated Successfully (Widescreen Split Grid Layout)
               <motion.div 
                 key="link-step"
                 className="space-y-6"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                {/* Zero Knowledge Warning Alert */}
-                <div className="flex items-start space-x-3 p-4 bg-amber-500/10 border border-amber-500/25 rounded-xl text-amber-200">
-                  <AlertTriangle className="w-5 h-5 shrink-0 text-amber-500 mt-0.5" />
-                  <div className="text-xs leading-relaxed">
-                    <p className="font-bold text-amber-400">Security Warning:</p>
-                    <p className="mt-1">
-                      {isMulti 
-                        ? 'This link contains cryptographic keys to decrypt all selected files. Keep it strictly private.'
-                        : 'This link contains your decryption key. Anyone with it can access the file.'}
-                    </p>
-                  </div>
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+                  {/* Left Column: Traditional Decryption Link Retrieval */}
+                  <div className="space-y-5 flex flex-col justify-between">
+                    <div className="space-y-4">
+                      {/* Zero Knowledge Warning Alert */}
+                      <div className="flex items-start space-x-3 p-4 bg-amber-500/10 border border-amber-500/25 rounded-xl text-amber-200">
+                        <AlertTriangle className="w-5 h-5 shrink-0 text-amber-500 mt-0.5" />
+                        <div className="text-xs leading-relaxed">
+                          <p className="font-bold text-amber-400">Security Warning:</p>
+                          <p className="mt-1">
+                            {isMulti 
+                              ? 'This link contains cryptographic keys to decrypt all selected files. Keep it strictly private.'
+                              : 'This link contains your decryption key. Anyone with it can access the file.'}
+                          </p>
+                        </div>
+                      </div>
 
-                {/* Link URL Clipboard Field */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    Secure Multi-Decryption Link
-                  </label>
-                  <div className="flex items-center space-x-2">
-                    <div className="flex-1 bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-3 text-xs font-mono text-slate-300 overflow-x-auto whitespace-nowrap select-all scrollbar-none">
-                      {shareUrl}
+                      {/* Link URL Clipboard Field */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                          Secure Decryption Link
+                        </label>
+                        <div className="flex items-center space-x-2">
+                          <div className="flex-1 bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-3 text-xs font-mono text-slate-300 overflow-x-auto whitespace-nowrap select-all scrollbar-none">
+                            {shareUrl}
+                          </div>
+                          <button
+                            onClick={handleCopyLink}
+                            className={`p-3 rounded-xl border transition-all shrink-0 ${
+                              isCopied 
+                                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                                : 'bg-[#0f172a] border-[#1e293b] text-slate-400 hover:text-white hover:bg-slate-800'
+                            }`}
+                            title="Copy Link"
+                          >
+                            {isCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <button
-                      onClick={handleCopyLink}
-                      className={`p-3 rounded-xl border transition-all shrink-0 ${
-                        isCopied 
-                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
-                          : 'bg-[#0f172a] border-[#1e293b] text-slate-400 hover:text-white hover:bg-slate-800'
-                      }`}
-                      title="Copy Link"
-                    >
-                      {isCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
 
-                {/* QR Code Section */}
-                <div className="flex flex-col items-center justify-center p-4 bg-[#0f172a]/60 border border-[#1e293b]/40 rounded-xl space-y-3">
-                  <div className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center">
-                    <QrCode className="w-4 h-4 mr-1.5 text-blue-500" />
-                    Scan QR Code to Retrieve
+                    {/* QR Code Section */}
+                    <div className="flex flex-col items-center justify-center p-4 bg-[#0f172a]/60 border border-[#1e293b]/40 rounded-xl space-y-2.5">
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
+                        <QrCode className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
+                        Scan QR Code to Retrieve
+                      </div>
+                      <div className="p-2 bg-white rounded-xl shadow-xl">
+                        {qrCodeDataUrl ? (
+                          <img src={qrCodeDataUrl} alt="Secure Share QR Code" className="w-32 h-32 select-none" />
+                        ) : (
+                          <div className="w-32 h-32 flex items-center justify-center bg-slate-800 animate-pulse rounded-lg" />
+                        )}
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-medium">Safe mobile client decryption bypass.</p>
+                    </div>
                   </div>
-                  <div className="p-2 bg-white rounded-xl shadow-xl">
-                    {qrCodeDataUrl ? (
-                      <img src={qrCodeDataUrl} alt="Secure Share QR Code" className="w-40 h-40 select-none" />
+
+                  {/* Right Column: Self-Destruct Sandbox Environment */}
+                  <div className="bg-[#0f172a]/50 border border-[#1e293b]/40 rounded-xl p-5 min-h-[380px] flex flex-col justify-between">
+                    {!isMulti ? (
+                      <SelfDestructToggle
+                        fileId={fileId}
+                        shareToken={shareUrl.split('/').pop().split('#')[0]}
+                        fileName={fileName}
+                        mimeType={file?.mime_type}
+                      />
                     ) : (
-                      <div className="w-40 h-40 flex items-center justify-center bg-slate-800 animate-pulse rounded-lg" />
+                      <div className="flex flex-col items-center justify-center text-center py-12 space-y-3 h-full">
+                        <AlertTriangle className="w-10 h-10 text-slate-600 animate-pulse" />
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Wrapper Disabled</h4>
+                        <p className="text-[10px] text-slate-500 max-w-[220px] leading-relaxed">
+                          Self-destructing containers are reserved strictly for single files, not bulk folder assets.
+                        </p>
+                      </div>
                     )}
                   </div>
-                  <p className="text-[10px] text-slate-500 font-medium">Safe mobile client decryption bypass.</p>
                 </div>
 
                 {/* Finish & Close Button */}
-                <div className="pt-2">
+                <div className="pt-2 border-t border-[#1e293b]/30">
                   <Button
                     variant="outline"
                     onClick={onClose}

@@ -49,6 +49,11 @@ async def setup_test_engine() -> AsyncIterator[None]:
     orig_node_maker = app.storage.node_manager.async_session_maker
     orig_core_maker = app.core.nodes.async_session_maker
 
+    # Guarantee all tables (including newly added ones) exist for test sessions
+    from app.models.base import Base
+    async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
     test_session_maker = sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
 
     app.db.engine = test_engine

@@ -81,3 +81,62 @@ async def test_share_creation_and_public_decryption_lifecycle(auth_client: Async
     # 6. Verify that accessing the revoked link now returns 410 Gone
     public_revoked_res = await client.get(f"/api/share/{share_token}")
     assert public_revoked_res.status_code == 410
+
+
+@pytest.mark.asyncio
+async def test_wrapper_generation_and_destruction(auth_client: AsyncClient, client: AsyncClient) -> None:
+    # 1. Upload mock file first
+    manifest_data = {
+        "version": 1,
+        "shards": [{"shard_index": 0, "hash": "shash"}]
+    }
+    upload_payload = {
+        "encrypted_filename": "wrapper_test.enc",
+        "encrypted_metadata": "meta_xyz",
+        "file_size": 24,
+        "integrity_hash": "hash_xyz",
+        "manifest": json.dumps(manifest_data)
+    }
+    files = [("shards", ("shard_0.bin", b"wrapper_bytes_payload"))]
+    upload_res = await auth_client.post("/files/upload", data=upload_payload, files=files)
+    assert upload_res.status_code == 201
+    file_id = int(upload_res.json()["file_id"])
+
+    # 2. Create a secure share link
+    share_payload = {
+        "file_id": file_id,
+        "ttl_hours": 1,
+        "max_downloads": 5,
+        "label": "Wrapper Test"
+    }
+    share_create_res = await auth_client.post("/api/share/create", json=share_payload)
+    assert share_create_res.status_code == 201
+    share_token = share_create_res.json()["share_token"]
+
+    # 3. Generate the self-destruct wrapper
+    wrapper_payload = {
+        "file_id": file_id,
+        "timer_seconds": 3600,
+        "share_token": share_token,
+        "file_name": "original_document.pdf",
+        "mime_type": "application/pdf"
+    }
+    wrapper_res = await auth_client.post("/api/share/generate-wrapper", json=wrapper_payload)
+    assert wrapper_res.status_code == 200
+    assert "Content-Disposition" in wrapper_res.headers
+    assert "attachment" in wrapper_res.headers["Content-Disposition"]
+    assert "original_document.pdf_zancrypt_protected.html" in wrapper_res.headers["Content-Disposition"]
+    
+    html_content = wrapper_res.text
+    assert "Zancrypt Secure Wrapper" in html_content
+    assert "ENCRYPTED_PAYLOAD" in html_content
+    assert "original_document.pdf" in html_content
+
+    # 4. Trigger the destroyed beacon callback
+    destroyed_payload = {
+        "file_id": str(file_id),
+        "destroyed_at": 1715900000000
+    }
+    destroyed_res = await client.post("/api/share/destroyed", json=destroyed_payload)
+    assert destroyed_res.status_code == 204
+

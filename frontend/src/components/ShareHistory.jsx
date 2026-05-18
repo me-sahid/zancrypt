@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Share2, 
@@ -16,10 +17,125 @@ import api from '../services/api';
 import { toast } from 'react-hot-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/Card';
 
+// Live Countdown Timer Cell Component for zero-knowledge shares
+const CountdownCell = ({ share, onExpire }) => {
+  const [timeLeft, setTimeLeft] = useState('');
+  const [isNearExpiry, setIsNearExpiry] = useState(false);
+  const [isMediumExpiry, setIsMediumExpiry] = useState(false);
+  const [isExpired, setIsExpired] = useState(false);
+
+  const expiresAt = share.expires_at;
+  const isActive = share.is_active;
+
+  useEffect(() => {
+    if (!isActive) {
+      setIsExpired(true);
+      return;
+    }
+    if (!expiresAt) {
+      return;
+    }
+
+    const updateTimer = () => {
+      const diff = new Date(expiresAt).getTime() - Date.now();
+      if (diff <= 0) {
+        setIsExpired(true);
+        onExpire();
+        return;
+      }
+
+      // Calculate days, hours, minutes, seconds
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      // Alert thresholds
+      setIsNearExpiry(diff < 5 * 60 * 1000); // < 5 minutes (pulsing red)
+      setIsMediumExpiry(diff >= 5 * 60 * 1000 && diff < 60 * 60 * 1000); // < 1 hour (amber warning)
+
+      let timeString = '';
+      if (days > 0) timeString += `${days}d `;
+      if (hours > 0 || days > 0) timeString += `${hours}h `;
+      timeString += `${minutes}m ${seconds}s`;
+
+      setTimeLeft(timeString);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, [expiresAt, isActive]);
+
+  // Format absolute expiration date for subtext
+  const formatAbsoluteDate = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString(undefined, { 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
+  if (!isActive || isExpired) {
+    return (
+      <span className="text-slate-500 font-sans italic">Expired</span>
+    );
+  }
+
+  if (!expiresAt) {
+    return (
+      <span className="text-emerald-400/80 font-sans italic font-medium flex items-center">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse" />
+        Infinite Access
+      </span>
+    );
+  }
+
+  return (
+    <div className="flex flex-col space-y-0.5 select-none">
+      <span className={`font-mono text-xs ${
+        isNearExpiry ? 'text-rose-500 font-black animate-pulse' :
+        isMediumExpiry ? 'text-amber-500 font-bold' : 'text-blue-400 font-medium'
+      }`}>
+        {timeLeft}
+      </span>
+      <span className="text-[10px] text-slate-500 leading-tight">
+        Expires {formatAbsoluteDate(expiresAt)}
+      </span>
+    </div>
+  );
+};
+
 const ShareHistory = () => {
   const [shares, setShares] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [copiedToken, setCopiedToken] = useState('');
+  
+  // Custom Revocation Confirmation Modal State
+  const [shareToRevoke, setShareToRevoke] = useState(null);
+  const [isRevoking, setIsRevoking] = useState(false);
+
+  // 2c. Proactively auto-revoke the link when countdown ends
+  const handleAutoRevoke = async (share) => {
+    try {
+      await api.delete(`/api/share/${share.share_token}`);
+      toast.error(`Share for "${share.encrypted_filename || 'this file'}" has expired and was auto-revoked`, {
+        id: `expire-${share.share_token}`
+      });
+      fetchShares();
+    } catch (err) {
+      // Quiet reload if already handled by the server task scheduler
+      fetchShares();
+    }
+  };
 
   // 1. Fetch all shares created by the user
   const fetchShares = async () => {
@@ -38,19 +154,25 @@ const ShareHistory = () => {
     fetchShares();
   }, []);
 
-  // 2. Revoke a share (DELETE /share/:token)
-  const handleRevokeShare = async (token) => {
-    const confirmRevoke = window.confirm('Are you absolutely sure you want to revoke this share link? Anyone with this link will instantly lose access.');
-    if (!confirmRevoke) return;
+  // 2. Open confirmation modal for revoking share
+  const handleRevokeShare = (share) => {
+    setShareToRevoke(share);
+  };
 
+  // 2b. Confirm and execute share revocation via API
+  const confirmRevoke = async () => {
+    if (!shareToRevoke) return;
+    setIsRevoking(true);
     try {
-      await api.delete(`/api/share/${token}`);
+      await api.delete(`/api/share/${shareToRevoke.share_token}`);
       toast.success('Share link successfully revoked');
-      // Refresh list
+      setShareToRevoke(null);
       fetchShares();
     } catch (error) {
       console.error('Failed to revoke share link:', error);
       toast.error('Could not revoke share link');
+    } finally {
+      setIsRevoking(false);
     }
   };
 
@@ -168,15 +290,12 @@ const ShareHistory = () => {
                         </div>
                       </td>
 
-                      {/* Expiry Timestamp */}
-                      <td className="px-6 py-4 text-xs font-mono text-slate-400">
-                        {share.expires_at ? (
-                          <span className={new Date(share.expires_at) < new Date() ? 'text-rose-500' : 'text-slate-300'}>
-                            {formatDate(share.expires_at)}
-                          </span>
-                        ) : (
-                          <span className="text-slate-500 font-sans italic">Never expires</span>
-                        )}
+                      {/* Expiration Date / Ticking Countdown */}
+                      <td className="px-6 py-4">
+                        <CountdownCell 
+                          share={share} 
+                          onExpire={() => handleAutoRevoke(share)} 
+                        />
                       </td>
 
                       {/* Active Status Badge */}
@@ -196,7 +315,7 @@ const ShareHistory = () => {
                       <td className="px-6 py-4 text-right">
                         {share.is_active ? (
                           <button
-                            onClick={() => handleRevokeShare(share.share_token)}
+                            onClick={() => handleRevokeShare(share)}
                             className="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/20 transition-all active:scale-95 cursor-pointer inline-flex items-center"
                             title="Revoke Share Link"
                           >
@@ -235,6 +354,94 @@ const ShareHistory = () => {
           )}
         </AnimatePresence>
       </CardContent>
+
+      {/* Custom Revocation Confirmation Modal */}
+      {createPortal(
+        <AnimatePresence>
+          {shareToRevoke && (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+              {/* Backdrop */}
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => !isRevoking && setShareToRevoke(null)}
+                className="fixed inset-0 bg-[#000000]/80 backdrop-blur-sm cursor-pointer"
+              />
+
+              {/* Modal Card */}
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="w-full max-w-md bg-[#0d121f] border border-[#1e293b] rounded-2xl shadow-2xl relative overflow-hidden text-white z-[10000] font-sans antialiased"
+              >
+                {/* Top Warning Accent Line */}
+                <div className="h-1.5 w-full bg-gradient-to-r from-rose-600 to-rose-700 animate-pulse" />
+                
+                <div className="p-6 space-y-4">
+                  {/* Header Icon & Title */}
+                  <div className="flex items-center space-x-3.5">
+                    <div className="p-3 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.15)]">
+                      <ShieldAlert className="w-6 h-6 animate-pulse" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-lg leading-tight text-white">
+                        Revoke Share Link?
+                      </h3>
+                      <p className="text-xs text-rose-400 font-bold uppercase tracking-wider mt-0.5">
+                        Irreversible Operation
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Content Details */}
+                  <div className="space-y-3.5 bg-[#0f172a]/60 border border-[#1e293b]/40 rounded-xl p-4 text-slate-300 text-xs leading-relaxed">
+                    <p>
+                      Are you absolutely sure you want to revoke the share link for:
+                    </p>
+                    <p className="font-mono text-blue-400 font-bold bg-[#070913] px-3 py-2 rounded-lg border border-[#1e293b]/50 select-all truncate">
+                      {shareToRevoke.encrypted_filename || 'Unnamed Asset'}
+                    </p>
+                    <p className="text-slate-400">
+                      Any recipient or client with this link will instantly and permanently lose decryption and retrieval capability.
+                    </p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center space-x-3 pt-2">
+                    <button
+                      disabled={isRevoking}
+                      onClick={() => setShareToRevoke(null)}
+                      className="flex-1 py-2.5 px-4 rounded-xl border border-[#1e293b] text-slate-300 font-bold text-xs hover:bg-slate-800/40 hover:text-white transition-all disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      disabled={isRevoking}
+                      onClick={confirmRevoke}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-bold text-xs shadow-lg shadow-rose-600/10 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+                    >
+                      {isRevoking ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Revoking...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Revoke Access</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </Card>
   );
 };

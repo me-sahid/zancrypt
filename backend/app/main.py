@@ -66,8 +66,7 @@ async def on_startup() -> None:
         await conn.execute(text("ALTER TABLE files ALTER COLUMN file_size TYPE BIGINT;"))
         await conn.execute(text("ALTER TABLE files ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;"))
         await conn.execute(text("ALTER TABLE files ADD COLUMN IF NOT EXISTS thumbnail TEXT;"))
-        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS delete_original BOOLEAN DEFAULT FALSE;"))
-        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS notify_on_expire BOOLEAN DEFAULT TRUE;"))
+
     await initialize_nodes()
     instrument_app(app)
 
