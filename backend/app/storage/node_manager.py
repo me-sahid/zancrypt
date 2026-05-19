@@ -5,6 +5,12 @@ from typing import List, Optional
 from sqlalchemy import select, update
 from app.models.node_registry import NodeRegistry
 from app.db import async_session_maker
+from app.core.config import settings
+
+try:
+    import aioboto3
+except ImportError:
+    aioboto3 = None
 
 class NodeManager:
     def __init__(self) -> None:
@@ -29,12 +35,26 @@ class NodeManager:
                 if not node or not node.healthy:
                     return False
 
-            node_path = os.path.join(self.base_path, node_name.lower())
-            os.makedirs(node_path, exist_ok=True)
-            
-            shard_path = os.path.join(node_path, shard_id)
-            with open(shard_path, "wb") as f:
-                f.write(data)
+            if node.provider == "S3":
+                if not aioboto3:
+                    print("aioboto3 not installed for S3 node")
+                    return False
+                s3_session = aioboto3.Session()
+                async with s3_session.client(
+                    "s3",
+                    endpoint_url=settings.B2_ENDPOINT,
+                    aws_access_key_id=settings.B2_KEY_ID,
+                    aws_secret_access_key=settings.B2_APP_KEY,
+                ) as s3_client:
+                    bucket = settings.B2_BUCKET
+                    await s3_client.put_object(Bucket=bucket, Key=f"{node_name.lower()}/{shard_id}", Body=data)
+            else:
+                node_path = os.path.join(self.base_path, node_name.lower())
+                os.makedirs(node_path, exist_ok=True)
+                
+                shard_path = os.path.join(node_path, shard_id)
+                with open(shard_path, "wb") as f:
+                    f.write(data)
             
             # Update storage metrics in metadata
             async with async_session_maker() as session:
@@ -63,20 +83,54 @@ class NodeManager:
                 if not node or not node.healthy:
                     return None
 
-            shard_path = os.path.join(self.base_path, node_name.lower(), shard_id)
-            if os.path.exists(shard_path):
-                with open(shard_path, "rb") as f:
-                    return f.read()
-            return None
+            if node.provider == "S3":
+                if not aioboto3:
+                    return None
+                s3_session = aioboto3.Session()
+                async with s3_session.client(
+                    "s3",
+                    endpoint_url=settings.B2_ENDPOINT,
+                    aws_access_key_id=settings.B2_KEY_ID,
+                    aws_secret_access_key=settings.B2_APP_KEY,
+                ) as s3_client:
+                    bucket = settings.B2_BUCKET
+                    response = await s3_client.get_object(Bucket=bucket, Key=f"{node_name.lower()}/{shard_id}")
+                    return await response['Body'].read()
+            else:
+                shard_path = os.path.join(self.base_path, node_name.lower(), shard_id)
+                if os.path.exists(shard_path):
+                    with open(shard_path, "rb") as f:
+                        return f.read()
+                return None
         except Exception:
             return None
 
     async def delete_shard(self, node_name: str, shard_id: str) -> bool:
         try:
-            shard_path = os.path.join(self.base_path, node_name.lower(), shard_id)
-            if os.path.exists(shard_path):
-                os.remove(shard_path)
-            return True
+            async with async_session_maker() as session:
+                result = await session.execute(
+                    select(NodeRegistry).where(NodeRegistry.node_name == node_name)
+                )
+                node = result.scalar_one_or_none()
+                
+            if node and node.provider == "S3":
+                if not aioboto3:
+                    return False
+                s3_session = aioboto3.Session()
+                async with s3_session.client(
+                    "s3",
+                    endpoint_url=settings.B2_ENDPOINT,
+                    aws_access_key_id=settings.B2_KEY_ID,
+                    aws_secret_access_key=settings.B2_APP_KEY,
+                ) as s3_client:
+                    bucket = settings.B2_BUCKET
+                    await s3_client.delete_object(Bucket=bucket, Key=f"{node_name.lower()}/{shard_id}")
+                    return True
+            else:
+                shard_path = os.path.join(self.base_path, node_name.lower(), shard_id)
+                if os.path.exists(shard_path):
+                    os.remove(shard_path)
+                return True
         except Exception:
             return False
 

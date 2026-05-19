@@ -8,6 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.file import File
 from app.models.manifest import Manifest
 from app.models.node_registry import NodeRegistry
+from app.models.shard_registry import ShardRegistry
+from app.models.user import User
+from sqlalchemy import select, delete
 from app.repositories.file_repo import FileRepository
 from app.repositories.manifest_repo import ManifestRepository
 from app.services.audit_service import AuditService
@@ -56,7 +59,7 @@ class FileService:
         )
 
         # 4. Insert ShardRegistry entries and update NodeRegistry.storage_used
-        from app.models.shard_registry import ShardRegistry
+
 
         shard_sizes = {}
         for shard_name, data in shards:
@@ -89,7 +92,6 @@ class FileService:
                         node.storage_used = (node.storage_used or 0) + size
 
         # 5. Update User storage_used
-        from app.models.user import User
         user_res = await self.session.execute(
             select(User).where(User.id == user_id)
         )
@@ -162,10 +164,6 @@ class FileService:
                     await self.router.node_manager.delete_shard(node, shard_info["shard_id"])
 
         # Storage cleanup: load all shards to decrement node-level storage usage
-        from app.models.shard_registry import ShardRegistry
-        from app.models.node_registry import NodeRegistry
-        from app.models.user import User
-        from sqlalchemy import select, delete
 
         shards_res = await self.session.execute(
             select(ShardRegistry).where(ShardRegistry.file_id == file_id)
