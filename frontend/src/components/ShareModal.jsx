@@ -30,9 +30,20 @@ const ShareModal = ({ file, onClose }) => {
   const [label, setLabel] = useState('');
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [shareUrl, setShareUrl] = useState('');
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
   const [isCopied, setIsCopied] = useState(false);
+
+  // Dynamic Sharing IP for localhost / development testing
+  const [customSharingIp, setCustomSharingIp] = useState(() => {
+    return localStorage.getItem('zancrypt_sharing_ip') || '192.168.30.73';
+  });
+  const [isEditingIp, setIsEditingIp] = useState(false);
+  const [ipInput, setIpInput] = useState(customSharingIp);
+
+  // States to keep track of generated tokens and keys for computed dynamic URL
+  const [shareToken, setShareToken] = useState('');
+  const [multiTokens, setMultiTokens] = useState([]);
+  const [multiKeys, setMultiKeys] = useState([]);
   
   const isMulti = Array.isArray(file);
   const fileId = isMulti ? null : (file?.file_id || file?.id);
@@ -40,9 +51,14 @@ const ShareModal = ({ file, onClose }) => {
     ? `${file.length} Secure Assets`
     : (file?.file_name || file?.encrypted_filename || file?.filename || 'decrypted_file');
 
-  // Helper to ensure the share link uses the device IP instead of localhost for development
+  // Helper to ensure the share link uses the dynamic device IP instead of localhost for development
   const getBaseUrl = () => {
-    return window.location.origin.replace('localhost', '192.168.30.73');
+    const origin = window.location.origin;
+    const hostname = window.location.hostname;
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      return origin;
+    }
+    return origin.replace('localhost', customSharingIp);
   };
 
   // Generate or derive a cryptographically secure key for the URL fragment if not provided (single file fallback)
@@ -57,6 +73,17 @@ const ShareModal = ({ file, onClose }) => {
       .replace(/\//g, '_')
       .replace(/=+$/, '');
   });
+
+  // Dynamic assembled share URL computed in real-time
+  const shareUrl = React.useMemo(() => {
+    if (isMulti) {
+      if (multiTokens.length === 0) return '';
+      return `${getBaseUrl()}/share/multi?tokens=${multiTokens.join(',') || ''}#keys=${multiKeys.join(',') || ''}`;
+    } else {
+      if (!shareToken) return '';
+      return `${getBaseUrl()}/share/${shareToken}#${encryptionKey}`;
+    }
+  }, [isMulti, shareToken, multiTokens, multiKeys, encryptionKey, customSharingIp]);
 
   // Form submission handler
   const handleCreateShare = async (e) => {
@@ -106,9 +133,8 @@ const ShareModal = ({ file, onClose }) => {
           keys.push(derivedKey);
         }
         
-        // Construct the multi-asset sharing URL
-        const assembledUrl = `${getBaseUrl()}/share/multi?tokens=${tokens.join(',') || ''}#keys=${keys.join(',') || ''}`;
-        setShareUrl(assembledUrl);
+        setMultiTokens(tokens);
+        setMultiKeys(keys);
         toast.success('Secure Multi-Asset share link created!');
       } else {
         // Single File Share
@@ -120,8 +146,7 @@ const ShareModal = ({ file, onClose }) => {
         });
         
         const token = res.data.share_token;
-        const assembledUrl = `${getBaseUrl()}/share/${token}#${encryptionKey}`;
-        setShareUrl(assembledUrl);
+        setShareToken(token);
         toast.success('Zero-Knowledge share link created!');
       }
     } catch (error) {
@@ -330,9 +355,20 @@ const ShareModal = ({ file, onClose }) => {
 
                       {/* Link URL Clipboard Field */}
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                          Secure Decryption Link
-                        </label>
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                            Secure Decryption Link
+                          </label>
+                          
+                          {/* Premium Local LAN IP Config Pill */}
+                          {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+                            <div className="text-[9px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/25 flex items-center space-x-1 shadow-[0_0_10px_rgba(59,130,246,0.05)]">
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                              <span>LAN Share Mode</span>
+                            </div>
+                          )}
+                        </div>
+
                         <div className="flex items-center space-x-2">
                           <div className="flex-1 bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-3 text-xs font-mono text-slate-300 overflow-x-auto whitespace-nowrap select-all scrollbar-none">
                             {shareUrl}
@@ -349,6 +385,60 @@ const ShareModal = ({ file, onClose }) => {
                             {isCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                           </button>
                         </div>
+
+                        {/* Inline Sharing IP Editor for Localhost Development / LAN share */}
+                        {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+                          <div className="pt-1.5">
+                            {!isEditingIp ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIpInput(customSharingIp);
+                                  setIsEditingIp(true);
+                                }}
+                                className="text-[10px] text-slate-400 hover:text-blue-400 transition-colors flex items-center space-x-1.5 bg-slate-800/30 hover:bg-slate-800/60 border border-slate-700/25 px-2.5 py-1 rounded-lg cursor-pointer"
+                              >
+                                <span>Sharing via Host IP: <strong className="text-white">{customSharingIp}</strong></span>
+                                <span className="text-slate-500 text-[9px]">(Click to edit)</span>
+                              </button>
+                            ) : (
+                              <div className="flex items-center space-x-2 bg-[#0a0a0c]/80 border border-blue-500/20 p-2 rounded-xl">
+                                <span className="text-[9px] text-slate-400 font-bold px-1 shrink-0 uppercase tracking-wider">Set Device IP:</span>
+                                <input
+                                  type="text"
+                                  value={ipInput}
+                                  onChange={(e) => setIpInput(e.target.value)}
+                                  placeholder="e.g. 192.168.1.15"
+                                  className="flex-1 bg-slate-900 border border-slate-700/50 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const cleaned = ipInput.trim();
+                                    if (cleaned) {
+                                      localStorage.setItem('zancrypt_sharing_ip', cleaned);
+                                      setCustomSharingIp(cleaned);
+                                      setIsEditingIp(false);
+                                      toast.success(`LAN IP updated to ${cleaned}`);
+                                    } else {
+                                      toast.error('Sharing IP cannot be empty');
+                                    }
+                                  }}
+                                  className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] px-2.5 py-1 rounded-lg active:scale-95 transition-all cursor-pointer"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setIsEditingIp(false)}
+                                  className="text-slate-400 hover:text-white font-bold text-[10px] px-2 py-1 rounded-lg active:scale-95 transition-all cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -374,9 +464,10 @@ const ShareModal = ({ file, onClose }) => {
                     {!isMulti ? (
                       <SelfDestructToggle
                         fileId={fileId}
-                        shareToken={shareUrl.split('/').pop().split('#')[0]}
+                        shareToken={shareToken}
                         fileName={fileName}
                         mimeType={file?.mime_type}
+                        baseUrl={getBaseUrl()}
                       />
                     ) : (
                       <div className="flex flex-col items-center justify-center text-center py-12 space-y-3 h-full">

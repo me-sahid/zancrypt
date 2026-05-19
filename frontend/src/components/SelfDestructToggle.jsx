@@ -9,7 +9,7 @@ import Button from './ui/Button';
  * SelfDestructToggle component
  * Allows users to compile their encrypted vault files into self-destructing HTML wrappers.
  */
-const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperGenerated }) => {
+const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperGenerated, baseUrl }) => {
   const [isEnabled, setIsEnabled] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(3600); // Default 1 Hour (3600 seconds)
   const [isGenerating, setIsGenerating] = useState(false);
@@ -211,12 +211,12 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
                 </label>
                 <div className="flex items-center space-x-1.5">
                   <div className="flex-1 bg-[#070913] border border-[#1e293b]/60 rounded-lg px-2.5 py-2 text-[10px] text-slate-300 font-mono overflow-x-auto whitespace-nowrap scrollbar-none select-all cursor-text select-text leading-tight">
-                    {`${window.location.origin}/api/share/w/${shareToken}?t=${timerSeconds}`}
+                    {`${baseUrl || window.location.origin}/api/share/w/${shareToken}?t=${timerSeconds}`}
                   </div>
                   <button
                     type="button"
                     onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/api/share/w/${shareToken}?t=${timerSeconds}`);
+                      navigator.clipboard.writeText(`${baseUrl || window.location.origin}/api/share/w/${shareToken}?t=${timerSeconds}`);
                       toast.success('Destruction link copied to clipboard!');
                     }}
                     className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/25 hover:text-rose-300 hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
