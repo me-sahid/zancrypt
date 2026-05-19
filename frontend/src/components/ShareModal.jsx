@@ -23,9 +23,29 @@ import SelfDestructToggle from './SelfDestructToggle';
  * Supports both single file and multi-file arrays.
  */
 const ShareModal = ({ file, onClose }) => {
-  const [ttl, setTtl] = useState(24); // Default 24 Hours
+  // Expiry states (TTL)
+  const [isTtlDropdownOpen, setIsTtlDropdownOpen] = useState(false);
+  const ttlOptions = [
+    { label: '1 Hour', value: 1 },
+    { label: '24 Hours (1 Day)', value: 24 },
+    { label: '7 Days (1 Week)', value: 168 },
+    { label: '30 Days (1 Month)', value: 720 },
+    { label: 'Custom Expiry...', value: 'custom' }
+  ];
+  const [selectedTtlOption, setSelectedTtlOption] = useState(ttlOptions[1]); // Default 24 Hours
+  const [customTtlHours, setCustomTtlHours] = useState('0');
+  const [customTtlMins, setCustomTtlMins] = useState('30');
 
-  const [maxDownloads, setMaxDownloads] = useState(0); // Default Unlimited
+  // Max Downloads states
+  const [isDlDropdownOpen, setIsDlDropdownOpen] = useState(false);
+  const dlOptions = [
+    { label: 'Unlimited Downloads', value: 0 },
+    { label: '1 Download only', value: 1 },
+    { label: '5 Downloads max', value: 5 },
+    { label: '10 Downloads max', value: 10 },
+    { label: 'Custom Limit...', value: 'custom' }
+  ];
+  const [selectedDlOption, setSelectedDlOption] = useState(dlOptions[0]); // Default Unlimited
   const [customDownloads, setCustomDownloads] = useState('3'); // Default 3
   const [label, setLabel] = useState('');
   
@@ -91,11 +111,23 @@ const ShareModal = ({ file, onClose }) => {
     setIsSubmitting(true);
     
     try {
-      let finalTtl = parseFloat(ttl);
+      let finalTtl = 0;
+      if (selectedTtlOption.value === 'custom') {
+        const hrs = parseFloat(customTtlHours) || 0;
+        const mins = parseFloat(customTtlMins) || 0;
+        finalTtl = hrs + (mins / 60);
+        if (finalTtl <= 0) {
+          toast.error('Expiration duration must be greater than 0 minutes');
+          setIsSubmitting(false);
+          return;
+        }
+      } else {
+        finalTtl = parseFloat(selectedTtlOption.value);
+      }
 
 
       let finalMaxDownloads = 0;
-      if (maxDownloads === 'custom') {
+      if (selectedDlOption.value === 'custom') {
         finalMaxDownloads = parseInt(customDownloads, 10) || 0;
         if (finalMaxDownloads <= 0) {
           toast.error('Download limit must be 1 or more (or select Unlimited)');
@@ -103,7 +135,7 @@ const ShareModal = ({ file, onClose }) => {
           return;
         }
       } else {
-        finalMaxDownloads = parseInt(maxDownloads, 10);
+        finalMaxDownloads = parseInt(selectedDlOption.value, 10);
       }
 
       if (isMulti) {
@@ -259,48 +291,195 @@ const ShareModal = ({ file, onClose }) => {
                 </div>
 
                 {/* Expiry Selector (TTL) */}
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 relative">
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center">
                     <Clock className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
                     Expiration Timer (TTL)
                   </label>
-                  <select 
-                    value={ttl}
-                    onChange={(e) => setTtl(e.target.value)}
-                    className="w-full bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all cursor-pointer font-medium"
-                  >
-                    <option value={1}>1 Hour</option>
-                    <option value={24}>24 Hours (1 Day)</option>
-                    <option value={168}>7 Days (1 Week)</option>
-                    <option value={720}>30 Days (1 Month)</option>
-                  </select>
+                  
+                  {/* Custom Dropdown Trigger Button */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsTtlDropdownOpen(!isTtlDropdownOpen);
+                        setIsDlDropdownOpen(false);
+                      }}
+                      className="w-full bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all flex items-center justify-between cursor-pointer font-medium text-left"
+                    >
+                      <span>{selectedTtlOption.label}</span>
+                      <svg
+                        className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isTtlDropdownOpen ? 'transform rotate-180 text-blue-400' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {/* Transparent Click-Outside Overlay */}
+                    {isTtlDropdownOpen && (
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setIsTtlDropdownOpen(false)}
+                      />
+                    )}
+
+                    {/* Custom Absolute Dropdown Menu (Guaranteed to open right below) */}
+                    <AnimatePresence>
+                      {isTtlDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -4, scale: 0.99 }}
+                          animate={{ opacity: 1, y: 4, scale: 1 }}
+                          exit={{ opacity: 0, y: -4, scale: 0.99 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute left-0 right-0 z-50 bg-[#0d121f] border border-[#1e293b] rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto scrollbar-none"
+                        >
+                          {ttlOptions.map((opt) => (
+                            <button
+                              key={opt.label}
+                              type="button"
+                              onClick={() => {
+                                setSelectedTtlOption(opt);
+                                setIsTtlDropdownOpen(false);
+                              }}
+                              className={`w-full px-4 py-3 text-sm text-left transition-colors font-medium flex items-center justify-between ${
+                                selectedTtlOption.value === opt.value
+                                  ? 'bg-blue-600/10 text-blue-400 border-l-2 border-blue-500'
+                                  : 'text-slate-300 hover:bg-slate-800/40 hover:text-white'
+                              }`}
+                            >
+                              <span>{opt.label}</span>
+                              {selectedTtlOption.value === opt.value && (
+                                <svg className="w-4.5 h-4.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
 
+                {/* Custom Hours & Minutes Expire Input Panel */}
+                {selectedTtlOption.value === 'custom' && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0, y: -5 }}
+                    animate={{ height: 'auto', opacity: 1, y: 0 }}
+                    className="p-4 bg-[#0a0d16] border border-[#1e293b]/60 rounded-xl grid grid-cols-2 gap-3"
+                  >
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Hours
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="8760"
+                        value={customTtlHours}
+                        onChange={(e) => setCustomTtlHours(e.target.value)}
+                        className="w-full bg-[#070913] border border-[#1e293b] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 font-medium"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Minutes
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="59"
+                        value={customTtlMins}
+                        onChange={(e) => setCustomTtlMins(e.target.value)}
+                        className="w-full bg-[#070913] border border-[#1e293b] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 font-medium"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+
                 {/* Max Downloads Selector */}
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 relative">
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center">
                     <Download className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
                     Download Limit
                   </label>
-                  <select 
-                    value={maxDownloads}
-                    onChange={(e) => setMaxDownloads(e.target.value)}
-                    className="w-full bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all cursor-pointer font-medium"
-                  >
-                    <option value={0}>Unlimited Downloads</option>
-                    <option value={1}>1 Download only</option>
-                    <option value={5}>5 Downloads max</option>
-                    <option value={10}>10 Downloads max</option>
-                    <option value="custom">Custom Limit...</option>
-                  </select>
+
+                  {/* Custom Dropdown Trigger Button */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsDlDropdownOpen(!isDlDropdownOpen);
+                        setIsTtlDropdownOpen(false);
+                      }}
+                      className="w-full bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all flex items-center justify-between cursor-pointer font-medium text-left"
+                    >
+                      <span>{selectedDlOption.label}</span>
+                      <svg
+                        className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isDlDropdownOpen ? 'transform rotate-180 text-blue-400' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {/* Transparent Click-Outside Overlay */}
+                    {isDlDropdownOpen && (
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setIsDlDropdownOpen(false)}
+                      />
+                    )}
+
+                    {/* Custom Absolute Dropdown Menu (Guaranteed to open right below) */}
+                    <AnimatePresence>
+                      {isDlDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -4, scale: 0.99 }}
+                          animate={{ opacity: 1, y: 4, scale: 1 }}
+                          exit={{ opacity: 0, y: -4, scale: 0.99 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute left-0 right-0 z-50 bg-[#0d121f] border border-[#1e293b] rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto scrollbar-none"
+                        >
+                          {dlOptions.map((opt) => (
+                            <button
+                              key={opt.label}
+                              type="button"
+                              onClick={() => {
+                                setSelectedDlOption(opt);
+                                setIsDlDropdownOpen(false);
+                              }}
+                              className={`w-full px-4 py-3 text-sm text-left transition-colors font-medium flex items-center justify-between ${
+                                selectedDlOption.value === opt.value
+                                  ? 'bg-blue-600/10 text-blue-400 border-l-2 border-blue-500'
+                                  : 'text-slate-300 hover:bg-slate-800/40 hover:text-white'
+                              }`}
+                            >
+                              <span>{opt.label}</span>
+                              {selectedDlOption.value === opt.value && (
+                                <svg className="w-4.5 h-4.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
 
                 {/* Custom Downloads Input Panel */}
-                {maxDownloads === 'custom' && (
+                {selectedDlOption.value === 'custom' && (
                   <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    className="p-4 bg-[#0f172a] border border-[#1e293b] rounded-xl overflow-hidden space-y-1.5"
+                    initial={{ height: 0, opacity: 0, y: -5 }}
+                    animate={{ height: 'auto', opacity: 1, y: 0 }}
+                    className="p-4 bg-[#0a0d16] border border-[#1e293b]/60 rounded-xl overflow-hidden space-y-1.5"
                   >
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                       Custom Download Limit
