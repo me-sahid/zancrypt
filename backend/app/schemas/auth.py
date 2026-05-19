@@ -48,3 +48,7 @@ class UserResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class UserUpdate(BaseModel):
+    full_name: str | None = Field(None, max_length=255)
+    region: str | None = Field(None, max_length=128)

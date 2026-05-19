@@ -71,6 +71,14 @@ const SharedFile = () => {
   const tokensParam = searchParams.get('tokens') || '';
   const isMultiShare = token === 'multi' || tokensParam;
 
+  const allowDownloads = React.useMemo(() => {
+    if (!fileDetails) return true;
+    if (Array.isArray(fileDetails)) {
+      return fileDetails.every(fd => fd.allow_downloads !== false);
+    }
+    return fileDetails.allow_downloads !== false;
+  }, [fileDetails]);
+
   // 1. Check URL fragment for base64 key on mount
   useEffect(() => {
     const hashValue = window.location.hash.substring(1);
@@ -112,6 +120,36 @@ const SharedFile = () => {
     
     validateToken();
   }, [token, tokensParam, isMultiShare]);
+
+  // Extra security protections when downloads are disabled
+  useEffect(() => {
+    if (allowDownloads) return;
+
+    const handleKeyDown = (e) => {
+      // Intercept Cmd+S or Ctrl+S
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        toast.error('Saving local copies is disabled for this secure preview link.');
+      }
+    };
+
+    const handleContextMenu = (e) => {
+      // Disallow right-click context menus on preview media elements
+      const targetTag = e.target.tagName?.toLowerCase();
+      if (['img', 'video', 'audio', 'canvas', 'iframe'].includes(targetTag)) {
+        e.preventDefault();
+        toast.error('Context menu download options are disabled on this preview.');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('contextmenu', handleContextMenu);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, [allowDownloads]);
 
   // Clean up object URLs on unmount
   useEffect(() => {
@@ -345,6 +383,10 @@ const SharedFile = () => {
 
   // Download Trigger from live player
   const triggerNativeDownload = (fileToDownload) => {
+    if (!allowDownloads) {
+      toast.error('Download permission is disabled by the owner.');
+      return;
+    }
     const target = fileToDownload || (Array.isArray(decryptedFile) ? decryptedFile[activeMultiIndex] : decryptedFile);
     if (!target) return;
     
@@ -358,6 +400,10 @@ const SharedFile = () => {
   };
 
   const triggerDownloadAll = () => {
+    if (!allowDownloads) {
+      toast.error('Download permission is disabled by the owner.');
+      return;
+    }
     if (!Array.isArray(decryptedFile)) return;
     decryptedFile.forEach((item, index) => {
       setTimeout(() => {
@@ -493,7 +539,7 @@ const SharedFile = () => {
               <ShieldCheck className="w-3.5 h-3.5 mr-1" />
               Fully Decrypted locally
             </span>
-            {isMultiDecrypted && (
+            {isMultiDecrypted && allowDownloads && (
               <Button
                 onClick={triggerDownloadAll}
                 className="py-2 px-4 font-bold text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg border border-indigo-500/30 flex items-center space-x-1.5 active:scale-95 transition-all"
@@ -502,13 +548,15 @@ const SharedFile = () => {
                 <span>Download All ({decryptedFile.length})</span>
               </Button>
             )}
-            <Button
-              onClick={() => triggerNativeDownload()}
-              className="py-2 px-4 font-bold text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg border border-blue-500/30 flex items-center space-x-1.5 active:scale-95 transition-all"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Download Active</span>
-            </Button>
+            {allowDownloads && (
+              <Button
+                onClick={() => triggerNativeDownload()}
+                className="py-2 px-4 font-bold text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg border border-blue-500/30 flex items-center space-x-1.5 active:scale-95 transition-all"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download Active</span>
+              </Button>
+            )}
           </div>
         </header>
 
@@ -732,13 +780,20 @@ const SharedFile = () => {
                     </div>
                   </div>
 
-                  <Button
-                    onClick={() => triggerNativeDownload()}
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-3 font-bold text-xs shadow-lg active:scale-95 transition-all flex items-center justify-center space-x-1.5"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Download Decrypted Document</span>
-                  </Button>
+                  {allowDownloads ? (
+                    <Button
+                      onClick={() => triggerNativeDownload()}
+                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-3 font-bold text-xs shadow-lg active:scale-95 transition-all flex items-center justify-center space-x-1.5"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download Decrypted Document</span>
+                    </Button>
+                  ) : (
+                    <div className="w-full bg-[#0d1324] border border-[#1e293b]/40 text-slate-400 py-3.5 rounded-xl text-center text-xs font-bold flex items-center justify-center space-x-2">
+                      <Lock className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Downloading is disabled by link owner</span>
+                    </div>
+                  )}
                 </div>
               )}
 

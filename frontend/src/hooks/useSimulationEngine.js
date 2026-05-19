@@ -58,7 +58,7 @@ export const useSimulationEngine = () => {
     runSimulation();
     
     // Set interval
-    timerRef.current = setInterval(runSimulation, 3000);
+    timerRef.current = setInterval(runSimulation, 10000);
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);

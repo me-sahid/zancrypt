@@ -44,18 +44,18 @@ class Settings(BaseSettings):
     TMP_STAGING_DIR: str = Field("/dev/shm/vault_staging", env="TMP_STAGING_DIR")
 
     # Cloud Storage — Backblaze B2 / S3 (Node 1)
-    B2_KEY_ID: str = Field(None, env="B2_KEY_ID")
-    B2_APP_KEY: str = Field(None, env="B2_APP_KEY")
-    B2_BUCKET: str = Field(None, env="B2_BUCKET")
-    B2_ENDPOINT: str = Field(None, env="B2_ENDPOINT")
-    B2_REGION: str = Field(None, env="B2_REGION")
+    B2_KEY_ID: str | None = Field(None, env="B2_KEY_ID")
+    B2_APP_KEY: str | None = Field(None, env="B2_APP_KEY")
+    B2_BUCKET: str | None = Field(None, env="B2_BUCKET")
+    B2_ENDPOINT: str | None = Field(None, env="B2_ENDPOINT")
+    B2_REGION: str | None = Field(None, env="B2_REGION")
 
     # Cloud Storage — Supabase S3-compatible (Node 2)
-    SUPABASE_ENDPOINT: str = Field(None, env="SUPABASE_ENDPOINT")
-    SUPABASE_REGION: str = Field(None, env="SUPABASE_REGION")
-    SUPABASE_ACCESS_KEY: str = Field(None, env="SUPABASE_ACCESS_KEY")
-    SUPABASE_SECRET_KEY: str = Field(None, env="SUPABASE_SECRET_KEY")
-    SUPABASE_BUCKET: str = Field(None, env="SUPABASE_BUCKET")
+    SUPABASE_ENDPOINT: str | None = Field(None, env="SUPABASE_ENDPOINT")
+    SUPABASE_REGION: str | None = Field(None, env="SUPABASE_REGION")
+    SUPABASE_ACCESS_KEY: str | None = Field(None, env="SUPABASE_ACCESS_KEY")
+    SUPABASE_SECRET_KEY: str | None = Field(None, env="SUPABASE_SECRET_KEY")
+    SUPABASE_BUCKET: str | None = Field(None, env="SUPABASE_BUCKET")
 
     # Observability
     ENABLE_OTEL: bool = Field(True, env="ENABLE_OTEL")

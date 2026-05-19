@@ -59,7 +59,7 @@ const SecurityArchitecture = () => {
   ];
 
   return (
-    <section ref={containerRef} className="bg-primary-bg overflow-hidden relative">
+    <section id="architecture" ref={containerRef} className="bg-primary-bg overflow-hidden relative">
       <div ref={triggerRef} className="h-screen flex items-center justify-center relative">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,112,243,0.05)_0%,rgba(0,0,0,0)_70%)]" />
         

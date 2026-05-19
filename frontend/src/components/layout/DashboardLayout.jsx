@@ -31,14 +31,13 @@ const DashboardLayout = ({ children }) => {
       <div className="flex-1 flex flex-col min-w-0 relative">
         <TopNav />
         <main className="flex-1 overflow-y-auto custom-scrollbar relative">
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             <motion.div
               key={location.pathname}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2, ease: 'circOut' }}
-              className="p-6 lg:p-10 max-w-[1600px] mx-auto w-full safari-hardware-accel"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
+              className="p-6 lg:p-10 max-w-[1600px] mx-auto w-full"
             >
               <Suspense fallback={<ContentSkeleton />}>
                 {children || <Outlet />}
@@ -46,9 +45,8 @@ const DashboardLayout = ({ children }) => {
             </motion.div>
           </AnimatePresence>
           
-          {/* Global Background Glows */}
-          <div className="fixed top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary-accent/5 rounded-full blur-[120px] pointer-events-none safari-hardware-accel" />
-          <div className="fixed bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-status-success/5 rounded-full blur-[120px] pointer-events-none safari-hardware-accel" />
+          {/* Subtle static background accent — no costly blur animation */}
+          <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-primary-accent/[0.03] rounded-full pointer-events-none" style={{ filter: 'blur(80px)', transform: 'translate(20%, -20%)', willChange: 'auto' }} />
         </main>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, Download, CheckCircle, Flame, Lock, Zap, Undo2 } from 'lucide-react';
 import api from '../services/api';
@@ -9,11 +9,14 @@ import Button from './ui/Button';
  * SelfDestructToggle component
  * Allows users to compile their encrypted vault files into self-destructing HTML wrappers.
  */
-const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperGenerated }) => {
+const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperGenerated, baseUrl }) => {
   const [isEnabled, setIsEnabled] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(3600); // Default 1 Hour (3600 seconds)
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const [isCustom, setIsCustom] = useState(false);
+  const [customHours, setCustomHours] = useState('0');
+  const [customMins, setCustomMins] = useState('30');
 
   const timeOptions = [
     { label: '1 Hour', seconds: 3600 },
@@ -22,9 +25,22 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
     { label: '72 Hours', seconds: 259200 }
   ];
 
+  useEffect(() => {
+    if (isCustom) {
+      const hrs = parseFloat(customHours) || 0;
+      const mins = parseFloat(customMins) || 0;
+      const totalSecs = Math.round((hrs * 3600) + (mins * 60));
+      setTimerSeconds(totalSecs);
+    }
+  }, [isCustom, customHours, customMins]);
+
   const handleGenerateWrapper = async () => {
     if (!shareToken) {
       toast.error('Please generate a standard share link first to register the token');
+      return;
+    }
+    if (isCustom && timerSeconds <= 0) {
+      toast.error('Local Expiration must be greater than 0 minutes');
       return;
     }
     
@@ -57,7 +73,11 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
       link.click();
       
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(downloadUrl);
+      
+      // Delay revocation to prevent race condition in browser download manager
+      setTimeout(() => {
+        window.URL.revokeObjectURL(downloadUrl);
+      }, 1000);
 
       setIsDone(true);
       toast.success('Protected self-destructing file generated!');
@@ -163,17 +183,18 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                   Local Expiration Duration
                 </label>
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-5 gap-1">
                   {timeOptions.map((opt) => (
                     <button
                       key={opt.seconds}
                       type="button"
                       onClick={() => {
+                        setIsCustom(false);
                         setTimerSeconds(opt.seconds);
                         setIsDone(false);
                       }}
-                      className={`py-2 px-1 text-[10px] font-black rounded-lg border transition-all ${
-                        timerSeconds === opt.seconds
+                      className={`py-2 px-0.5 text-[9px] font-black rounded-lg border transition-all ${
+                        !isCustom && timerSeconds === opt.seconds
                           ? 'bg-rose-500/10 border-rose-500 text-rose-300 shadow-md shadow-rose-500/5'
                           : 'bg-[#0f172a] border-[#1e293b] text-slate-400 hover:text-white hover:bg-slate-800'
                       }`}
@@ -181,8 +202,58 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
                       {opt.label}
                     </button>
                   ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCustom(true);
+                      setIsDone(false);
+                    }}
+                    className={`py-2 px-0.5 text-[9px] font-black rounded-lg border transition-all ${
+                      isCustom
+                        ? 'bg-rose-500/10 border-rose-500 text-rose-300 shadow-md shadow-rose-500/5'
+                        : 'bg-[#0f172a] border-[#1e293b] text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    Custom
+                  </button>
                 </div>
               </div>
+
+              {/* Custom Expiry Input Panel */}
+              {isCustom && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0, y: -5 }}
+                  animate={{ height: 'auto', opacity: 1, y: 0 }}
+                  className="p-3 bg-[#0a0d16] border border-rose-500/10 rounded-xl grid grid-cols-2 gap-2"
+                >
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                      Hours
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="8760"
+                      value={customHours}
+                      onChange={(e) => setCustomHours(e.target.value)}
+                      className="w-full bg-[#070913] border border-[#1e293b] rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-rose-500 font-medium"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                      Minutes
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="59"
+                      value={customMins}
+                      onChange={(e) => setCustomMins(e.target.value)}
+                      className="w-full bg-[#070913] border border-[#1e293b] rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-rose-500 font-medium"
+                    />
+                  </div>
+                </motion.div>
+              )}
 
               {/* Red Warning Card */}
               <div className="flex items-start space-x-2.5 p-3 bg-rose-500/5 border border-rose-500/15 rounded-xl text-rose-200">
@@ -191,9 +262,39 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
                   <p className="font-bold text-rose-400 uppercase tracking-wider">Destruction Warning:</p>
                   <p className="mt-0.5 text-slate-300">
                     The compiled HTML container will permanently decrypt strictly in-memory and completely shred itself <strong>{
-                      timeOptions.find(o => o.seconds === timerSeconds)?.label
+                      isCustom 
+                        ? `${customHours} Hours ${customMins} Mins` 
+                        : (timeOptions.find(o => o.seconds === timerSeconds)?.label || '1 Hour')
                     }</strong> after the recipient first opens it.
                   </p>
+                </div>
+              </div>
+
+              {/* Copy Wrapper Link Panel */}
+              <div className="space-y-1.5 pt-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex justify-between items-center">
+                  <span>Direct Destruction Link</span>
+                  <span className="text-[8px] font-bold text-rose-400 lowercase tracking-normal bg-rose-500/10 px-1.5 py-0.5 rounded-full">
+                    recipient downloads html directly
+                  </span>
+                </label>
+                <div className="flex items-center space-x-1.5">
+                  <div className="flex-1 bg-[#070913] border border-[#1e293b]/60 rounded-lg px-2.5 py-2 text-[10px] text-slate-300 font-mono overflow-x-auto whitespace-nowrap scrollbar-none select-all cursor-text select-text leading-tight">
+                    {`${baseUrl || window.location.origin}/api/share/w/${shareToken}?t=${timerSeconds}`}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${baseUrl || window.location.origin}/api/share/w/${shareToken}?t=${timerSeconds}`);
+                      toast.success('Destruction link copied to clipboard!');
+                    }}
+                    className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/25 hover:text-rose-300 hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+                    title="Copy to clipboard"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>

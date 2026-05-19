@@ -272,20 +272,39 @@ def generate_self_destruct_wrapper(options: Dict[str, Any]) -> bytes:
         let isDestroyed = false;
         let startTime = 0;
 
+        // Safe localStorage wrapper to prevent crashes in restricted environments (e.g. local file previews, iOS Files app, Private tabs)
+        const safeStorage = {{
+            storage: {{}},
+            getItem(key) {{
+                try {{
+                    return localStorage.getItem(key);
+                }} catch (e) {{
+                    return this.storage[key] || null;
+                }}
+            }},
+            setItem(key, value) {{
+                try {{
+                    localStorage.setItem(key, value);
+                }} catch (e) {{
+                    this.storage[key] = value.toString();
+                }}
+            }}
+        }};
+
         document.addEventListener("DOMContentLoaded", () => {{
             // 1. Verify local storage status locks
-            if (localStorage.getItem("zct_destroyed_" + FILE_ID)) {{
+            if (safeStorage.getItem("zct_destroyed_" + FILE_ID)) {{
                 showDestroyedScreen();
                 return;
             }}
 
             // 2. Load or commit first-open timestamp
-            const localStart = localStorage.getItem("zct_start_" + FILE_ID);
+            const localStart = safeStorage.getItem("zct_start_" + FILE_ID);
             if (localStart) {{
                 startTime = parseInt(localStart, 10);
             }} else {{
                 startTime = Date.now();
-                localStorage.setItem("zct_start_" + FILE_ID, startTime.toString());
+                safeStorage.setItem("zct_start_" + FILE_ID, startTime.toString());
             }}
 
             // 3. Launch Monotonic protection timer
@@ -357,7 +376,7 @@ def generate_self_destruct_wrapper(options: Dict[str, Any]) -> bytes:
             window.WRAPPER_KEY = "";
 
             // Register destruction locally
-            localStorage.setItem("zct_destroyed_" + FILE_ID, Date.now().toString());
+            safeStorage.setItem("zct_destroyed_" + FILE_ID, Date.now().toString());
 
             showDestroyedScreen();
             
@@ -375,7 +394,7 @@ def generate_self_destruct_wrapper(options: Dict[str, Any]) -> bytes:
             const destroyedCont = document.getElementById("destroyedContainer");
             destroyedCont.style.display = "block";
             
-            const timestamp = localStorage.getItem("zct_destroyed_" + FILE_ID);
+            const timestamp = safeStorage.getItem("zct_destroyed_" + FILE_ID);
             if (timestamp) {{
                 const d = new Date(parseInt(timestamp, 10));
                 document.getElementById("destroyedAtLabel").textContent = "DESTROYED_AT: " + d.toISOString();

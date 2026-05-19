@@ -22,6 +22,7 @@ class ShareCreateRequest(BaseModel):
     ttl_hours: Optional[float] = None  # None or 0 = Never
     max_downloads: Optional[int] = None  # None or 0 = Unlimited
     label: Optional[str] = None
+    allow_downloads: Optional[bool] = True
 
 
 class ShareCreateResponse(BaseModel):
@@ -38,6 +39,7 @@ class ShareListItem(BaseModel):
     download_count: int
     is_active: bool
     label: Optional[str] = None
+    allow_downloads: bool
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -51,6 +53,7 @@ class SharedFileResponse(BaseModel):
     integrity_hash: str
     manifest: dict
     shards: List[dict]  # Contains list of { shard_id, data (hex) }
+    allow_downloads: bool
 
 # --- API Endpoints ---
 
@@ -93,7 +96,7 @@ async def create_share(
         download_count=0,
         is_active=True,
         label=payload.label,
-
+        allow_downloads=payload.allow_downloads if payload.allow_downloads is not None else True,
     )
     
     session.add(db_share)
@@ -130,7 +133,8 @@ async def list_shares(
             max_downloads=share.max_downloads,
             download_count=share.download_count,
             is_active=share.is_active,
-            label=share.label
+            label=share.label,
+            allow_downloads=share.allow_downloads if getattr(share, "allow_downloads", None) is not None else True
         ))
     return response_items
 
@@ -275,7 +279,8 @@ async def get_shared_file(
         file_size=file.file_size,
         integrity_hash=file.integrity_hash,
         manifest=manifest_data,
-        shards=shards_list
+        shards=shards_list,
+        allow_downloads=db_share.allow_downloads if getattr(db_share, "allow_downloads", None) is not None else True
     )
 
 
@@ -318,12 +323,12 @@ async def generate_wrapper(
             detail="Access denied or file not found"
         )
 
-    # 2. Check file size limit (maximum 50MB for in-browser memory buffers)
-    MAX_WRAPPER_SIZE = 50 * 1024 * 1024
+    # 2. Check file size limit (maximum 200MB for in-browser memory buffers)
+    MAX_WRAPPER_SIZE = 200 * 1024 * 1024
     if db_file.file_size and db_file.file_size > MAX_WRAPPER_SIZE:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail="File too large for wrapper generation. Maximum size is 50MB."
+            detail="File too large for wrapper generation. Maximum size is 200MB."
         )
 
     # 3. Verify share token matches file
@@ -391,9 +396,9 @@ async def generate_wrapper(
 
     # 8. Stream as dynamic attachment file download
     filename = payload.file_name or db_file.encrypted_filename
-    safe_filename = filename.replace("'", "")
+    safe_filename = filename.replace('"', '\\"')
     headers = {
-        "Content-Disposition": f"attachment; filename='{safe_filename}_zancrypt_protected.html'"
+        "Content-Disposition": f'attachment; filename="{safe_filename}_zancrypt_protected.html"'
     }
     return Response(
         content=wrapper_html_bytes,
@@ -427,5 +432,169 @@ async def wrapper_destroyed(
     session.add(destruction)
     await session.commit()
     return Response(status_code=204)
+
+
+def get_python_mime_type(filename: str) -> str:
+    if not filename:
+        return "application/octet-stream"
+    ext = filename.split(".")[-1].lower()
+    mimes = {
+        "mp4": "video/mp4",
+        "mov": "video/quicktime",
+        "webm": "video/webm",
+        "mkv": "video/x-matroska",
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "png": "image/png",
+        "webp": "image/webp",
+        "gif": "image/gif",
+        "heic": "image/heic",
+        "heif": "image/heif",
+        "pdf": "application/pdf",
+        "txt": "text/plain",
+        "html": "text/html",
+        "zip": "application/zip",
+    }
+    return mimes.get(ext, "application/octet-stream")
+
+
+@router.get("/w/{token}")
+async def download_public_wrapper(
+    token: str,
+    t: int = 3600,  # countdown timer in seconds, default 1 hour
+    session: AsyncSession = Depends(get_async_session)
+):
+    """
+    Public GET endpoint:
+    Fetches the encrypted shards, compiles them into a self-destructing
+    HTML wrapper directly, and streams it back to the client as an attachment.
+    """
+    # 1. Fetch and validate share
+    stmt = (
+        select(Share)
+        .options(selectinload(Share.file))
+        .where(Share.share_token == token)
+    )
+    result = await session.execute(stmt)
+    db_share = result.scalar_one_or_none()
+
+    if not db_share:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Share link not found"
+        )
+
+    if not db_share.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="This share link is no longer active"
+        )
+
+    # Check Expiration (TTL)
+    if db_share.expires_at:
+        expires_tz = db_share.expires_at
+        if expires_tz.tzinfo is None:
+            expires_tz = expires_tz.replace(tzinfo=timezone.utc)
+            
+        if datetime.now(timezone.utc) > expires_tz:
+            db_share.is_active = False
+            await session.commit()
+            raise HTTPException(
+                status_code=status.HTTP_410_GONE,
+                detail="This share link has expired"
+            )
+
+    # Check Download Limit
+    if db_share.max_downloads and db_share.download_count >= db_share.max_downloads:
+        db_share.is_active = False
+        await session.commit()
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="This share link has reached its maximum download limit"
+        )
+
+    # Increment download count
+    db_share.download_count += 1
+    if db_share.max_downloads and db_share.download_count >= db_share.max_downloads:
+        db_share.is_active = False
+
+    # Fetch file details
+    db_file = db_share.file
+    if not db_file:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Linked file not found"
+        )
+
+    # Verify size limit (up to 200MB)
+    MAX_WRAPPER_SIZE = 200 * 1024 * 1024
+    if db_file.file_size and db_file.file_size > MAX_WRAPPER_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="File too large for wrapper generation. Maximum size is 200MB."
+        )
+
+    # Load manifest and nodes assignment
+    manifest_stmt = select(Manifest).where(Manifest.file_id == db_share.file_id)
+    manifest_result = await session.execute(manifest_stmt)
+    db_manifest = manifest_result.scalar_one_or_none()
+
+    if not db_manifest:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="File manifest not found"
+        )
+
+    # Reassemble shards
+    storage_router = StorageRouter()
+    file_bytes = b""
+    
+    for shard_info in db_manifest.replication_mapping:
+        shard_id = shard_info["shard_id"]
+        target_nodes = shard_info["nodes"]
+        shard_bytes = await storage_router.fetch_shard(shard_id, target_nodes)
+        
+        if not shard_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Shard registry error: {shard_id} offline across all replication layers"
+            )
+        
+        file_bytes += shard_bytes
+
+    # Fetch owner user to customize HTML
+    from app.models.user import User
+    owner_stmt = select(User).where(User.id == db_share.owner_user_id)
+    owner_result = await session.execute(owner_stmt)
+    owner_user = owner_result.scalar_one_or_none()
+    owner_name = owner_user.username if owner_user else "Anonymous User"
+
+    # Generate HTML wrapper
+    wrapper_options = {
+        "file_bytes": file_bytes,
+        "file_name": db_file.encrypted_filename,
+        "mime_type": get_python_mime_type(db_file.encrypted_filename),
+        "timer_seconds": t,
+        "file_id": db_share.file_id,
+        "share_token": token,
+        "owner_name": owner_name,
+    }
+    
+    wrapper_html_bytes = generate_self_destruct_wrapper(wrapper_options)
+
+    # Save download count changes
+    await session.commit()
+
+    # Stream as dynamic attachment file download
+    filename = db_file.encrypted_filename
+    safe_filename = filename.replace('"', '\\"')
+    headers = {
+        "Content-Disposition": f'attachment; filename="{safe_filename}_zancrypt_protected.html"'
+    }
+    return Response(
+        content=wrapper_html_bytes,
+        media_type="text/html",
+        headers=headers
+    )
 
 

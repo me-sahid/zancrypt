@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { 
@@ -30,7 +30,10 @@ import {
   FileImage,
   FileText,
   ShieldCheck,
-  Loader2
+  Loader2,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '../../components/ui/Card';
@@ -39,7 +42,7 @@ import Input from '../../components/ui/Input';
 import Badge from '../../components/ui/Badge';
 
 import { useDashboardStore } from '../../store/useDashboardStore';
-import { fileService, adminService } from '../../services/vaultServices';
+import { fileService } from '../../services/vaultServices';
 import { toast } from 'react-hot-toast';
 import ShareModal from '../../components/ShareModal';
 import FileThumbnail from '../../components/vault/FileThumbnail';
@@ -147,33 +150,48 @@ const Files = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
 
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState({});
+  const [sortField, setSortField] = useState('uploaded_at');
+  const [sortDirection, setSortDirection] = useState('desc');
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
 
+
+  const isFetchingRef = useRef(false);
+
+  const fetchFiles = useCallback(async () => {
+    if (isFetchingRef.current) return; // Prevent concurrent fetches
+    isFetchingRef.current = true;
+    setIsLoading(true);
+    try {
+      const res = await fileService.listFiles();
+      if (res?.data) setFiles(res.data);
+    } catch (error) {
+      console.error('Failed to fetch files:', error);
+      toast.error('Could not refresh vault data');
+    } finally {
+      setIsLoading(false);
+      isFetchingRef.current = false;
+    }
+  }, [setFiles]);
 
   React.useEffect(() => {
-    const fetchFiles = async () => {
-      setIsLoading(true);
-      try {
-        const res = await fileService.listFiles();
-        if (res?.data) setFiles(res.data);
-      } catch (error) {
-        console.error('Failed to fetch files:', error);
-        toast.error('Could not refresh vault data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchFiles();
-  }, [setFiles]);
+  }, [fetchFiles]);
 
   const handleDelete = async (id) => {
     try {
       await fileService.deleteFile(id);
       toast.success('File moved to Recycle Bin');
-      const res = await fileService.listFiles();
-      if (res?.data) setFiles(res.data);
+      fetchFiles();
     } catch (error) {
       console.error('Delete failed:', error);
       toast.error('Failed to move file to Bin');
@@ -189,15 +207,21 @@ const Files = () => {
         const fullHex = sortedShards.map(s => s.data).join('');
         const bytes = hexToBytes(fullHex);
         
-        const blob = new Blob([bytes], { type: 'application/octet-stream' });
+        const filename = file.encrypted_filename || file.filename || file.name || 'decrypted_file';
+        const mimeType = getMimeType(filename);
+        const blob = new Blob([bytes], { type: mimeType });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = file.encrypted_filename || file.filename || file.name || 'decrypted_file';
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        
+        // Delay revocation to prevent race condition in browser download manager
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+        }, 1000);
         toast.success('File decrypted successfully!', { id: 'download-toast' });
       } else {
         toast.error('Failed to parse download payload', { id: 'download-toast' });
@@ -293,11 +317,33 @@ const Files = () => {
     }
   };
 
-  const filteredFiles = files.filter(f => {
-    const matchesSearch = (f.encrypted_filename || f.filename || f.name || '').toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesDate = !dateFilter || (f.upload_time && f.upload_time.startsWith(dateFilter));
-    return matchesSearch && matchesDate;
-  });
+  const filteredFiles = useMemo(() => {
+    const filtered = files.filter(f => {
+      const matchesSearch = (f.encrypted_filename || f.filename || f.name || '').toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesDate = !dateFilter || (f.upload_time && f.upload_time.startsWith(dateFilter));
+      return matchesSearch && matchesDate;
+    });
+
+    if (!sortField) return filtered;
+
+    return [...filtered].sort((a, b) => {
+      let valA, valB;
+      if (sortField === 'name') {
+        valA = (a.encrypted_filename || a.filename || a.name || '').toLowerCase();
+        valB = (b.encrypted_filename || b.filename || b.name || '').toLowerCase();
+      } else if (sortField === 'size') {
+        valA = a.file_size || 0;
+        valB = b.file_size || 0;
+      } else if (sortField === 'uploaded_at') {
+        valA = a.upload_time || '';
+        valB = b.upload_time || '';
+      }
+
+      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [files, searchQuery, dateFilter, sortField, sortDirection]);
 
   const toggleSelectFile = (fileId) => {
     setSelectedIds(prev => ({
@@ -329,12 +375,8 @@ const Files = () => {
         await fileService.deleteFile(id);
       }
       toast.success(`Moved ${idsToDelete.length} files to Recycle Bin`, { id: 'bulk-delete-toast' });
-      
       setSelectedIds({});
-      setIsSelectionMode(false);
-      
-      const res = await fileService.listFiles();
-      if (res?.data) setFiles(res.data);
+      fetchFiles();
     } catch (error) {
       console.error('Bulk delete failed:', error);
       toast.error('Failed to complete bulk delete operations', { id: 'bulk-delete-toast' });
@@ -457,20 +499,17 @@ const Files = () => {
           <p className="text-xs text-slate-400 mt-1">Manage, share, and preview your securely distributed zero-knowledge assets.</p>
         </div>
         <div className="flex items-center space-x-3.5">
-          <Button 
-            onClick={() => {
-              setIsSelectionMode(!isSelectionMode);
-              setSelectedIds({});
-            }}
-            variant="outline" 
-            className={`font-bold border-[#1e293b] active:scale-95 transition-all text-xs rounded-xl py-2 px-4 cursor-pointer ${
-              isSelectionMode 
-                ? 'bg-rose-500/10 border-rose-500/35 text-rose-400 hover:bg-rose-500/20' 
-                : 'text-slate-300 hover:bg-slate-800'
-            }`}
-          >
-            {isSelectionMode ? 'Cancel Selection' : 'Select Files'}
-          </Button>
+          {Object.values(selectedIds).filter(Boolean).length > 0 && (
+            <Button 
+              onClick={() => {
+                setSelectedIds({});
+              }}
+              variant="outline" 
+              className="font-bold border-rose-500/35 text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 active:scale-95 transition-all text-xs rounded-xl py-2 px-4 cursor-pointer"
+            >
+              Clear Selection
+            </Button>
+          )}
           <Link to="/uploads">
             <Button variant="primary" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 font-bold shadow-lg shadow-blue-500/10 rounded-xl text-xs py-2 px-4">
               Upload New File
@@ -483,12 +522,12 @@ const Files = () => {
       <Card className="bg-[#0b0f19]/70 border-[#1e293b]/70 backdrop-blur-xl rounded-2xl">
         <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-4">
           <div className="relative w-full sm:flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
             <Input 
-              placeholder="Search secure assets..." 
+              placeholder="Filter vault by filename..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-[#070913] border-[#1e293b] focus:border-blue-500 rounded-xl"
+              className="pl-9 bg-[#070913]/40 border-[#1e293b]/60 focus:border-blue-500/80 rounded-xl text-xs"
             />
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto shrink-0">
@@ -521,26 +560,45 @@ const Files = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-[#1e293b]/60 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-[#0f172a]/20">
-                {isSelectionMode && (
-                  <th className="py-4 px-6 w-12 text-center select-none">
-                    <input
-                      type="checkbox"
-                      checked={isAllSelected}
-                      onChange={toggleSelectAll}
-                      className="w-4 h-4 rounded border-[#1e293b] bg-slate-900 text-blue-500 focus:ring-blue-500 cursor-pointer"
-                    />
-                  </th>
-                )}
-                <th className="py-4 px-6">File Name</th>
-                <th className="py-4 px-6">Original Size</th>
-                <th className="py-4 px-6">Uploaded At</th>
+                <th className="py-4 px-6 w-12 text-center select-none">
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 rounded border-[#1e293b] bg-slate-900 text-blue-500 focus:ring-blue-500 cursor-pointer"
+                  />
+                </th>
+                <th className="py-4 px-6 select-none cursor-pointer group/hdr" onClick={() => handleSort('name')}>
+                  <div className="flex items-center space-x-1.5 hover:text-slate-200 transition-colors">
+                    <span>File Name</span>
+                    <span className={`transition-all duration-200 ${sortField === 'name' ? 'text-blue-400 opacity-100' : 'text-slate-500 opacity-0 group-hover/hdr:opacity-100'}`}>
+                      {sortField === 'name' ? (sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}
+                    </span>
+                  </div>
+                </th>
+                <th className="py-4 px-6 hidden sm:table-cell select-none cursor-pointer group/hdr" onClick={() => handleSort('size')}>
+                  <div className="flex items-center space-x-1.5 hover:text-slate-200 transition-colors">
+                    <span>Original Size</span>
+                    <span className={`transition-all duration-200 ${sortField === 'size' ? 'text-blue-400 opacity-100' : 'text-slate-500 opacity-0 group-hover/hdr:opacity-100'}`}>
+                      {sortField === 'size' ? (sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}
+                    </span>
+                  </div>
+                </th>
+                <th className="py-4 px-6 hidden sm:table-cell select-none cursor-pointer group/hdr" onClick={() => handleSort('uploaded_at')}>
+                  <div className="flex items-center space-x-1.5 hover:text-slate-200 transition-colors">
+                    <span>Uploaded At</span>
+                    <span className={`transition-all duration-200 ${sortField === 'uploaded_at' ? 'text-blue-400 opacity-100' : 'text-slate-500 opacity-0 group-hover/hdr:opacity-100'}`}>
+                      {sortField === 'uploaded_at' ? (sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}
+                    </span>
+                  </div>
+                </th>
                 <th className="py-4 px-6 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1e293b]/30">
               {isLoading ? (
                 <tr>
-                  <td colSpan={isSelectionMode ? 5 : 4} className="py-20 text-center">
+                  <td colSpan={5} className="py-20 text-center">
                     <Loader2 className="w-10 h-10 text-blue-500 animate-spin mx-auto" />
                     <p className="text-slate-400 text-xs mt-3 uppercase tracking-wider font-semibold">Decrypting file entries...</p>
                   </td>
@@ -550,26 +608,22 @@ const Files = () => {
                   <tr 
                     key={file.id} 
                     onClick={(e) => {
-                      if (isSelectionMode) {
-                        if (e.target.tagName !== 'BUTTON' && !e.target.closest('button') && e.target.type !== 'checkbox') {
-                          toggleSelectFile(file.id);
-                        }
+                      if (e.target.tagName !== 'BUTTON' && !e.target.closest('button') && e.target.type !== 'checkbox' && !e.target.closest('input[type="checkbox"]')) {
+                        handlePreview(file);
                       }
                     }}
                     className={`hover:bg-slate-800/10 transition-colors group cursor-pointer ${
                       selectedIds[file.id] ? 'bg-blue-500/[0.04]' : ''
                     }`}
                   >
-                    {isSelectionMode && (
-                      <td className="py-4.5 px-6 w-12 text-center select-none" onClick={(e) => e.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          checked={!!selectedIds[file.id]}
-                          onChange={() => toggleSelectFile(file.id)}
-                          className="w-4 h-4 rounded border-[#1e293b] bg-slate-900 text-blue-500 focus:ring-blue-500 cursor-pointer"
-                        />
-                      </td>
-                    )}
+                    <td className="py-4.5 px-6 w-12 text-center select-none" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={!!selectedIds[file.id]}
+                        onChange={() => toggleSelectFile(file.id)}
+                        className="w-4 h-4 rounded border-[#1e293b] bg-slate-900 text-blue-500 focus:ring-blue-500 cursor-pointer"
+                      />
+                    </td>
                     <td className="py-4.5 px-6">
                       <div className="flex items-center space-x-3.5">
                         <div className="w-12 h-12 rounded-xl border border-white/10 overflow-hidden bg-slate-950 flex items-center justify-center shrink-0 relative group-hover:border-blue-500/40 transition-colors shadow-lg">
@@ -586,17 +640,18 @@ const Files = () => {
                             />
                           )}
                         </div>
-                        <div className="min-w-0 max-w-[200px] sm:max-w-xs md:max-w-md">
+                        <div className="min-w-0 max-w-[200px] sm:max-w-xs md:max-w-md flex items-center space-x-2">
                           <p className="font-bold text-sm text-slate-200 truncate" title={file.encrypted_filename}>
                             {file.encrypted_filename}
                           </p>
+                          <Lock className="w-3.5 h-3.5 text-blue-500/80 shrink-0" title="End-to-End Encrypted Shard" />
                         </div>
                       </div>
                     </td>
-                    <td className="py-4.5 px-6 font-mono text-xs text-slate-300 font-medium">
+                    <td className="py-4.5 px-6 font-mono text-xs text-slate-300 font-medium hidden sm:table-cell">
                       {formatSize(file.file_size)}
                     </td>
-                    <td className="py-4.5 px-6 text-xs text-slate-400 font-medium">
+                    <td className="py-4.5 px-6 text-xs text-slate-400 font-medium hidden sm:table-cell">
                       {formatDate(file.upload_time)}
                     </td>
                     <td className="py-4.5 px-6 text-right">
@@ -635,7 +690,7 @@ const Files = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={isSelectionMode ? 5 : 4} className="py-16 text-center text-slate-500 text-xs uppercase tracking-widest font-semibold">
+                  <td colSpan={5} className="py-16 text-center text-slate-500 text-xs uppercase tracking-widest font-semibold">
                     No matching assets in this vault
                   </td>
                 </tr>
@@ -648,7 +703,7 @@ const Files = () => {
       {/* Floating Selection Bulk Action Bar */}
       {createPortal(
         <AnimatePresence>
-          {isSelectionMode && Object.values(selectedIds).filter(Boolean).length > 0 && (
+          {Object.values(selectedIds).filter(Boolean).length > 0 && (
             <motion.div
               initial={{ y: 80, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -705,7 +760,7 @@ const Files = () => {
             className="bg-[#0b0f19]/95 border border-[#1e293b]/80 rounded-3xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden shadow-2xl relative cursor-default z-10 text-white"
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-[#1e293b]/50 bg-[#0f172a]/40">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 border-b border-[#1e293b]/50 bg-[#0f172a]/40 gap-4">
               <div className="flex items-center space-x-3.5">
                 <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 shrink-0">
                   {previewData.fileType === 'video' ? <FileVideo className="w-5 h-5" /> :
@@ -820,7 +875,7 @@ const Files = () => {
                             step="0.05"
                             value={isMuted ? 0 : volume}
                             onChange={handleVolumeChange}
-                            className="w-14 h-1 bg-white/20 rounded-full appearance-none cursor-pointer accent-blue-500"
+                            className="hidden sm:block w-14 h-1 bg-white/20 rounded-full appearance-none cursor-pointer accent-blue-500"
                           />
                         </div>
                         <select 

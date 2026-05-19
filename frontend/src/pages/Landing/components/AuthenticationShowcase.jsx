@@ -60,12 +60,16 @@ const AuthenticationShowcase = () => {
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
         
         {/* Visual Animation Side */}
-        <div className="relative h-[500px] flex items-center justify-center">
+        <div className="relative h-[650px] flex items-center justify-center">
           {/* Mock Device */}
-          <div className="auth-device relative w-[300px] h-[550px] bg-[#0d0d12] border border-white/20 rounded-[40px] shadow-2xl overflow-hidden p-2">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#0d0d12] rounded-b-3xl z-20" />
+          <div className="auth-device relative w-[280px] h-[586px] shrink-0 bg-[#0d0d12] border-[6px] border-[#1a1a24] rounded-[52px] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.8)] overflow-hidden p-1">
             
-            <div className="relative w-full h-full bg-[#13131a] rounded-[32px] overflow-hidden flex flex-col items-center pt-24 px-6 border border-white/5">
+            {/* Punch Hole Camera */}
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[18px] h-[18px] bg-black rounded-full z-30 flex items-center justify-center shadow-[0_0_4px_rgba(0,0,0,0.5),inset_0_-1px_2px_rgba(255,255,255,0.1)]">
+              <div className="w-2 h-2 rounded-full bg-[#111] shadow-[inset_0_0_2px_rgba(255,255,255,0.3)]" />
+            </div>
+            
+            <div className="relative w-full h-full bg-gradient-to-b from-[#13131a] to-[#050508] rounded-[44px] overflow-hidden flex flex-col items-center pt-20 px-6 shadow-inner">
               
               <div className="w-16 h-16 rounded-2xl bg-surface-elevated flex items-center justify-center mb-8 shadow-lg">
                 <ShieldCheck className="w-8 h-8 text-primary-accent" />

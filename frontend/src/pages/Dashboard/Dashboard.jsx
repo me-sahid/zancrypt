@@ -9,8 +9,10 @@ import {
   HardDrive,
   Cpu,
   Globe,
-  Zap
+  Zap,
+  Sparkles
 } from 'lucide-react';
+import Button from '../../components/ui/Button';
 import { useDashboardStore } from '../../store/useDashboardStore';
 import { useAuthStore } from '../../store/useStore';
 import { useSimulationEngine } from '../../hooks/useSimulationEngine';
@@ -213,6 +215,29 @@ const Dashboard = () => {
           </Link>
         </div>
       </div>
+
+      {/* Onboarding Alert for Profile Personalization */}
+      {(user?.full_name === 'No Name' || !user?.full_name) && (
+        <Card className="bg-primary-accent/5 border border-primary-accent/20 rounded-2xl p-6 relative overflow-hidden">
+          <div className="absolute top-[-10%] right-[-10%] w-[20%] h-[50%] bg-primary-accent/10 blur-[80px] rounded-full pointer-events-none" />
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            <div className="space-y-2">
+              <h3 className="font-bold text-lg text-white flex items-center">
+                <Sparkles className="w-5 h-5 mr-2 text-primary-accent" />
+                Personalize Your Secure Vault
+              </h3>
+              <p className="text-text-secondary text-sm max-w-2xl leading-relaxed">
+                Welcome to your distributed zero-knowledge cloud storage. Please update your profile alias to customize your node dashboard experience.
+              </p>
+            </div>
+            <Link to="/profile">
+              <Button variant="primary" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold px-5 py-2.5 rounded-xl whitespace-nowrap shadow-lg shadow-blue-500/20 active:scale-95 transition-all text-xs">
+                Set Vault Alias
+              </Button>
+            </Link>
+          </div>
+        </Card>
+      )}
 
       {/* Simplified Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -37,6 +37,20 @@ class FileService:
         if not nodes:
             raise HTTPException(status_code=503, detail="No healthy storage nodes available for distribution")
 
+        # Check storage limit (1 GB Testing Tier)
+        user_res = await self.session.execute(
+            select(User).where(User.id == user_id)
+        )
+        user = user_res.scalar_one_or_none()
+        if user:
+            # 1 GB limit in bytes
+            limit = 1073741824
+            if (user.storage_used or 0) + file_size > limit:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Storage quota exceeded. The Testing Tier limit is 1 GB."
+                )
+
         # 1. Create file record
         file = await self.repo.create_file_record(
             owner_id=user_id,

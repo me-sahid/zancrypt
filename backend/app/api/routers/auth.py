@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_async_session, get_current_user
-from app.schemas.auth import LoginRequest, RefreshRequest, TokenResponse, UserCreate, UserResponse
+from app.schemas.auth import LoginRequest, RefreshRequest, TokenResponse, UserCreate, UserResponse, UserUpdate
 from app.services.auth_service import AuthService
 from app.services.user_service import UserService
 from app.services.session_service import SessionService
@@ -32,4 +32,21 @@ async def logout(current_user = Depends(get_current_user), session: AsyncSession
 
 @router.get("/me", response_model=UserResponse)
 async def get_self(current_user = Depends(get_current_user)) -> UserResponse:
+    return UserResponse.model_validate(current_user)
+
+@router.put("/profile", response_model=UserResponse)
+async def update_profile(
+    payload: UserUpdate,
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session)
+) -> UserResponse:
+    print(f"Payload received: {payload.model_dump()}")
+    if payload.full_name is not None:
+        current_user.full_name = payload.full_name
+    if payload.region is not None:
+        current_user.region = payload.region
+        print(f"Set current_user.region to: {current_user.region}")
+    session.add(current_user)
+    await session.commit()
+    await session.refresh(current_user)
     return UserResponse.model_validate(current_user)
