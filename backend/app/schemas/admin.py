@@ -42,6 +42,7 @@ class NodeHealthResponse(BaseModel):
     provider: str
     storage_used: int = 0
     shards: list[ShardInfoSchema] = []
+    node_metadata: dict[str, Any] | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

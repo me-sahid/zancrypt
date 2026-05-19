@@ -53,7 +53,11 @@ const MetricCard = ({ label, value, suffix, icon: Icon, trend, isPositive, class
         <p className="text-[10px] font-bold text-text-secondary uppercase tracking-[0.15em]">{label}</p>
         <div className="flex items-baseline space-x-1">
           <h3 className="text-3xl font-bold text-text-primary tracking-tight">
-            <AnimatedCounter value={value} suffix={suffix} />
+            {typeof value === 'number' ? (
+              <AnimatedCounter value={value} suffix={suffix} />
+            ) : (
+              <>{value}{suffix}</>
+            )}
           </h3>
         </div>
       </div>

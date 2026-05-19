@@ -3,5 +3,6 @@ from .files import router as files_router
 from .admin import router as admin_router
 from .health import router as health_router
 from .share import router as share_router
+from .dashboard import router as dashboard_router
 
-__all__ = ["auth_router", "files_router", "admin_router", "health_router", "share_router"]
+__all__ = ["auth_router", "files_router", "admin_router", "health_router", "share_router", "dashboard_router"]
