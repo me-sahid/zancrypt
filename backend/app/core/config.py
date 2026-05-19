@@ -44,10 +44,10 @@ class Settings(BaseSettings):
     TMP_STAGING_DIR: str = Field("/dev/shm/vault_staging", env="TMP_STAGING_DIR")
 
     # Cloud Storage (B2 / S3)
-    B2_KEY_ID: str = Field(None, env="B2_KEY_ID")
-    B2_APP_KEY: str = Field(None, env="B2_APP_KEY")
-    B2_BUCKET: str = Field(None, env="B2_BUCKET")
-    B2_ENDPOINT: str = Field(None, env="B2_ENDPOINT")
+    B2_KEY_ID: str | None = Field(None, env="B2_KEY_ID")
+    B2_APP_KEY: str | None = Field(None, env="B2_APP_KEY")
+    B2_BUCKET: str | None = Field(None, env="B2_BUCKET")
+    B2_ENDPOINT: str | None = Field(None, env="B2_ENDPOINT")
 
     # Observability
     ENABLE_OTEL: bool = Field(True, env="ENABLE_OTEL")

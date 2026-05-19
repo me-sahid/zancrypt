@@ -16,7 +16,7 @@ from datetime import datetime, timezone, timedelta
 from sqlalchemy import select, delete as sa_delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import async_session_factory
+from app.db import async_session_maker as async_session_factory
 from app.models.pending_deletion import PendingDeletion
 from app.models.share import Share
 from app.workers.celery_app import celery_app
