@@ -556,9 +556,11 @@ const Files = () => {
                   <tr 
                     key={file.id} 
                     onClick={(e) => {
-                      if (isSelectionMode) {
-                        if (e.target.tagName !== 'BUTTON' && !e.target.closest('button') && e.target.type !== 'checkbox') {
+                      if (e.target.tagName !== 'BUTTON' && !e.target.closest('button') && e.target.type !== 'checkbox') {
+                        if (isSelectionMode) {
                           toggleSelectFile(file.id);
+                        } else {
+                          handlePreview(file);
                         }
                       }
                     }}
