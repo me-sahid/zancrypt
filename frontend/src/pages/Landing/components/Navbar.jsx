@@ -5,7 +5,7 @@ import {
   Menu, 
   X, 
   ArrowRight, 
-  Globe, 
+  Activity, 
   ChevronDown, 
   Snowflake, 
   Cloud, 
@@ -58,10 +58,10 @@ const Navbar = () => {
   const displayName = getUserDisplayName();
 
   const navLinks = [
-    { name: 'Features', href: '#features' },
-    { name: 'Architecture', href: '#architecture' },
-    { name: 'Security', href: '#security' },
-    { name: 'API', href: '#api' },
+    { name: 'Features', href: '#features', isRoute: false },
+    { name: 'Architecture', href: '#architecture', isRoute: false },
+    { name: 'Security', href: '#security', isRoute: false },
+    { name: 'API', href: '/api', isRoute: true },
   ];
 
   return (
@@ -84,20 +84,46 @@ const Navbar = () => {
         {/* Desktop Links (Optimized spacing for tablet widths) */}
         <div className="hidden lg:flex items-center space-x-8">
           {navLinks.map((link) => (
-            <a 
-              key={link.name} 
-              href={link.href} 
-              className="text-xs lg:text-sm font-semibold text-text-secondary hover:text-white transition-colors relative group"
-            >
-              {link.name}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary-accent transition-all group-hover:w-full" />
-            </a>
+            link.isRoute ? (
+              <Link 
+                key={link.name} 
+                to={link.href} 
+                className="text-xs lg:text-sm font-semibold text-text-secondary hover:text-white transition-colors relative group"
+              >
+                {link.name}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary-accent transition-all group-hover:w-full" />
+              </Link>
+            ) : (
+              <a 
+                key={link.name} 
+                href={link.href} 
+                className="text-xs lg:text-sm font-semibold text-text-secondary hover:text-white transition-colors relative group"
+              >
+                {link.name}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary-accent transition-all group-hover:w-full" />
+              </a>
+            )
           ))}
         </div>
 
         {/* Auth Buttons / Dropdown Section (Responsive adjustments) */}
         <div className="hidden lg:flex items-center space-x-5">
-          <Globe className="w-4 h-4 lg:w-5 lg:h-5 text-text-secondary hover:text-white transition-colors cursor-pointer" />
+          {/* System Status Popover */}
+          <div className="relative group flex items-center justify-center cursor-pointer">
+            <button className="flex items-center space-x-2 p-1.5 rounded-lg hover:bg-white/5 transition-colors">
+              <Activity className="w-4 h-4 lg:w-5 lg:h-5 text-text-secondary group-hover:text-white transition-colors" />
+            </button>
+            <div className="absolute top-full mt-2 right-1/2 translate-x-1/2 w-48 bg-[#18181c] border border-white/5 rounded-xl shadow-2xl p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[200]">
+              <div className="flex items-center space-x-3 mb-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                <span className="text-xs font-bold text-white">All Systems Operational</span>
+              </div>
+              <p className="text-[10px] text-text-secondary">5/5 Global Relays Online</p>
+              <Link to="/nodes" className="mt-2 block w-full text-center py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-white transition-colors">
+                View Metrics
+              </Link>
+            </div>
+          </div>
           
           {isAuthenticated ? (
             <div className="flex items-center space-x-3 lg:space-x-4 relative" ref={dropdownRef}>
@@ -259,14 +285,25 @@ const Navbar = () => {
           >
             <div className="flex flex-col space-y-6">
               {navLinks.map((link) => (
-                <a 
-                  key={link.name} 
-                  href={link.href} 
-                  className="text-lg font-bold text-text-secondary hover:text-white transition-colors"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {link.name}
-                </a>
+                link.isRoute ? (
+                  <Link 
+                    key={link.name} 
+                    to={link.href} 
+                    className="text-lg font-bold text-text-secondary hover:text-white transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {link.name}
+                  </Link>
+                ) : (
+                  <a 
+                    key={link.name} 
+                    href={link.href} 
+                    className="text-lg font-bold text-text-secondary hover:text-white transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {link.name}
+                  </a>
+                )
               ))}
               
               <div className="pt-6 border-t border-white/5 flex flex-col space-y-4">

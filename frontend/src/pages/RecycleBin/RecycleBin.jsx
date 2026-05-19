@@ -11,7 +11,12 @@ import {
   ShieldAlert,
   CheckCircle2,
   Calendar,
-  Database
+  Database,
+  Lock,
+  Filter,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown
 } from 'lucide-react';
 import { fileService } from '../../services/vaultServices';
 import { toast } from 'react-hot-toast';
@@ -38,8 +43,18 @@ export default function RecycleBin() {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState({});
+  const [sortField, setSortField] = useState('deleted_at');
+  const [sortDirection, setSortDirection] = useState('desc');
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
   const fetchBinFiles = async () => {
     setIsLoading(true);
@@ -96,7 +111,6 @@ export default function RecycleBin() {
       toast.success('Successfully emptied the Recycle Bin', { id: 'empty-bin-toast' });
       fetchBinFiles();
       setSelectedIds({});
-      setIsSelectionMode(false);
     } catch (error) {
       console.error('Empty bin failed:', error);
       toast.error('Failed to empty all trash files completely', { id: 'empty-bin-toast' });
@@ -111,9 +125,31 @@ export default function RecycleBin() {
     }));
   };
 
-  const filteredFiles = files.filter(f => 
-    (f.encrypted_filename || f.filename || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredFiles = React.useMemo(() => {
+    const filtered = files.filter(f => 
+      (f.encrypted_filename || f.filename || '').toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    if (!sortField) return filtered;
+
+    return [...filtered].sort((a, b) => {
+      let valA, valB;
+      if (sortField === 'name') {
+        valA = (a.encrypted_filename || a.filename || '').toLowerCase();
+        valB = (b.encrypted_filename || b.filename || '').toLowerCase();
+      } else if (sortField === 'size') {
+        valA = a.file_size || 0;
+        valB = b.file_size || 0;
+      } else if (sortField === 'deleted_at') {
+        valA = a.deleted_at || a.upload_time || '';
+        valB = b.deleted_at || b.upload_time || '';
+      }
+
+      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [files, searchQuery, sortField, sortDirection]);
 
   const isAllSelected = filteredFiles.length > 0 && filteredFiles.every(f => selectedIds[f.id]);
   const toggleSelectAll = () => {
@@ -139,7 +175,6 @@ export default function RecycleBin() {
       }
       toast.success(`Successfully restored ${idsToRestore.length} files to My Vault`, { id: 'bulk-restore-toast' });
       setSelectedIds({});
-      setIsSelectionMode(false);
       fetchBinFiles();
     } catch (error) {
       console.error('Bulk restore failed:', error);
@@ -161,7 +196,6 @@ export default function RecycleBin() {
       }
       toast.success(`Permanently destroyed ${idsToPurge.length} files`, { id: 'bulk-purge-toast' });
       setSelectedIds({});
-      setIsSelectionMode(false);
       fetchBinFiles();
     } catch (error) {
       console.error('Bulk purge failed:', error);
@@ -209,20 +243,15 @@ export default function RecycleBin() {
         </div>
         
         <div className="flex items-center space-x-3">
-          {files.length > 0 && (
+          {Object.values(selectedIds).filter(Boolean).length > 0 && (
             <Button
               onClick={() => {
-                setIsSelectionMode(!isSelectionMode);
                 setSelectedIds({});
               }}
               variant="outline"
-              className={`font-bold border-[#1e293b] active:scale-95 transition-all text-xs rounded-xl py-2 px-4 cursor-pointer ${
-                isSelectionMode 
-                  ? 'bg-rose-500/10 border-rose-500/35 text-rose-400 hover:bg-rose-500/20' 
-                  : 'text-slate-300 hover:bg-slate-800'
-              }`}
+              className="font-bold border-rose-500/35 text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 active:scale-95 transition-all text-xs rounded-xl py-2 px-4 cursor-pointer"
             >
-              {isSelectionMode ? 'Cancel Selection' : 'Select Files'}
+              Clear Selection
             </Button>
           )}
           
@@ -242,13 +271,13 @@ export default function RecycleBin() {
       <Card className="bg-[#0b0f19]/70 border-[#1e293b]/70 backdrop-blur-xl rounded-2xl">
         <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-4">
           <div className="relative w-full sm:flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
             <Input 
               type="text" 
-              placeholder="Search soft-deleted files..." 
+              placeholder="Filter bin by filename..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10.5 bg-[#070913]/60 border-[#1e293b]/50 text-slate-200 placeholder-slate-500 rounded-xl focus:border-rose-500/40 text-xs w-full py-2.5"
+              className="pl-9 bg-[#070913]/40 border-[#1e293b]/60 text-slate-200 placeholder-slate-500 rounded-xl focus:border-rose-500/40 text-xs w-full py-2.5"
             />
           </div>
         </CardContent>
@@ -260,26 +289,45 @@ export default function RecycleBin() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-[#1e293b]/60 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-[#0f172a]/20">
-                {isSelectionMode && (
-                  <th className="py-4 px-6 w-12 text-center select-none">
-                    <input
-                      type="checkbox"
-                      checked={isAllSelected}
-                      onChange={toggleSelectAll}
-                      className="w-4 h-4 rounded border-[#1e293b] bg-slate-900 text-blue-500 focus:ring-blue-500 cursor-pointer"
-                    />
-                  </th>
-                )}
-                <th className="py-4 px-6">File Name</th>
-                <th className="py-4 px-6">Original Size</th>
-                <th className="py-4 px-6">Deleted At</th>
+                <th className="py-4 px-6 w-12 text-center select-none">
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 rounded border-[#1e293b] bg-slate-900 text-blue-500 focus:ring-blue-500 cursor-pointer"
+                  />
+                </th>
+                <th className="py-4 px-6 select-none cursor-pointer group/hdr" onClick={() => handleSort('name')}>
+                  <div className="flex items-center space-x-1.5 hover:text-slate-200 transition-colors">
+                    <span>File Name</span>
+                    <span className={`transition-all duration-200 ${sortField === 'name' ? 'text-blue-400 opacity-100' : 'text-slate-500 opacity-0 group-hover/hdr:opacity-100'}`}>
+                      {sortField === 'name' ? (sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}
+                    </span>
+                  </div>
+                </th>
+                <th className="py-4 px-6 hidden sm:table-cell select-none cursor-pointer group/hdr" onClick={() => handleSort('size')}>
+                  <div className="flex items-center space-x-1.5 hover:text-slate-200 transition-colors">
+                    <span>Original Size</span>
+                    <span className={`transition-all duration-200 ${sortField === 'size' ? 'text-blue-400 opacity-100' : 'text-slate-500 opacity-0 group-hover/hdr:opacity-100'}`}>
+                      {sortField === 'size' ? (sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}
+                    </span>
+                  </div>
+                </th>
+                <th className="py-4 px-6 hidden sm:table-cell select-none cursor-pointer group/hdr" onClick={() => handleSort('deleted_at')}>
+                  <div className="flex items-center space-x-1.5 hover:text-slate-200 transition-colors">
+                    <span>Deleted At</span>
+                    <span className={`transition-all duration-200 ${sortField === 'deleted_at' ? 'text-blue-400 opacity-100' : 'text-slate-500 opacity-0 group-hover/hdr:opacity-100'}`}>
+                      {sortField === 'deleted_at' ? (sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}
+                    </span>
+                  </div>
+                </th>
                 <th className="py-4 px-6 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1e293b]/30">
               {isLoading ? (
                 <tr>
-                  <td colSpan={isSelectionMode ? 5 : 4} className="py-20 text-center">
+                  <td colSpan={5} className="py-20 text-center">
                     <Loader2 className="w-10 h-10 text-rose-500 animate-spin mx-auto" />
                     <p className="text-slate-400 text-xs mt-3 uppercase tracking-wider font-semibold">Loading trash bin...</p>
                   </td>
@@ -289,26 +337,22 @@ export default function RecycleBin() {
                   <tr 
                     key={file.id} 
                     onClick={(e) => {
-                      if (isSelectionMode) {
-                        if (e.target.tagName !== 'BUTTON' && !e.target.closest('button') && e.target.type !== 'checkbox') {
-                          toggleSelectFile(file.id);
-                        }
+                      if (e.target.tagName !== 'BUTTON' && !e.target.closest('button') && e.target.type !== 'checkbox' && !e.target.closest('input[type="checkbox"]')) {
+                        toggleSelectFile(file.id);
                       }
                     }}
                     className={`hover:bg-slate-800/10 transition-colors group cursor-pointer ${
                       selectedIds[file.id] ? 'bg-rose-500/[0.03]' : ''
                     }`}
                   >
-                    {isSelectionMode && (
-                      <td className="py-4.5 px-6 w-12 text-center select-none" onClick={(e) => e.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          checked={!!selectedIds[file.id]}
-                          onChange={() => toggleSelectFile(file.id)}
-                          className="w-4 h-4 rounded border-[#1e293b] bg-slate-900 text-rose-500 focus:ring-rose-500 cursor-pointer"
-                        />
-                      </td>
-                    )}
+                    <td className="py-4.5 px-6 w-12 text-center select-none" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={!!selectedIds[file.id]}
+                        onChange={() => toggleSelectFile(file.id)}
+                        className="w-4 h-4 rounded border-[#1e293b] bg-slate-900 text-rose-500 focus:ring-blue-500 cursor-pointer"
+                      />
+                    </td>
                     
                     <td className="py-4.5 px-6">
                       <div className="flex items-center space-x-3.5">
@@ -319,19 +363,20 @@ export default function RecycleBin() {
                              <FileText className="w-4.5 h-4.5" />}
                           </div>
                         </div>
-                        <div className="min-w-0 max-w-[200px] sm:max-w-xs md:max-w-md">
+                        <div className="min-w-0 max-w-[200px] sm:max-w-xs md:max-w-md flex items-center space-x-2">
                           <p className="font-bold text-sm text-slate-200 truncate" title={file.encrypted_filename}>
                             {file.encrypted_filename}
                           </p>
+                          <Lock className="w-3.5 h-3.5 text-blue-500/80 shrink-0" title="End-to-End Encrypted Shard" />
                         </div>
                       </div>
                     </td>
                     
-                    <td className="py-4.5 px-6 font-mono text-xs text-slate-300 font-medium">
+                    <td className="py-4.5 px-6 font-mono text-xs text-slate-300 font-medium hidden sm:table-cell">
                       {formatSize(file.file_size)}
                     </td>
                     
-                    <td className="py-4.5 px-6 text-xs text-slate-400 font-medium">
+                    <td className="py-4.5 px-6 text-xs text-slate-400 font-medium hidden sm:table-cell">
                       <span className="flex items-center">
                         <Calendar className="w-3.5 h-3.5 mr-1.5 text-slate-500" />
                         {formatDate(file.upload_time)}
@@ -360,7 +405,7 @@ export default function RecycleBin() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={isSelectionMode ? 5 : 4} className="py-20 text-center">
+                  <td colSpan={5} className="py-20 text-center">
                     <div className="max-w-xs mx-auto">
                       <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-2xl w-fit mx-auto mb-3">
                         <CheckCircle2 className="w-6 h-6" />
@@ -379,7 +424,7 @@ export default function RecycleBin() {
       {/* Floating Selection Bulk Action Bar — portalled to body so it always anchors to viewport bottom */}
       {createPortal(
         <AnimatePresence>
-          {isSelectionMode && Object.values(selectedIds).filter(Boolean).length > 0 && (
+          {Object.values(selectedIds).filter(Boolean).length > 0 && (
             <motion.div
               initial={{ y: 80, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}

@@ -23,6 +23,7 @@ const Audit = lazy(() => import('./pages/Audit/Audit'));
 const Settings = lazy(() => import('./pages/Settings/Settings'));
 const Profile = lazy(() => import('./pages/Settings/Profile'));
 const NotFound = lazy(() => import('./pages/Errors/NotFound'));
+const ApiSoon = lazy(() => import('./pages/Api/ApiSoon'));
 const DownloadPage = lazy(() => import('./pages/Download/Download'));
 const SharedFile = lazy(() => import('./pages/Download/SharedFile'));
 const SharesPage = lazy(() => import('./pages/Shares/Shares'));
@@ -50,6 +51,7 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Landing />} />
+          <Route path="/api" element={<ApiSoon />} />
           <Route path="/download" element={<DownloadPage />} />
           <Route path="/share/:token" element={<SharedFile />} />
           <Route path="/login" element={<Login />} />

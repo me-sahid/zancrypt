@@ -22,6 +22,7 @@ class ShareCreateRequest(BaseModel):
     ttl_hours: Optional[float] = None  # None or 0 = Never
     max_downloads: Optional[int] = None  # None or 0 = Unlimited
     label: Optional[str] = None
+    allow_downloads: Optional[bool] = True
 
 
 class ShareCreateResponse(BaseModel):
@@ -38,6 +39,7 @@ class ShareListItem(BaseModel):
     download_count: int
     is_active: bool
     label: Optional[str] = None
+    allow_downloads: bool
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -51,6 +53,7 @@ class SharedFileResponse(BaseModel):
     integrity_hash: str
     manifest: dict
     shards: List[dict]  # Contains list of { shard_id, data (hex) }
+    allow_downloads: bool
 
 # --- API Endpoints ---
 
@@ -93,7 +96,7 @@ async def create_share(
         download_count=0,
         is_active=True,
         label=payload.label,
-
+        allow_downloads=payload.allow_downloads if payload.allow_downloads is not None else True,
     )
     
     session.add(db_share)
@@ -130,7 +133,8 @@ async def list_shares(
             max_downloads=share.max_downloads,
             download_count=share.download_count,
             is_active=share.is_active,
-            label=share.label
+            label=share.label,
+            allow_downloads=share.allow_downloads if getattr(share, "allow_downloads", None) is not None else True
         ))
     return response_items
 
@@ -275,7 +279,8 @@ async def get_shared_file(
         file_size=file.file_size,
         integrity_hash=file.integrity_hash,
         manifest=manifest_data,
-        shards=shards_list
+        shards=shards_list,
+        allow_downloads=db_share.allow_downloads if getattr(db_share, "allow_downloads", None) is not None else True
     )
 
 

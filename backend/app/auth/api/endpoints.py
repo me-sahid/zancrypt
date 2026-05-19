@@ -295,3 +295,33 @@ async def login_fallback(
             "master_key_salt": user.master_key_salt
         }
     )
+
+from app.api.deps import get_current_user
+
+@router.put("/profile")
+async def update_profile(
+    payload: dict,
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session)
+):
+    full_name = payload.get("full_name")
+    if not full_name:
+        raise HTTPException(status_code=400, detail="full_name is required")
+    current_user.full_name = full_name
+    
+    region = payload.get("region")
+    if region is not None:
+        current_user.region = region
+        
+    session.add(current_user)
+    await session.commit()
+    await session.refresh(current_user)
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "username": current_user.username,
+        "full_name": current_user.full_name,
+        "role": current_user.role,
+        "region": current_user.region,
+        "master_key_salt": current_user.master_key_salt
+    }

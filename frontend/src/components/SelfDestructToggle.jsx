@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, Download, CheckCircle, Flame, Lock, Zap, Undo2 } from 'lucide-react';
 import api from '../services/api';
@@ -14,6 +14,9 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
   const [timerSeconds, setTimerSeconds] = useState(3600); // Default 1 Hour (3600 seconds)
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const [isCustom, setIsCustom] = useState(false);
+  const [customHours, setCustomHours] = useState('0');
+  const [customMins, setCustomMins] = useState('30');
 
   const timeOptions = [
     { label: '1 Hour', seconds: 3600 },
@@ -22,9 +25,22 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
     { label: '72 Hours', seconds: 259200 }
   ];
 
+  useEffect(() => {
+    if (isCustom) {
+      const hrs = parseFloat(customHours) || 0;
+      const mins = parseFloat(customMins) || 0;
+      const totalSecs = Math.round((hrs * 3600) + (mins * 60));
+      setTimerSeconds(totalSecs);
+    }
+  }, [isCustom, customHours, customMins]);
+
   const handleGenerateWrapper = async () => {
     if (!shareToken) {
       toast.error('Please generate a standard share link first to register the token');
+      return;
+    }
+    if (isCustom && timerSeconds <= 0) {
+      toast.error('Local Expiration must be greater than 0 minutes');
       return;
     }
     
@@ -167,17 +183,18 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                   Local Expiration Duration
                 </label>
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-5 gap-1">
                   {timeOptions.map((opt) => (
                     <button
                       key={opt.seconds}
                       type="button"
                       onClick={() => {
+                        setIsCustom(false);
                         setTimerSeconds(opt.seconds);
                         setIsDone(false);
                       }}
-                      className={`py-2 px-1 text-[10px] font-black rounded-lg border transition-all ${
-                        timerSeconds === opt.seconds
+                      className={`py-2 px-0.5 text-[9px] font-black rounded-lg border transition-all ${
+                        !isCustom && timerSeconds === opt.seconds
                           ? 'bg-rose-500/10 border-rose-500 text-rose-300 shadow-md shadow-rose-500/5'
                           : 'bg-[#0f172a] border-[#1e293b] text-slate-400 hover:text-white hover:bg-slate-800'
                       }`}
@@ -185,8 +202,58 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
                       {opt.label}
                     </button>
                   ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCustom(true);
+                      setIsDone(false);
+                    }}
+                    className={`py-2 px-0.5 text-[9px] font-black rounded-lg border transition-all ${
+                      isCustom
+                        ? 'bg-rose-500/10 border-rose-500 text-rose-300 shadow-md shadow-rose-500/5'
+                        : 'bg-[#0f172a] border-[#1e293b] text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    Custom
+                  </button>
                 </div>
               </div>
+
+              {/* Custom Expiry Input Panel */}
+              {isCustom && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0, y: -5 }}
+                  animate={{ height: 'auto', opacity: 1, y: 0 }}
+                  className="p-3 bg-[#0a0d16] border border-rose-500/10 rounded-xl grid grid-cols-2 gap-2"
+                >
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                      Hours
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="8760"
+                      value={customHours}
+                      onChange={(e) => setCustomHours(e.target.value)}
+                      className="w-full bg-[#070913] border border-[#1e293b] rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-rose-500 font-medium"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                      Minutes
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="59"
+                      value={customMins}
+                      onChange={(e) => setCustomMins(e.target.value)}
+                      className="w-full bg-[#070913] border border-[#1e293b] rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-rose-500 font-medium"
+                    />
+                  </div>
+                </motion.div>
+              )}
 
               {/* Red Warning Card */}
               <div className="flex items-start space-x-2.5 p-3 bg-rose-500/5 border border-rose-500/15 rounded-xl text-rose-200">
@@ -195,7 +262,9 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
                   <p className="font-bold text-rose-400 uppercase tracking-wider">Destruction Warning:</p>
                   <p className="mt-0.5 text-slate-300">
                     The compiled HTML container will permanently decrypt strictly in-memory and completely shred itself <strong>{
-                      timeOptions.find(o => o.seconds === timerSeconds)?.label
+                      isCustom 
+                        ? `${customHours} Hours ${customMins} Mins` 
+                        : (timeOptions.find(o => o.seconds === timerSeconds)?.label || '1 Hour')
                     }</strong> after the recipient first opens it.
                   </p>
                 </div>

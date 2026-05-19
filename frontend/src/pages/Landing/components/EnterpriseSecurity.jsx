@@ -42,7 +42,7 @@ const EnterpriseSecurity = () => {
   ];
 
   return (
-    <section ref={containerRef} className="py-32 px-8 bg-[#050508] border-y border-white/5 relative overflow-hidden">
+    <section id="security" ref={containerRef} className="py-32 px-8 bg-[#050508] border-y border-white/5 relative overflow-hidden">
       <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
       
       <div className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-16 items-center">

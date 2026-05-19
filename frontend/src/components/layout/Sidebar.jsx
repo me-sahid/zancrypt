@@ -32,7 +32,7 @@ const menuItems = [
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { isSidebarOpenMobile, setSidebarOpenMobile } = useDashboardStore();
+  const { isSidebarOpenMobile, setSidebarOpenMobile, metrics } = useDashboardStore();
   const [isMobileView, setIsMobileView] = useState(false);
 
   useEffect(() => {
@@ -144,6 +144,35 @@ const Sidebar = () => {
           </NavLink>
         ))}
       </nav>
+
+      {/* Storage Quota Block */}
+      {(!isCollapsed || isMobileView) && (
+        <div className="px-5 py-4 mx-4 mb-4 rounded-xl bg-surface-elevated/40 border border-border/50">
+          <div className="flex items-center justify-between text-[10px] mb-1 font-bold uppercase tracking-wider text-blue-400">
+            <span>Testing Tier</span>
+          </div>
+          <div className="flex items-center justify-between text-xs mb-1.5 font-bold">
+            <span className="text-text-secondary">Storage Vault</span>
+            <span className="text-text-primary">
+              {(() => {
+                const bytes = metrics?.totalStorage || 0;
+                const gb = bytes / (1024 * 1024 * 1024);
+                if (gb < 0.1) {
+                  const mb = bytes / (1024 * 1024);
+                  return `${mb.toFixed(1)} MB`;
+                }
+                return `${gb.toFixed(2)} GB`;
+              })()} / 1 GB
+            </span>
+          </div>
+          <div className="w-full h-1.5 bg-border/50 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
+              style={{ width: `${Math.min(100, Math.max(0.5, ((metrics?.totalStorage || 0) / (1 * 1024 * 1024 * 1024)) * 100))}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Collapse Toggle */}
       <div className="p-4 border-t border-border/50">

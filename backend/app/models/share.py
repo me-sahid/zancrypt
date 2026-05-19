@@ -18,7 +18,7 @@ class Share(Base):
     download_count = Column(Integer, default=0, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     label = Column(String(255), nullable=True)
-
+    allow_downloads = Column(Boolean, default=True, nullable=False)
 
     file = relationship("File")
     owner = relationship("User")

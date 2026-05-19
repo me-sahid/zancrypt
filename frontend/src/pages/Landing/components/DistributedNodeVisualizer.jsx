@@ -111,7 +111,7 @@ const DistributedNodeVisualizer = () => {
           </p>
         </div>
 
-        <div className="relative w-full aspect-[21/9] bg-surface-elevated/30 border border-white/10 rounded-3xl overflow-hidden backdrop-blur-md" ref={mapRef}>
+        <div className="relative w-full aspect-video md:aspect-[21/9] bg-surface-elevated/30 border border-white/10 rounded-3xl overflow-hidden backdrop-blur-md" ref={mapRef}>
           {/* Abstract Dotted Map Background */}
           <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 

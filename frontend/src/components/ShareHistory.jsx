@@ -252,11 +252,11 @@ const ShareHistory = () => {
               <table className="w-full text-left border-collapse min-w-[650px]">
                 <thead>
                   <tr className="bg-[#0f172a]/40 border-b border-[#1e293b]/40">
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Label / Purpose</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:table-cell">Label / Purpose</th>
                     <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Associated File</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest font-mono">Downloads</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest font-mono hidden md:table-cell">Downloads</th>
                     <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Expiration Date</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:table-cell">Status</th>
                     <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Revoke Access</th>
                   </tr>
                 </thead>
@@ -267,7 +267,7 @@ const ShareHistory = () => {
                       className={`group transition-all hover:bg-white/[0.01] ${!share.is_active ? 'opacity-50' : ''}`}
                     >
                       {/* Label */}
-                      <td className="px-6 py-4 font-semibold text-sm max-w-[200px] truncate" title={share.label || 'No Label'}>
+                      <td className="px-6 py-4 font-semibold text-sm max-w-[200px] truncate hidden sm:table-cell" title={share.label || 'No Label'}>
                         {share.label || <span className="text-slate-500 font-normal italic">Unnamed share</span>}
                       </td>
 
@@ -290,7 +290,7 @@ const ShareHistory = () => {
                       </td>
 
                       {/* Download Limits / Counts */}
-                      <td className="px-6 py-4 font-mono text-xs">
+                      <td className="px-6 py-4 font-mono text-xs hidden md:table-cell">
                         <div className="flex items-center space-x-1.5">
                           <Download className="w-3.5 h-3.5 text-slate-500" />
                           <span className="font-bold text-white">{share.download_count}</span>
@@ -310,7 +310,7 @@ const ShareHistory = () => {
                       </td>
 
                       {/* Active Status Badge */}
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 hidden sm:table-cell">
                         {share.is_active ? (
                           <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                             Active

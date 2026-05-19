@@ -44,11 +44,8 @@
 @layer utilities {
   .glass-panel {
     @apply bg-surface-secondary/75 backdrop-blur-md border border-border/50;
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
-    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
     backface-visibility: hidden;
-    will-change: transform, opacity;
   }
   
   .infrastructure-glow {
@@ -69,20 +66,14 @@
   }
 
   .safari-hardware-accel {
-    -webkit-transform: translate3d(0, 0, 0) !important;
-    transform: translate3d(0, 0, 0) !important;
-    -webkit-backface-visibility: hidden !important;
-    backface-visibility: hidden !important;
-    perspective: 1000px !important;
-    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   .safari-backdrop-blur {
-    -webkit-backdrop-filter: blur(8px) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
-    will-change: transform, opacity;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    transform: translateZ(0);
   }
 }
 

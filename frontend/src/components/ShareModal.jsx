@@ -48,6 +48,7 @@ const ShareModal = ({ file, onClose }) => {
   const [selectedDlOption, setSelectedDlOption] = useState(dlOptions[0]); // Default Unlimited
   const [customDownloads, setCustomDownloads] = useState('3'); // Default 3
   const [label, setLabel] = useState('');
+  const [allowDownloads, setAllowDownloads] = useState(true);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
@@ -158,7 +159,8 @@ const ShareModal = ({ file, onClose }) => {
             file_id: parseInt(itemFileId, 10),
             ttl_hours: finalTtl,
             max_downloads: finalMaxDownloads,
-            label: label.trim() ? `${label.trim()} (${item.encrypted_filename || item.filename || 'asset'})` : undefined
+            label: label.trim() ? `${label.trim()} (${item.encrypted_filename || item.filename || 'asset'})` : undefined,
+            allow_downloads: allowDownloads
           });
           
           tokens.push(res.data.share_token);
@@ -174,7 +176,8 @@ const ShareModal = ({ file, onClose }) => {
           file_id: parseInt(fileId, 10),
           ttl_hours: finalTtl,
           max_downloads: finalMaxDownloads,
-          label: label.trim() || undefined
+          label: label.trim() || undefined,
+          allow_downloads: allowDownloads
         });
         
         const token = res.data.share_token;
@@ -234,10 +237,10 @@ const ShareModal = ({ file, onClose }) => {
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className={`w-full ${shareUrl ? 'max-w-4xl' : 'max-w-lg'} bg-[#0d121f] border border-[#1e293b]/70 rounded-2xl shadow-2xl relative overflow-hidden text-white z-10 transition-all duration-300`}
+        className={`w-full ${shareUrl ? 'max-w-4xl' : 'max-w-lg'} bg-[#0d121f] border border-[#1e293b]/70 rounded-2xl shadow-2xl relative overflow-visible text-white z-10 transition-all duration-300`}
       >
         {/* Glowing Top Border Accent */}
-        <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-indigo-500 to-cyan-400" />
+        <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-indigo-500 to-cyan-400 rounded-t-2xl" />
 
         {/* Modal Header */}
         <div className="flex items-center justify-between p-6 border-b border-[#1e293b]/40">
@@ -334,7 +337,7 @@ const ShareModal = ({ file, onClose }) => {
                           animate={{ opacity: 1, y: 4, scale: 1 }}
                           exit={{ opacity: 0, y: -4, scale: 0.99 }}
                           transition={{ duration: 0.15 }}
-                          className="absolute left-0 right-0 z-50 bg-[#0d121f] border border-[#1e293b] rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto scrollbar-none"
+                          className="absolute left-0 right-0 z-50 bg-[#0d121f] border border-[#1e293b] rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar"
                         >
                           {ttlOptions.map((opt) => (
                             <button
@@ -440,11 +443,11 @@ const ShareModal = ({ file, onClose }) => {
                     <AnimatePresence>
                       {isDlDropdownOpen && (
                         <motion.div
-                          initial={{ opacity: 0, y: -4, scale: 0.99 }}
-                          animate={{ opacity: 1, y: 4, scale: 1 }}
-                          exit={{ opacity: 0, y: -4, scale: 0.99 }}
+                          initial={{ opacity: 0, y: 4, scale: 0.99 }}
+                          animate={{ opacity: 1, y: -4, scale: 1 }}
+                          exit={{ opacity: 0, y: 4, scale: 0.99 }}
                           transition={{ duration: 0.15 }}
-                          className="absolute left-0 right-0 z-50 bg-[#0d121f] border border-[#1e293b] rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto scrollbar-none"
+                          className="absolute left-0 right-0 bottom-full mb-2 z-50 bg-[#0d121f] border border-[#1e293b] rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar"
                         >
                           {dlOptions.map((opt) => (
                             <button
@@ -495,6 +498,26 @@ const ShareModal = ({ file, onClose }) => {
                   </motion.div>
                 )}
 
+                {/* Allow Downloads Toggle */}
+                <div className="flex items-center justify-between p-3.5 bg-[#0f172a]/60 border border-[#1e293b]/40 rounded-xl">
+                  <div className="flex items-center space-x-3">
+                    <Download className="w-4 h-4 text-blue-500" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-200">Allow Downloads</p>
+                      <p className="text-[10px] text-slate-500">Recipients can download/save a decrypted copy of the file</p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={allowDownloads} 
+                      onChange={(e) => setAllowDownloads(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600 peer-checked:after:bg-white peer-checked:after:border-white"></div>
+                  </label>
+                </div>
+
                 {/* Submit Action Button */}
                 <div className="pt-2">
                   <Button
@@ -508,164 +531,138 @@ const ShareModal = ({ file, onClose }) => {
                 </div>
               </motion.form>
             ) : (
-              // STEP 2: Link Generated Successfully (Widescreen Split Grid Layout)
+              // STEP 2: Link Generated Successfully (Clean Centered Layout)
               <motion.div 
                 key="link-step"
-                className="space-y-6"
+                className="space-y-6 max-w-xl mx-auto"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-                  {/* Left Column: Traditional Decryption Link Retrieval */}
-                  <div className="space-y-5 flex flex-col justify-between">
-                    <div className="space-y-4">
-                      {/* Zero Knowledge Warning Alert */}
-                      <div className="flex items-start space-x-3 p-4 bg-amber-500/10 border border-amber-500/25 rounded-xl text-amber-200">
-                        <AlertTriangle className="w-5 h-5 shrink-0 text-amber-500 mt-0.5" />
-                        <div className="text-xs leading-relaxed">
-                          <p className="font-bold text-amber-400">Security Warning:</p>
-                          <p className="mt-1">
-                            {isMulti 
-                              ? 'This link contains cryptographic keys to decrypt all selected files. Keep it strictly private.'
-                              : 'This link contains your decryption key. Anyone with it can access the file.'}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Link URL Clipboard Field */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                            Secure Decryption Link
-                          </label>
-                          
-                          {/* Premium Local LAN IP Config Pill */}
-                          {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
-                            <div className="text-[9px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/25 flex items-center space-x-1 shadow-[0_0_10px_rgba(59,130,246,0.05)]">
-                              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                              <span>LAN Share Mode</span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <div className="flex-1 bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-3 text-xs font-mono text-slate-300 overflow-x-auto whitespace-nowrap select-all scrollbar-none">
-                            {shareUrl}
-                          </div>
-                          <button
-                            onClick={handleCopyLink}
-                            className={`p-3 rounded-xl border transition-all shrink-0 ${
-                              isCopied 
-                                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
-                                : 'bg-[#0f172a] border-[#1e293b] text-slate-400 hover:text-white hover:bg-slate-800'
-                            }`}
-                            title="Copy Link"
-                          >
-                            {isCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                          </button>
-                        </div>
-
-                        {/* Inline Sharing IP Editor for Localhost Development / LAN share */}
-                        {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
-                          <div className="pt-1.5">
-                            {!isEditingIp ? (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setIpInput(customSharingIp);
-                                  setIsEditingIp(true);
-                                }}
-                                className="text-[10px] text-slate-400 hover:text-blue-400 transition-colors flex items-center space-x-1.5 bg-slate-800/30 hover:bg-slate-800/60 border border-slate-700/25 px-2.5 py-1 rounded-lg cursor-pointer"
-                              >
-                                <span>Sharing via Host IP: <strong className="text-white">{customSharingIp}</strong></span>
-                                <span className="text-slate-500 text-[9px]">(Click to edit)</span>
-                              </button>
-                            ) : (
-                              <div className="flex items-center space-x-2 bg-[#0a0a0c]/80 border border-blue-500/20 p-2 rounded-xl">
-                                <span className="text-[9px] text-slate-400 font-bold px-1 shrink-0 uppercase tracking-wider">Set Device IP:</span>
-                                <input
-                                  type="text"
-                                  value={ipInput}
-                                  onChange={(e) => setIpInput(e.target.value)}
-                                  placeholder="e.g. 192.168.1.15"
-                                  className="flex-1 bg-slate-900 border border-slate-700/50 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const cleaned = ipInput.trim();
-                                    if (cleaned) {
-                                      localStorage.setItem('zancrypt_sharing_ip', cleaned);
-                                      setCustomSharingIp(cleaned);
-                                      setIsEditingIp(false);
-                                      toast.success(`LAN IP updated to ${cleaned}`);
-                                    } else {
-                                      toast.error('Sharing IP cannot be empty');
-                                    }
-                                  }}
-                                  className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] px-2.5 py-1 rounded-lg active:scale-95 transition-all cursor-pointer"
-                                >
-                                  Save
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setIsEditingIp(false)}
-                                  className="text-slate-400 hover:text-white font-bold text-[10px] px-2 py-1 rounded-lg active:scale-95 transition-all cursor-pointer"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* QR Code Section */}
-                    <div className="flex flex-col items-center justify-center p-4 bg-[#0f172a]/60 border border-[#1e293b]/40 rounded-xl space-y-2.5">
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
-                        <QrCode className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
-                        Scan QR Code to Retrieve
-                      </div>
-                      <div className="p-2 bg-white rounded-xl shadow-xl">
-                        {qrCodeDataUrl ? (
-                          <img src={qrCodeDataUrl} alt="Secure Share QR Code" className="w-32 h-32 select-none" />
-                        ) : (
-                          <div className="w-32 h-32 flex items-center justify-center bg-slate-800 animate-pulse rounded-lg" />
-                        )}
-                      </div>
-                      <p className="text-[10px] text-slate-500 font-medium">Safe mobile client decryption bypass.</p>
+                <div className="space-y-5">
+                  {/* Zero Knowledge Warning Alert */}
+                  <div className="flex items-start space-x-3 p-4 bg-amber-500/10 border border-amber-500/25 rounded-xl text-amber-200">
+                    <AlertTriangle className="w-5 h-5 shrink-0 text-amber-500 mt-0.5" />
+                    <div className="text-xs leading-relaxed text-left">
+                      <p className="font-bold text-amber-400">Security Warning:</p>
+                      <p className="mt-1">
+                        {isMulti 
+                          ? 'This link contains cryptographic keys to decrypt all selected files. Keep it strictly private.'
+                          : 'This link contains your decryption key. Anyone with it can access the file.'}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Right Column: Self-Destruct Sandbox Environment */}
-                  <div className="bg-[#0f172a]/50 border border-[#1e293b]/40 rounded-xl p-5 min-h-[380px] flex flex-col justify-between">
-                    {!isMulti ? (
-                      <SelfDestructToggle
-                        fileId={fileId}
-                        shareToken={shareToken}
-                        fileName={fileName}
-                        mimeType={file?.mime_type}
-                        baseUrl={getBaseUrl()}
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center text-center py-12 space-y-3 h-full">
-                        <AlertTriangle className="w-10 h-10 text-slate-600 animate-pulse" />
-                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Wrapper Disabled</h4>
-                        <p className="text-[10px] text-slate-500 max-w-[220px] leading-relaxed">
-                          Self-destructing containers are reserved strictly for single files, not bulk folder assets.
-                        </p>
+                  {/* Link URL Clipboard Field */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                        Secure Decryption Link
+                      </label>
+                      
+                      {/* Premium Local LAN IP Config Pill */}
+                      {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+                        <div className="text-[9px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/25 flex items-center space-x-1 shadow-[0_0_10px_rgba(59,130,246,0.05)]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                          <span>LAN Share Mode</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-1 bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-3 text-xs font-mono text-slate-300 overflow-x-auto whitespace-nowrap select-all scrollbar-none text-left">
+                        {shareUrl}
+                      </div>
+                      <button
+                        onClick={handleCopyLink}
+                        className={`p-3 rounded-xl border transition-all shrink-0 cursor-pointer ${
+                          isCopied 
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                            : 'bg-[#0f172a] border-[#1e293b] text-slate-400 hover:text-white hover:bg-slate-800'
+                        }`}
+                        title="Copy Link"
+                      >
+                        {isCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                      </button>
+                    </div>
+
+                    {/* Inline Sharing IP Editor for Localhost Development / LAN share */}
+                    {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+                      <div className="pt-1.5 flex justify-start">
+                        {!isEditingIp ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIpInput(customSharingIp);
+                              setIsEditingIp(true);
+                            }}
+                            className="text-[10px] text-slate-400 hover:text-blue-400 transition-colors flex items-center space-x-1.5 bg-slate-800/30 hover:bg-slate-800/60 border border-slate-700/25 px-2.5 py-1 rounded-lg cursor-pointer"
+                          >
+                            <span>Sharing via Host IP: <strong className="text-white">{customSharingIp}</strong></span>
+                            <span className="text-slate-500 text-[9px]">(Click to edit)</span>
+                          </button>
+                        ) : (
+                          <div className="flex items-center space-x-2 bg-[#0a0a0c]/80 border border-blue-500/20 p-2 rounded-xl w-full">
+                            <span className="text-[9px] text-slate-400 font-bold px-1 shrink-0 uppercase tracking-wider">Set Device IP:</span>
+                            <input
+                              type="text"
+                              value={ipInput}
+                              onChange={(e) => setIpInput(e.target.value)}
+                              placeholder="e.g. 192.168.1.15"
+                              className="flex-1 bg-slate-900 border border-slate-700/50 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const cleaned = ipInput.trim();
+                                if (cleaned) {
+                                  localStorage.setItem('zancrypt_sharing_ip', cleaned);
+                                  setCustomSharingIp(cleaned);
+                                  setIsEditingIp(false);
+                                  toast.success(`LAN IP updated to ${cleaned}`);
+                                } else {
+                                  toast.error('Sharing IP cannot be empty');
+                                }
+                              }}
+                              className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] px-2.5 py-1 rounded-lg active:scale-95 transition-all cursor-pointer"
+                            >
+                              Save
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setIsEditingIp(false)}
+                              className="text-slate-400 hover:text-white font-bold text-[10px] px-2 py-1 rounded-lg active:scale-95 transition-all cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
+                  </div>
+
+                  {/* QR Code Section */}
+                  <div className="flex flex-col items-center justify-center p-5 bg-[#0f172a]/60 border border-[#1e293b]/40 rounded-2xl space-y-3">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
+                      <QrCode className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
+                      Scan QR Code to Retrieve
+                    </div>
+                    <div className="p-2.5 bg-white rounded-2xl shadow-xl">
+                      {qrCodeDataUrl ? (
+                        <img src={qrCodeDataUrl} alt="Secure Share QR Code" className="w-36 h-36 select-none" />
+                      ) : (
+                        <div className="w-36 h-36 flex items-center justify-center bg-slate-800 animate-pulse rounded-lg" />
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-medium">Safe mobile client decryption bypass.</p>
                   </div>
                 </div>
 
                 {/* Finish & Close Button */}
-                <div className="pt-2 border-t border-[#1e293b]/30">
+                <div className="pt-4 border-t border-[#1e293b]/30">
                   <Button
                     variant="outline"
                     onClick={onClose}
-                    className="w-full border-[#1e293b] text-slate-300 hover:bg-slate-800/40 hover:text-white py-2.5 font-bold text-sm"
+                    className="w-full border-[#1e293b] text-slate-300 hover:bg-slate-800/40 hover:text-white py-2.5 font-bold text-sm cursor-pointer"
                   >
                     Done
                   </Button>
