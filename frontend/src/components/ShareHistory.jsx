@@ -193,9 +193,20 @@ const ShareHistory = () => {
     }
   };
 
+  // Helper to ensure the share link uses the dynamic device IP instead of localhost for development
+  const getBaseUrl = () => {
+    const origin = window.location.origin;
+    const hostname = window.location.hostname;
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      return origin;
+    }
+    const customSharingIp = localStorage.getItem('zancrypt_sharing_ip') || '192.168.30.73';
+    return origin.replace('localhost', customSharingIp);
+  };
+
   // 4. Quick copy of full URL if active
   const handleCopyLinkOnly = (token) => {
-    const fullUrl = `${window.location.origin}/share/${token}`;
+    const fullUrl = `${getBaseUrl()}/share/${token}`;
     navigator.clipboard.writeText(fullUrl)
       .then(() => {
         setCopiedToken(token);
