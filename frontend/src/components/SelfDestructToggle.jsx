@@ -57,7 +57,11 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
       link.click();
       
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(downloadUrl);
+      
+      // Delay revocation to prevent race condition in browser download manager
+      setTimeout(() => {
+        window.URL.revokeObjectURL(downloadUrl);
+      }, 1000);
 
       setIsDone(true);
       toast.success('Protected self-destructing file generated!');
@@ -194,6 +198,34 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
                       timeOptions.find(o => o.seconds === timerSeconds)?.label
                     }</strong> after the recipient first opens it.
                   </p>
+                </div>
+              </div>
+
+              {/* Copy Wrapper Link Panel */}
+              <div className="space-y-1.5 pt-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex justify-between items-center">
+                  <span>Direct Destruction Link</span>
+                  <span className="text-[8px] font-bold text-rose-400 lowercase tracking-normal bg-rose-500/10 px-1.5 py-0.5 rounded-full">
+                    recipient downloads html directly
+                  </span>
+                </label>
+                <div className="flex items-center space-x-1.5">
+                  <div className="flex-1 bg-[#070913] border border-[#1e293b]/60 rounded-lg px-2.5 py-2 text-[10px] text-slate-300 font-mono overflow-x-auto whitespace-nowrap scrollbar-none select-all cursor-text select-text leading-tight">
+                    {`${window.location.origin}/api/share/w/${shareToken}?t=${timerSeconds}`}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/api/share/w/${shareToken}?t=${timerSeconds}`);
+                      toast.success('Destruction link copied to clipboard!');
+                    }}
+                    className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/25 hover:text-rose-300 hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+                    title="Copy to clipboard"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>

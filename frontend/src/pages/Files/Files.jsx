@@ -189,15 +189,21 @@ const Files = () => {
         const fullHex = sortedShards.map(s => s.data).join('');
         const bytes = hexToBytes(fullHex);
         
-        const blob = new Blob([bytes], { type: 'application/octet-stream' });
+        const filename = file.encrypted_filename || file.filename || file.name || 'decrypted_file';
+        const mimeType = getMimeType(filename);
+        const blob = new Blob([bytes], { type: mimeType });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = file.encrypted_filename || file.filename || file.name || 'decrypted_file';
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        
+        // Delay revocation to prevent race condition in browser download manager
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+        }, 1000);
         toast.success('File decrypted successfully!', { id: 'download-toast' });
       } else {
         toast.error('Failed to parse download payload', { id: 'download-toast' });

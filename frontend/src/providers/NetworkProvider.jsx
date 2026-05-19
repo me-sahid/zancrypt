@@ -21,7 +21,7 @@ export const NetworkProvider = ({ children }) => {
 
   const checkHealth = useCallback(async () => {
     try {
-      const response = await api.get('/health', { timeout: 5000 });
+      const response = await api.get('/health/', { timeout: 5000 });
       const data = response.data;
       
       setConnectivity({ 
@@ -36,7 +36,7 @@ export const NetworkProvider = ({ children }) => {
         sync: 'healthy'
       });
 
-      if (status === 'offline' || status === 'backend_unreachable') {
+      if (status === 'offline' || status === 'backend_unreachable' || status === 'reconnecting') {
         toast.success('Infrastructure services restored.', { id: 'network-status' });
         resetRetry();
       }
