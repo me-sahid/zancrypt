@@ -36,6 +36,7 @@ class StorageRouter:
         """
         assignments = []
         tasks = []
+        task_info = []
         
         for shard_name, data in shards:
             shard_id = f"file_{file_id}_{shard_name}"
@@ -51,11 +52,39 @@ class StorageRouter:
             })
             
             for node in target_nodes:
+                task_info.append((node, shard_id, data))
                 tasks.append(self.node_manager.write_shard(node, shard_id, data))
         
-        results = await asyncio.gather(*tasks)
-        if not any(results):
-            raise Exception("Failed to write shards to any nodes")
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Track successes per shard
+        shard_successes = {shard_id: [] for _, shard_id, _ in task_info}
+        for idx, res in enumerate(results):
+            if not isinstance(res, Exception) and res is True:
+                node, shard_id, _ = task_info[idx]
+                shard_successes[shard_id].append(node)
+                
+        # Only rollback if a shard failed on ALL targeted nodes
+        any_failed = False
+        for shard_id, successes in shard_successes.items():
+            if not successes:
+                any_failed = True
+                break
+                
+        if any_failed:
+            # Rollback: delete all successfully written shards
+            rollback_tasks = []
+            for idx, res in enumerate(results):
+                if not isinstance(res, Exception) and res is True:
+                    node, shard_id, _ = task_info[idx]
+                    rollback_tasks.append(self.node_manager.delete_shard(node, shard_id))
+            if rollback_tasks:
+                await asyncio.gather(*rollback_tasks, return_exceptions=True)
+            raise Exception("Failed to upload all shard replicas successfully; rolled back uploaded shards")
+            
+        # Update assignments to only include nodes that succeeded
+        for assignment in assignments:
+            assignment["nodes"] = shard_successes[assignment["shard_id"]]
             
         return assignments
 

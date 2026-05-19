@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.middleware import SlowAPIMiddleware
 
-from app.api.routers import auth, files, admin, health, share, notifications
+from app.api.routers import auth, files, admin, health, share, notifications, dashboard
 from app.core.config import settings
 from app.core.logging import configure_structured_logging
 from app.core.tracing import setup_tracing
@@ -48,6 +48,7 @@ app.include_router(admin.router, prefix="/admin", tags=["admin"])
 app.include_router(health.router, prefix="/health", tags=["health"])
 app.include_router(share.router, prefix="/api/share", tags=["share"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
+app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
 app.include_router(prometheus_router)
 
 register_exception_handlers(app)
@@ -63,6 +64,7 @@ async def on_startup() -> None:
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS storage_used BIGINT DEFAULT 0;"))
         await conn.execute(text("ALTER TABLE node_registry ADD COLUMN IF NOT EXISTS storage_used BIGINT DEFAULT 0;"))
         await conn.execute(text("ALTER TABLE shard_registry ADD COLUMN IF NOT EXISTS shard_size INT DEFAULT 0;"))
+        await conn.execute(text("ALTER TABLE shard_registry ADD COLUMN IF NOT EXISTS provider VARCHAR(64) DEFAULT 'local';"))
         await conn.execute(text("ALTER TABLE files ALTER COLUMN file_size TYPE BIGINT;"))
         await conn.execute(text("ALTER TABLE files ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;"))
         await conn.execute(text("ALTER TABLE files ADD COLUMN IF NOT EXISTS thumbnail TEXT;"))

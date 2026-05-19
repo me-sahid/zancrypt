@@ -19,12 +19,7 @@ export const useDashboardStore = create((set) => ({
   },
 
   // Nodes Status
-  nodes: [
-    { id: 'tokyo-01', name: 'Tokyo-Alpha', region: 'ap-northeast-1', health: 'Healthy', load: 12, latency: 45, shards: 1240, provider: 'AWS', status: 'success' },
-    { id: 'frankfurt-01', name: 'Frankfurt-01', region: 'eu-central-1', health: 'Healthy', load: 85, latency: 120, shards: 3420, provider: 'GCP', status: 'success' },
-    { id: 'us-west-01', name: 'US-West-Legacy', region: 'us-west-2', health: 'Healthy', load: 44, latency: 85, shards: 890, provider: 'Azure', status: 'success' },
-    { id: 'mumbai-01', name: 'Mumbai-Primary', region: 'ap-south-1', health: 'Syncing', load: 5, latency: 32, shards: 210, provider: 'DigitalOcean', status: 'warning' },
-  ],
+  nodes: [],
 
   // Security Events Feed
   events: [

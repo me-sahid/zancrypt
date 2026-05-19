@@ -19,6 +19,8 @@ class Share(Base):
     is_active = Column(Boolean, default=True, nullable=False)
     label = Column(String(255), nullable=True)
     allow_downloads = Column(Boolean, default=True, nullable=False)
+    delete_original = Column(Boolean, default=False, nullable=False)
+    notify_on_expire = Column(Boolean, default=True, nullable=False)
 
     file = relationship("File")
     owner = relationship("User")

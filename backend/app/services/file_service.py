@@ -1,8 +1,10 @@
 from typing import AsyncIterator, List, Tuple
 import json
+import hashlib
+import asyncio
 
 from fastapi import HTTPException, UploadFile, status
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.file import File
@@ -10,7 +12,6 @@ from app.models.manifest import Manifest
 from app.models.node_registry import NodeRegistry
 from app.models.shard_registry import ShardRegistry
 from app.models.user import User
-from sqlalchemy import select, delete
 from app.repositories.file_repo import FileRepository
 from app.repositories.manifest_repo import ManifestRepository
 from app.services.audit_service import AuditService
@@ -60,70 +61,98 @@ class FileService:
             thumbnail=thumbnail
         )
 
-        # 2. Distribute shards across nodes
-        shard_assignments = await self.router.distribute_shards(file.id, shards)
+        shard_assignments = []
+        try:
+            # 2. Distribute shards across nodes
+            shard_assignments = await self.router.distribute_shards(file.id, shards)
 
-        # 3. Create manifest record with node assignments
-        await self.manifest_repo.create_manifest(
-            file_id=file.id,
-            manifest_payload=manifest_payload,
-            version_reference=1,
-            replication_mapping=shard_assignments,
-            node_assignments=[node for shard in shard_assignments for node in shard["nodes"]]
-        )
-
-        # 4. Insert ShardRegistry entries and update NodeRegistry.storage_used
-
-
-        shard_sizes = {}
-        for shard_name, data in shards:
-            shard_id = f"file_{file.id}_{shard_name}"
-            shard_sizes[shard_id] = len(data)
-
-        node_names = list({node_name for sa in shard_assignments for node_name in sa["nodes"]})
-        if node_names:
-            nodes_res = await self.session.execute(
-                select(NodeRegistry).where(NodeRegistry.node_name.in_(node_names))
+            # 3. Create manifest record with node assignments
+            await self.manifest_repo.create_manifest(
+                file_id=file.id,
+                manifest_payload=manifest_payload,
+                version_reference=1,
+                replication_mapping=shard_assignments,
+                node_assignments=[node for shard in shard_assignments for node in shard["nodes"]]
             )
-            nodes_by_name = {n.node_name: n for n in nodes_res.scalars().all()}
 
-            for sa in shard_assignments:
-                s_id = sa["shard_id"]
-                size = shard_sizes.get(s_id, 0)
-                for idx, node_name in enumerate(sa["nodes"]):
-                    node = nodes_by_name.get(node_name)
-                    if node:
-                        shard_rec = ShardRegistry(
-                            shard_id=f"{s_id}_replica_{idx}",
-                            file_id=file.id,
-                            node_id=node.id,
-                            shard_hash=sa["hash"],
-                            replica_index=idx,
-                            status="available",
-                            shard_size=size
-                        )
-                        self.session.add(shard_rec)
-                        node.storage_used = (node.storage_used or 0) + size
+            # 4. Insert ShardRegistry entries and update NodeRegistry.storage_used
+            shard_sizes = {}
+            for shard_name, data in shards:
+                shard_id = f"file_{file.id}_{shard_name}"
+                shard_sizes[shard_id] = len(data)
 
-        # 5. Update User storage_used
-        user_res = await self.session.execute(
-            select(User).where(User.id == user_id)
-        )
-        user = user_res.scalar_one_or_none()
-        if user:
-            user.storage_used = (user.storage_used or 0) + file_size
+            node_names = list({node_name for sa in shard_assignments for node_name in sa["nodes"]})
+            if node_names:
+                nodes_res = await self.session.execute(
+                    select(NodeRegistry).where(NodeRegistry.node_name.in_(node_names))
+                )
+                nodes_by_name = {n.node_name: n for n in nodes_res.scalars().all()}
 
-        # 6. Audit event
-        await self.audit_service.capture_event(
-            user_id=user_id,
-            event_type="upload",
-            resource_type="files",
-            resource_id=str(file.id),
-            details={"shard_count": len(shards), "size": file_size}
-        )
+                for sa in shard_assignments:
+                    s_id = sa["shard_id"]
+                    size = shard_sizes.get(s_id, 0)
+                    for idx, node_name in enumerate(sa["nodes"]):
+                        node = nodes_by_name.get(node_name)
+                        if node:
+                            shard_rec = ShardRegistry(
+                                shard_id=f"{s_id}_replica_{idx}",
+                                file_id=file.id,
+                                node_id=node.id,
+                                shard_hash=sa["hash"],
+                                provider=node.provider.lower() if node.provider in ("S3", "SUPABASE") else "local",
+                                replica_index=idx,
+                                status="available",
+                                shard_size=size
+                            )
+                            self.session.add(shard_rec)
+                            node.storage_used = (node.storage_used or 0) + size
 
-        await self.session.commit()
-        return file.id
+            # 5. Update User storage_used
+            user_res = await self.session.execute(
+                select(User).where(User.id == user_id)
+            )
+            user = user_res.scalar_one_or_none()
+            if user:
+                user.storage_used = (user.storage_used or 0) + file_size
+
+            # 6. Audit event
+            await self.audit_service.capture_event(
+                user_id=user_id,
+                event_type="upload",
+                resource_type="files",
+                resource_id=str(file.id),
+                details={"shard_count": len(shards), "size": file_size}
+            )
+
+            await self.session.commit()
+            return file.id
+
+        except Exception as e:
+            # ROLLBACK PHYSICAL SHARDS IN CASE OF DB / TIMEOUT / CONCURRENCY FAILURE
+            print(f"[ROLLBACK] Upload failed for file {file.id}. Cleaning up physical shards: {e}")
+            rollback_tasks = []
+            if shard_assignments:
+                for sa in shard_assignments:
+                    shard_id = sa["shard_id"]
+                    for node_name in sa["nodes"]:
+                        rollback_tasks.append(self.router.node_manager.delete_shard(node_name, shard_id))
+            if rollback_tasks:
+                await asyncio.gather(*rollback_tasks, return_exceptions=True)
+                
+            # Rollback DB transaction
+            await self.session.rollback()
+            
+            # Delete file record if it was inserted to keep DB clean
+            try:
+                await self.repo.delete_file(file.id)
+                await self.session.commit()
+            except Exception:
+                pass
+                
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Upload failed: {str(e)}"
+            )
 
     async def download_file_shards(self, file_id: int, user_id: int) -> List[Tuple[str, bytes]]:
         file = await self.repo.get_owned_file(file_id, user_id)
@@ -134,6 +163,16 @@ class FileService:
         if not manifest:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Manifest not found")
 
+        # Fetch expected hashes from ShardRegistry for verification
+        shards_res = await self.session.execute(
+            select(ShardRegistry).where(ShardRegistry.file_id == file_id)
+        )
+        shard_regs = shards_res.scalars().all()
+        expected_hashes = {}
+        for sr in shard_regs:
+            base_id = sr.shard_id.rsplit("_replica_", 1)[0]
+            expected_hashes[base_id] = sr.shard_hash
+
         shards_data = []
         for shard_info in manifest.replication_mapping:
             shard_id = shard_info["shard_id"]
@@ -141,6 +180,17 @@ class FileService:
             data = await self.router.fetch_shard(shard_id, nodes)
             if not data:
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Shard {shard_id} not found on any replica")
+            
+            # Verify SHA-256 hash on download before returning the buffer
+            expected_hash = expected_hashes.get(shard_id)
+            if expected_hash:
+                actual_hash = hashlib.sha256(data).hexdigest()
+                if actual_hash != expected_hash:
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=f"SHA-256 hash integrity check failed for shard {shard_id}! Expected: {expected_hash}, got: {actual_hash}"
+                    )
+            
             shards_data.append((shard_id, data))
         
         return shards_data
@@ -171,14 +221,18 @@ class FileService:
         if not file:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
         
+        # 1. Loop through every shard in the shard map and call delete_shard on each one
         manifest = await self.manifest_repo.get_manifest_by_file(file_id)
-        if manifest:
+        if manifest and manifest.replication_mapping:
             for shard_info in manifest.replication_mapping:
+                shard_id = shard_info["shard_id"]
                 for node in shard_info["nodes"]:
-                    await self.router.node_manager.delete_shard(node, shard_info["shard_id"])
+                    try:
+                        await self.router.node_manager.delete_shard(node, shard_id)
+                    except Exception as e:
+                        print(f"[ERROR] [b2] Failed to physically delete shard {shard_id} from node {node}: {e}")
 
-        # Storage cleanup: load all shards to decrement node-level storage usage
-
+        # 2. Storage cleanup: load all shards to decrement node-level storage usage
         shards_res = await self.session.execute(
             select(ShardRegistry).where(ShardRegistry.file_id == file_id)
         )
@@ -196,7 +250,7 @@ class FileService:
             for n in nodes:
                 n.storage_used = max(0, (n.storage_used or 0) - node_storage_to_subtract.get(n.id, 0))
 
-        # Decrement user storage
+        # 3. Decrement user storage
         user_res = await self.session.execute(
             select(User).where(User.id == user_id)
         )
@@ -204,11 +258,12 @@ class FileService:
         if user:
             user.storage_used = max(0, (user.storage_used or 0) - (file.file_size or 0))
 
-        # Delete shards from database
+        # 4. Delete shards from database record
         await self.session.execute(
             delete(ShardRegistry).where(ShardRegistry.file_id == file_id)
         )
 
+        # 5. Delete core records
         await self.repo.delete_file(file_id)
         await self.audit_service.capture_event(user_id, "purge", "files", str(file_id), {})
         await self.session.commit()

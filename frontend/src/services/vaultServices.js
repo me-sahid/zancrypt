@@ -27,3 +27,7 @@ export const adminService = {
   toggleNode: (id, status) => api.post(`/admin/nodes/${id}/toggle?status=${status}`),
   getSystemMetrics: () => api.get('/admin/system-metrics'),
 };
+
+export const dashboardService = {
+  getStats: () => api.get('/api/dashboard/stats'),
+};

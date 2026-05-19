@@ -281,7 +281,20 @@ const Upload = () => {
           if (thumbnail) {
             formData.append('thumbnail', thumbnail);
           }
-          formData.append('shards', fileObj.rawFile); 
+          
+          // Slice file into 10MB shards to bypass 50MB cloud limits and distribute load
+          const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
+          const numShards = Math.ceil(fileObj.rawFile.size / CHUNK_SIZE);
+          
+          const manifestShards = [];
+          for (let i = 0; i < numShards; i++) {
+            const chunk = fileObj.rawFile.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+            const partName = `part_${i}`;
+            formData.append('shards', chunk, partName);
+            manifestShards.push(partName);
+          }
+          
+          formData.set('manifest', JSON.stringify({ shards: manifestShards })); 
           
           await fileService.uploadFile(formData, {
             onUploadProgress: (progressEvent) => {

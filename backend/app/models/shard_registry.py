@@ -10,6 +10,7 @@ class ShardRegistry(Base, TimestampMixin):
     file_id = Column(Integer, ForeignKey("files.id"), nullable=False, index=True)
     node_id = Column(Integer, ForeignKey("node_registry.id"), nullable=False, index=True)
     shard_hash = Column(String(128), nullable=False)
+    provider = Column(String(64), nullable=True, default="local")
     replica_index = Column(Integer, nullable=False)
     shard_size = Column(Integer, nullable=False, default=0)
     status = Column(String(64), default="available", nullable=False)

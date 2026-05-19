@@ -16,7 +16,7 @@ from datetime import datetime, timezone, timedelta
 from sqlalchemy import select, delete as sa_delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import async_session_maker as async_session_factory
+from app.db import async_session_maker
 from app.models.pending_deletion import PendingDeletion
 from app.models.share import Share
 from app.workers.celery_app import celery_app
@@ -50,7 +50,7 @@ async def _run_expire_shares() -> int:
     start = time.monotonic()
     processed = 0
 
-    async with async_session_factory() as session:
+    async with async_session_maker() as session:
         # Find expired active shares (uses idx_shares_expiry partial index)
         stmt = (
             select(Share)
@@ -111,7 +111,7 @@ async def _run_retry_pending_deletions() -> dict:
     success_count = 0
     fail_count = 0
 
-    async with async_session_factory() as session:
+    async with async_session_maker() as session:
         stmt = (
             select(PendingDeletion)
             .where(PendingDeletion.failed_at < cutoff)
