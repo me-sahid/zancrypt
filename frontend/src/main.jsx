@@ -6,6 +6,11 @@ import App from './App';
 import { silentRefresh } from './services/api';
 import './index.css';
 
+// Clear localStorage completely if both old/renamed auth keys exist simultaneously
+if (localStorage.getItem('zancrypt-auth') && localStorage.getItem('yuuvault-auth')) {
+  localStorage.clear();
+}
+
 // Clear chunk failure reload flag on successful load
 if (sessionStorage.getItem('zancrypt-reload-on-chunk-fail')) {
   setTimeout(() => {

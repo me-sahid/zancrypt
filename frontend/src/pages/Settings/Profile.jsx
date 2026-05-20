@@ -66,7 +66,7 @@ const Profile = () => {
          <Card className="md:col-span-2">
             <CardHeader>
                <CardTitle>Vault Credentials</CardTitle>
-               <CardDescription>Your unique identity details on the YuuVault network.</CardDescription>
+               <CardDescription>Your unique identity details on the Zancrypt network.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

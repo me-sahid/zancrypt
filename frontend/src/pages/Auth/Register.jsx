@@ -120,7 +120,7 @@ const Register = () => {
       >
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-text-primary tracking-tight">Vault Identity</h1>
-          <p className="text-text-secondary mt-2">Initialize your secure instance on the YuuVault network.</p>
+          <p className="text-text-secondary mt-2">Initialize your secure instance on the Zancrypt network.</p>
         </div>
 
         <div className="glass-elevated rounded-2xl p-8">
