@@ -175,7 +175,7 @@ const Register = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <SecureInput
                 label="Fallback Key"
                 name="accessKey"
@@ -201,8 +201,8 @@ const Register = () => {
 
             <div className="flex flex-col items-center justify-center p-6 border border-border border-dashed rounded-md bg-surface-raised mb-4 mt-2">
               <Fingerprint className="w-10 h-10 text-accent mb-3" strokeWidth={1} />
-              <p className="font-mono text-[10px] text-text-primary uppercase tracking-widest mb-1">Biometric Protocol</p>
-              <p className="font-sans text-[10px] text-text-secondary text-center leading-relaxed">
+              <p className="font-mono text-xs text-text-primary uppercase tracking-widest mb-1">Biometric Protocol</p>
+              <p className="font-sans text-xs text-text-secondary text-center leading-relaxed">
                 Registration requires WebAuthn confirmation.
               </p>
             </div>
@@ -220,7 +220,7 @@ const Register = () => {
           <div className="mt-8 text-center">
             <p className="font-sans text-xs text-text-secondary">
               Identity exists?{' '}
-              <Link to="/login" className="text-accent hover:underline font-mono uppercase tracking-widest text-[10px]">
+              <Link to="/login" className="text-accent hover:underline font-mono uppercase tracking-widest text-xs">
                 Authenticate
               </Link>
             </p>
@@ -236,7 +236,7 @@ const Register = () => {
           {/* Client Node */}
           <div className="w-24 h-24 border border-border bg-surface flex flex-col items-center justify-center rounded-sm z-10 shadow-[0_0_20px_rgba(79,255,176,0.1)]">
             <Fingerprint className="w-8 h-8 text-accent mb-2" />
-            <span className="font-mono text-[9px] text-text-muted uppercase tracking-widest">New Device</span>
+            <span className="font-mono text-[11px] text-text-muted uppercase tracking-widest">New Device</span>
           </div>
 
           {/* Connection Lines */}
@@ -247,7 +247,7 @@ const Register = () => {
             {[0, 1, 2].map((i) => (
               <div key={i} className="absolute left-0 w-full h-16 flex items-center" style={{ top: `${i * 25 + 15}%` }}>
                 <div className="auth-line w-full h-0 bg-accent/20 origin-left" />
-                <span className="absolute left-1/2 -translate-x-1/2 font-mono text-[8px] text-accent opacity-50 bg-void px-2">
+                <span className="absolute left-1/2 -translate-x-1/2 font-mono text-[11px] text-accent opacity-50 bg-void px-2">
                   <CipherText text={i === 0 ? 'GEN_KEYPAIR' : i === 1 ? 'STORE_PRIV_KEY' : 'SEND_PUB_KEY'} duration={2000} delay={i * 500} />
                 </span>
               </div>
@@ -257,12 +257,12 @@ const Register = () => {
           {/* Server Node */}
           <div className="w-24 h-24 border border-border bg-surface flex flex-col items-center justify-center rounded-sm z-10">
             <Lock className="w-8 h-8 text-text-secondary mb-2" />
-            <span className="font-mono text-[9px] text-text-muted uppercase tracking-widest">Zancrypt</span>
+            <span className="font-mono text-[11px] text-text-muted uppercase tracking-widest">Zancrypt</span>
           </div>
         </div>
 
         {/* Terminal Output Overlay */}
-        <div className="absolute bottom-12 right-12 w-80 bg-surface/80 backdrop-blur-md border border-border p-4 rounded-sm font-mono text-[10px] text-text-muted leading-relaxed">
+        <div className="absolute bottom-12 right-12 w-80 bg-surface/80 backdrop-blur-md border border-border p-4 rounded-sm font-mono text-xs text-text-muted leading-relaxed">
           <div>&gt; INIT_REGISTRATION</div>
           <div>&gt; GENERATING_ENTROPY_POOL</div>
           <div className="text-accent">&gt; ASYMMETRIC_KEYPAIR_MINTED</div>

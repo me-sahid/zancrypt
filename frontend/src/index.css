@@ -128,3 +128,60 @@ html.light {
     background-position: 200% 0;
   }
 }
+
+/* Interactive elements focus rings */
+*:focus-visible {
+  outline: 2px solid #d97757 !important;
+  outline-offset: 2px !important;
+}
+
+/* Scroll Animation classes */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-on-scroll.fade-in-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Custom glowing pulse for node dots */
+.animate-pulse-custom {
+  animation: pulse-custom-anim 2s infinite ease-in-out;
+  transform-origin: center;
+}
+
+@keyframes pulse-custom-anim {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+}
+
+/* Custom shard division animations for "How it works" visual panel */
+@keyframes slide-left {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(-30px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes slide-right {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(30px); }
+  100% { transform: translateX(0); }
+}
+
+.animate-slide-left {
+  animation: slide-left 4s infinite ease-in-out;
+}
+
+.animate-slide-right {
+  animation: slide-right 4s infinite ease-in-out;
+}
+

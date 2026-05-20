@@ -159,7 +159,7 @@ const ShareModal = ({ file, onClose }) => {
               {isMulti ? 'Multi-Asset Share' : 'Cryptographic Share'}
             </h3>
           </div>
-          <button onClick={onClose} className="text-text-muted hover:text-text-primary font-mono text-[10px] uppercase tracking-widest">
+          <button onClick={onClose} className="text-text-muted hover:text-text-primary font-mono text-xs uppercase tracking-widest">
             [ Close ]
           </button>
         </div>
@@ -171,7 +171,7 @@ const ShareModal = ({ file, onClose }) => {
                 <p className="font-mono text-xs text-text-muted mb-4 truncate">Target: {fileName}</p>
                 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest flex items-center">
+                  <label className="text-xs font-mono text-text-muted uppercase tracking-widest flex items-center">
                     <Tag className="w-3 h-3 mr-2 text-accent" /> Label / Purpose
                   </label>
                   <input
@@ -183,11 +183,11 @@ const ShareModal = ({ file, onClose }) => {
                 </div>
 
                 <div className="space-y-2 relative">
-                  <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest flex items-center">
+                  <label className="text-xs font-mono text-text-muted uppercase tracking-widest flex items-center">
                     <Clock className="w-3 h-3 mr-2 text-accent" /> Time to Live (TTL)
                   </label>
                   <button type="button" onClick={() => setIsTtlDropdownOpen(!isTtlDropdownOpen)} className="w-full bg-void border border-border text-left px-3 py-2 text-xs font-mono text-text-primary flex justify-between items-center">
-                    {selectedTtlOption.label} <span className="text-[10px]">▼</span>
+                    {selectedTtlOption.label} <span className="text-xs">▼</span>
                   </button>
                   {isTtlDropdownOpen && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-surface-raised border border-border z-20 shadow-xl">
@@ -203,22 +203,22 @@ const ShareModal = ({ file, onClose }) => {
                 {selectedTtlOption.value === 'custom' && (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest">Hours</label>
+                      <label className="text-xs font-mono text-text-muted uppercase tracking-widest">Hours</label>
                       <input type="number" min="0" value={customTtlHours} onChange={(e) => setCustomTtlHours(e.target.value)} className="w-full bg-void border border-border focus:border-accent text-xs font-mono py-2 px-3 outline-none" />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest">Minutes</label>
+                      <label className="text-xs font-mono text-text-muted uppercase tracking-widest">Minutes</label>
                       <input type="number" min="0" max="59" value={customTtlMins} onChange={(e) => setCustomTtlMins(e.target.value)} className="w-full bg-void border border-border focus:border-accent text-xs font-mono py-2 px-3 outline-none" />
                     </div>
                   </div>
                 )}
 
                 <div className="space-y-2 relative">
-                  <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest flex items-center">
+                  <label className="text-xs font-mono text-text-muted uppercase tracking-widest flex items-center">
                     <Download className="w-3 h-3 mr-2 text-accent" /> Download Limit
                   </label>
                   <button type="button" onClick={() => setIsDlDropdownOpen(!isDlDropdownOpen)} className="w-full bg-void border border-border text-left px-3 py-2 text-xs font-mono text-text-primary flex justify-between items-center">
-                    {selectedDlOption.label} <span className="text-[10px]">▼</span>
+                    {selectedDlOption.label} <span className="text-xs">▼</span>
                   </button>
                   {isDlDropdownOpen && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-surface-raised border border-border z-20 shadow-xl">
@@ -233,13 +233,13 @@ const ShareModal = ({ file, onClose }) => {
 
                 {selectedDlOption.value === 'custom' && (
                   <div className="space-y-2">
-                    <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest">Custom Limit</label>
+                    <label className="text-xs font-mono text-text-muted uppercase tracking-widest">Custom Limit</label>
                     <input type="number" min="1" value={customDownloads} onChange={(e) => setCustomDownloads(e.target.value)} className="w-full bg-void border border-border focus:border-accent text-xs font-mono py-2 px-3 outline-none" />
                   </div>
                 )}
 
                 <div className="flex items-center justify-between py-3 border-y border-border">
-                  <div className="text-[10px] font-mono text-text-muted uppercase tracking-widest">Allow Downloads</div>
+                  <div className="text-xs font-mono text-text-muted uppercase tracking-widest">Allow Downloads</div>
                   <input type="checkbox" checked={allowDownloads} onChange={(e) => setAllowDownloads(e.target.checked)} className="accent-accent" />
                 </div>
 
@@ -258,7 +258,7 @@ const ShareModal = ({ file, onClose }) => {
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest">Secure Decryption Link</label>
+                  <label className="text-xs font-mono text-text-muted uppercase tracking-widest">Secure Decryption Link</label>
                   <div className="flex items-center space-x-2">
                     <div className="flex-1 bg-void border border-border p-3 text-xs font-mono text-text-primary overflow-x-auto whitespace-nowrap select-all scrollbar-none">
                       {shareUrl}

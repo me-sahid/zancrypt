@@ -44,7 +44,7 @@ const ApiSoon = () => {
             <ArrowLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
             Return Home
           </Link>
-          <div className="flex items-center space-x-2 border border-border px-3 py-1 font-mono text-[10px] text-text-muted uppercase tracking-widest">
+          <div className="flex items-center space-x-2 border border-border px-3 py-1 font-mono text-xs text-text-muted uppercase tracking-widest">
             <Terminal className="w-3.5 h-3.5 text-accent" />
             <span>Zancrypt API V1</span>
           </div>
@@ -61,7 +61,7 @@ const ApiSoon = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
           >
-            <div className="inline-flex items-center px-3 py-1 border border-accent/30 bg-accent/5 text-accent text-[10px] font-mono uppercase tracking-widest mb-8">
+            <div className="inline-flex items-center px-3 py-1 border border-accent/30 bg-accent/5 text-accent text-xs font-mono uppercase tracking-widest mb-8">
               <Terminal className="w-3.5 h-3.5 mr-2" />
               Developer API V1
             </div>
@@ -141,7 +141,7 @@ const ApiSoon = () => {
                 <div className="w-2.5 h-2.5 rounded-full bg-warning/70" />
                 <div className="w-2.5 h-2.5 rounded-full bg-accent/70" />
               </div>
-              <span className="font-mono text-[10px] text-text-muted uppercase tracking-widest">upload.py</span>
+              <span className="font-mono text-xs text-text-muted uppercase tracking-widest">upload.py</span>
               <div className="w-16" />
             </div>
             
@@ -160,9 +160,9 @@ const ApiSoon = () => {
             <div className="border-t border-border px-4 py-2 flex items-center justify-between bg-surface-raised">
               <div className="flex items-center space-x-2">
                 <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
-                <span className="font-mono text-[9px] text-text-muted uppercase tracking-widest">ZK_ENCRYPTION_ACTIVE</span>
+                <span className="font-mono text-[11px] text-text-muted uppercase tracking-widest">ZK_ENCRYPTION_ACTIVE</span>
               </div>
-              <span className="font-mono text-[9px] text-text-muted uppercase tracking-widest">Python 3.12</span>
+              <span className="font-mono text-[11px] text-text-muted uppercase tracking-widest">Python 3.12</span>
             </div>
           </motion.div>
         </div>

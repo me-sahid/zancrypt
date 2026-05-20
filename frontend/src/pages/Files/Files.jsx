@@ -258,7 +258,7 @@ const Files = () => {
         </div>
         
         <div className="flex items-center space-x-3">
-          <Link to="/uploads" className="px-6 py-3 border border-accent text-accent font-mono text-[10px] uppercase tracking-widest hover:bg-accent/10 transition-colors">
+          <Link to="/uploads" className="px-6 py-3 border border-accent text-accent font-mono text-xs uppercase tracking-widest hover:bg-accent/10 transition-colors">
             [ Upload ]
           </Link>
         </div>
@@ -282,7 +282,7 @@ const Files = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-border text-[9px] font-mono text-text-muted uppercase tracking-widest bg-surface-raised">
+              <tr className="border-b border-border text-[11px] font-mono text-text-muted uppercase tracking-widest bg-surface-raised">
                 <th className="py-4 px-6 w-12 text-center">
                   <input
                     type="checkbox"
@@ -317,7 +317,7 @@ const Files = () => {
                 <tr>
                   <td colSpan={5} className="py-16 text-center">
                     <Loader2 className="w-6 h-6 text-accent animate-spin mx-auto mb-2" />
-                    <span className="text-[10px] uppercase tracking-widest text-text-muted">Fetching from Shards...</span>
+                    <span className="text-xs uppercase tracking-widest text-text-muted">Fetching from Shards...</span>
                   </td>
                 </tr>
               ) : filteredFiles.length > 0 ? (
@@ -343,7 +343,7 @@ const Files = () => {
                           <div className="w-8 h-8 flex items-center justify-center border border-border bg-void shrink-0">
                             <Lock className={`w-3.5 h-3.5 ${isDecrypted ? 'text-accent' : 'text-text-muted'}`} />
                           </div>
-                          <div className="min-w-0 max-w-md truncate">
+                          <div className="min-w-0 max-w-[120px] sm:max-w-[240px] md:max-w-md truncate">
                             <p className={`truncate ${isDecrypted ? 'text-text-primary' : 'text-text-muted opacity-50'}`}>
                               {isDecrypted ? displayName : <CipherText text={displayName} duration={2000} />}
                             </p>
@@ -368,7 +368,7 @@ const Files = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={5} className="py-16 text-center text-text-muted text-[10px] uppercase tracking-widest">
+                  <td colSpan={5} className="py-16 text-center text-text-muted text-xs uppercase tracking-widest">
                     No files found in Vault
                   </td>
                 </tr>
@@ -392,7 +392,7 @@ const Files = () => {
                 <File className="w-4 h-4 text-accent" />
                 <h3 className="font-mono text-xs text-text-primary uppercase tracking-widest">{previewData.filename}</h3>
               </div>
-              <button onClick={() => setPreviewData(null)} className="text-text-muted hover:text-text-primary font-mono text-[10px] uppercase tracking-widest">
+              <button onClick={() => setPreviewData(null)} className="text-text-muted hover:text-text-primary font-mono text-xs uppercase tracking-widest">
                 [ Close ]
               </button>
             </div>
@@ -402,9 +402,9 @@ const Files = () => {
               ) : previewData.fileType === 'video' ? (
                 <video src={previewData.objectUrl} controls className="max-w-full max-h-full" />
               ) : previewData.fileType === 'text' ? (
-                <pre className="font-mono text-[10px] text-text-secondary whitespace-pre-wrap w-full">{previewData.textContent}</pre>
+                <pre className="font-mono text-xs text-text-secondary whitespace-pre-wrap w-full">{previewData.textContent}</pre>
               ) : (
-                <div className="text-center font-mono text-[10px] text-text-muted uppercase tracking-widest">
+                <div className="text-center font-mono text-xs text-text-muted uppercase tracking-widest">
                   Preview not available for this format.
                 </div>
               )}

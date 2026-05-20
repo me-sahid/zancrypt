@@ -36,7 +36,7 @@ const Security = () => {
               <Eye className="w-4 h-4 text-accent" />
               <h3 className="font-mono text-xs text-text-primary uppercase tracking-widest">Live Integrity Monitoring</h3>
             </div>
-            <span className="text-[9px] font-mono text-accent uppercase tracking-widest animate-pulse flex items-center">
+            <span className="text-[11px] font-mono text-accent uppercase tracking-widest animate-pulse flex items-center">
               <span className="w-1.5 h-1.5 bg-accent mr-1.5" /> Streaming
             </span>
           </div>
@@ -57,14 +57,14 @@ const Security = () => {
               <div className="p-4 space-y-4 font-mono text-xs">
                  <div className="flex items-center justify-between">
                     <span className="text-text-muted uppercase tracking-widest">Master Key</span>
-                    <span className="text-accent bg-accent/10 border border-accent/20 px-2 py-1 text-[9px] uppercase tracking-widest">Active</span>
+                    <span className="text-accent bg-accent/10 border border-accent/20 px-2 py-1 text-[11px] uppercase tracking-widest">Active</span>
                  </div>
                  <div className="flex items-center justify-between">
                     <span className="text-text-muted uppercase tracking-widest">Shard Keys</span>
-                    <span className="text-accent bg-accent/10 border border-accent/20 px-2 py-1 text-[9px] uppercase tracking-widest">Distributed</span>
+                    <span className="text-accent bg-accent/10 border border-accent/20 px-2 py-1 text-[11px] uppercase tracking-widest">Distributed</span>
                  </div>
                  <div className="pt-4 border-t border-border">
-                    <button className="w-full py-3 border border-accent text-accent font-mono text-[10px] uppercase tracking-widest hover:bg-accent hover:text-white transition-colors">
+                    <button className="w-full py-3 border border-accent text-accent font-mono text-xs uppercase tracking-widest hover:bg-accent hover:text-white transition-colors">
                        [ Initiate Key Rotation ]
                     </button>
                  </div>
@@ -81,11 +81,11 @@ const Security = () => {
               <div className="p-4 space-y-4 font-mono text-xs text-text-muted">
                  <div className="flex items-center space-x-3">
                     <div className="w-2 h-2 bg-accent" />
-                    <p className="truncate uppercase tracking-widest text-[9px]">Zero suspicious patterns in 24h.</p>
+                    <p className="truncate uppercase tracking-widest text-[11px]">Zero suspicious patterns in 24h.</p>
                  </div>
                  <div className="flex items-center space-x-3">
                     <div className="w-2 h-2 bg-accent" />
-                    <p className="truncate uppercase tracking-widest text-[9px]">All regions reporting 100% integrity.</p>
+                    <p className="truncate uppercase tracking-widest text-[11px]">All regions reporting 100% integrity.</p>
                  </div>
                  <div className="pt-4 mt-4 border-t border-border">
                     <div className="aspect-video bg-void border border-border flex items-center justify-center relative overflow-hidden">

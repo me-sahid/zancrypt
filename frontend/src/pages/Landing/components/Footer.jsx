@@ -23,18 +23,6 @@ const Footer = () => {
             <p className="text-sm text-text-secondary mb-8 pr-4 leading-relaxed">
               Enterprise-grade distributed zero-knowledge storage infrastructure. Built for scale, engineered for absolute privacy.
             </p>
-            
-            {/* System Status */}
-            <div className="inline-flex flex-col border border-border/40 rounded-xl p-4 bg-surface/30 backdrop-blur-sm">
-              <div className="flex items-center space-x-2 mb-2">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-sm font-bold text-text-primary">All Systems Operational</span>
-              </div>
-              <div className="text-xs text-text-secondary flex items-center justify-between">
-                <span>Global Uptime</span>
-                <span className="text-green-500 font-mono">99.999%</span>
-              </div>
-            </div>
           </div>
 
           {/* Column 2: Platform */}

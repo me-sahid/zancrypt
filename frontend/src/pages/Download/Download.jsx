@@ -52,7 +52,7 @@ const Download = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
           {/* LEFT: Coming Soon Copy */}
           <div className="lg:col-span-6 space-y-8">
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-primary-accent/10 border border-primary-accent/30 text-primary-accent text-[10px] font-black uppercase tracking-[0.2em] backdrop-blur-md">
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-primary-accent/10 border border-primary-accent/30 text-primary-accent text-xs font-black uppercase tracking-[0.2em] backdrop-blur-md">
               <Zap className="w-3.5 h-3.5" />
               <span>Native Desktop Redundancy</span>
             </div>
@@ -71,39 +71,39 @@ const Download = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-4">
               {/* macOS card */}
               <div className="p-6 rounded-2xl bg-surface-elevated/40 border border-white/5 backdrop-blur-xl relative overflow-hidden group hover:border-primary-accent/30 transition-all">
-                <div className="absolute top-0 right-0 p-3 text-[10px] font-black text-[#5F6368] uppercase tracking-widest">
+                <div className="absolute top-0 right-0 p-3 text-xs font-black text-[#5F6368] uppercase tracking-widest">
                   macOS
                 </div>
                 <Cpu className="w-8 h-8 text-primary-accent mb-4 group-hover:scale-105 transition-transform" />
                 <h3 className="font-bold text-white mb-1">Apple Silicon</h3>
                 <p className="text-xs text-text-secondary mb-3">Native M1/M2/M3 builds</p>
-                <div className="inline-flex px-2 py-0.5 rounded bg-white/[0.04] text-[9px] font-black text-text-secondary uppercase tracking-widest">
+                <div className="inline-flex px-2 py-0.5 rounded bg-white/[0.04] text-[11px] font-black text-text-secondary uppercase tracking-widest">
                   Alpha testing
                 </div>
               </div>
 
               {/* Windows card */}
               <div className="p-6 rounded-2xl bg-surface-elevated/40 border border-white/5 backdrop-blur-xl relative overflow-hidden group hover:border-primary-accent/30 transition-all">
-                <div className="absolute top-0 right-0 p-3 text-[10px] font-black text-[#5F6368] uppercase tracking-widest">
+                <div className="absolute top-0 right-0 p-3 text-xs font-black text-[#5F6368] uppercase tracking-widest">
                   Windows
                 </div>
                 <Monitor className="w-8 h-8 text-blue-400 mb-4 group-hover:scale-105 transition-transform" />
                 <h3 className="font-bold text-white mb-1">Windows client</h3>
                 <p className="text-xs text-text-secondary mb-3">DirectX accelerated engine</p>
-                <div className="inline-flex px-2 py-0.5 rounded bg-white/[0.04] text-[9px] font-black text-text-secondary uppercase tracking-widest">
+                <div className="inline-flex px-2 py-0.5 rounded bg-white/[0.04] text-[11px] font-black text-text-secondary uppercase tracking-widest">
                   In Development
                 </div>
               </div>
 
               {/* Android card */}
               <div className="p-6 rounded-2xl bg-surface-elevated/40 border border-white/5 backdrop-blur-xl relative overflow-hidden group hover:border-primary-accent/30 transition-all">
-                <div className="absolute top-0 right-0 p-3 text-[10px] font-black text-[#5F6368] uppercase tracking-widest">
+                <div className="absolute top-0 right-0 p-3 text-xs font-black text-[#5F6368] uppercase tracking-widest">
                   Android
                 </div>
                 <Smartphone className="w-8 h-8 text-emerald-400 mb-4 group-hover:scale-105 transition-transform" />
                 <h3 className="font-bold text-white mb-1">Android app</h3>
                 <p className="text-xs text-text-secondary mb-3">Mobile distributed key vault</p>
-                <div className="inline-flex px-2 py-0.5 rounded bg-white/[0.04] text-[9px] font-black text-text-secondary uppercase tracking-widest">
+                <div className="inline-flex px-2 py-0.5 rounded bg-white/[0.04] text-[11px] font-black text-text-secondary uppercase tracking-widest">
                   Coming Soon
                 </div>
               </div>
@@ -154,7 +154,7 @@ const Download = () => {
                   <div className="w-2.5 h-2.5 rounded-full bg-status-warning/40" />
                   <div className="w-2.5 h-2.5 rounded-full bg-status-success/40" />
                 </div>
-                <div className="text-[9px] font-black text-text-secondary uppercase tracking-widest">
+                <div className="text-[11px] font-black text-text-secondary uppercase tracking-widest">
                   Zancrypt Desktop v1.0.0
                 </div>
                 <Shield className="w-3.5 h-3.5 text-primary-accent" />
@@ -175,13 +175,13 @@ const Download = () => {
                   </div>
                   <div>
                     <div className="text-xs font-bold text-white uppercase tracking-widest">Shard Sync active</div>
-                    <div className="text-[9px] text-[#5F6368] font-mono mt-1">12 shards replicated successfully</div>
+                    <div className="text-[11px] text-[#5F6368] font-mono mt-1">12 shards replicated successfully</div>
                   </div>
                 </div>
               </div>
 
               {/* Bottom Utilization status */}
-              <div className="pt-3 border-t border-white/5 flex justify-between items-center text-[10px] font-bold text-text-secondary uppercase tracking-wider">
+              <div className="pt-3 border-t border-white/5 flex justify-between items-center text-xs font-bold text-text-secondary uppercase tracking-wider">
                 <div className="flex items-center space-x-2">
                   <span className="w-2 h-2 rounded-full bg-status-success animate-pulse" />
                   <span>Daemon Engine Online</span>

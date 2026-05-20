@@ -22,7 +22,7 @@ const NodeStatusGrid = ({ nodes }) => {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center opacity-40">
         <Cloud className="w-8 h-8 mb-3 text-text-muted" />
-        <p className="font-mono text-[10px] text-text-muted uppercase tracking-widest">No nodes found</p>
+        <p className="font-mono text-xs text-text-muted uppercase tracking-widest">No nodes found</p>
       </div>
     );
   }
@@ -30,10 +30,10 @@ const NodeStatusGrid = ({ nodes }) => {
   return (
     <div className="grid grid-cols-1 gap-2">
       {/* Header Row */}
-      <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-border font-mono text-[9px] uppercase tracking-widest text-text-muted">
-        <div className="col-span-1">Status</div>
-        <div className="col-span-4">Node / Region</div>
-        <div className="col-span-3">Provider</div>
+      <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-border font-mono text-[11px] uppercase tracking-widest text-text-muted">
+        <div className="col-span-2 sm:col-span-1">Status</div>
+        <div className="col-span-6 sm:col-span-4">Node / Region</div>
+        <div className="hidden sm:block sm:col-span-3">Provider</div>
         <div className="col-span-2">Latency</div>
         <div className="col-span-2 text-right">Load</div>
       </div>
@@ -51,18 +51,18 @@ const NodeStatusGrid = ({ nodes }) => {
             className="grid grid-cols-12 gap-2 px-4 py-3 items-center border border-transparent hover:bg-surface-raised transition-colors group text-xs font-mono"
           >
             {/* Status */}
-            <div className="col-span-1 flex justify-center">
+            <div className="col-span-2 sm:col-span-1 flex justify-center">
               <NodeDot status={statusType} />
             </div>
 
             {/* Node Info */}
-            <div className="col-span-4 min-w-0">
+            <div className="col-span-6 sm:col-span-4 min-w-0">
               <div className="text-text-primary truncate">{node.name}</div>
-              <div className="text-[9px] text-text-muted truncate">{node.region}</div>
+              <div className="text-[11px] text-text-muted truncate">{node.region}</div>
             </div>
 
             {/* Provider */}
-            <div className="col-span-3 text-text-secondary truncate">
+            <div className="hidden sm:block sm:col-span-3 text-text-secondary truncate">
               {providerLabel}
             </div>
 

@@ -18,7 +18,7 @@ const StatusBadge = ({ severity = 'info' }) => {
   };
 
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-sm border font-mono text-[10px] uppercase tracking-wider ${getStyles()}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-sm border font-mono text-xs uppercase tracking-wider ${getStyles()}`}>
       {severity}
     </span>
   );

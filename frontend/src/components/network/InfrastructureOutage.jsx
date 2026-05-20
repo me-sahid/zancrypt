@@ -77,7 +77,7 @@ const InfrastructureOutage = () => {
       <div className="absolute top-6 left-6 flex space-x-2">
          <div className="flex items-center px-3 py-1.5 rounded-full bg-status-danger/10 border border-status-danger/20">
             <div className="w-1.5 h-1.5 rounded-full bg-status-danger animate-ping mr-2" />
-            <span className="text-[10px] font-bold text-status-danger uppercase tracking-widest">Network Outage</span>
+            <span className="text-xs font-bold text-status-danger uppercase tracking-widest">Network Outage</span>
          </div>
       </div>
     </div>

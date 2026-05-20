@@ -177,7 +177,7 @@ const Bin = () => {
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-text-primary">{file.encrypted_filename || file.filename || file.name}</p>
-                        <p className="text-[10px] text-text-secondary uppercase">Sandbox Isolation</p>
+                        <p className="text-xs text-text-secondary uppercase">Sandbox Isolation</p>
                       </div>
                     </div>
                   </td>

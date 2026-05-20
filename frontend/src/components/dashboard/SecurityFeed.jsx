@@ -34,11 +34,11 @@ const SecurityFeed = ({ events }) => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <p className="text-sm font-mono text-text-primary truncate">{event.event}</p>
-                    <span className="text-[10px] font-mono text-text-muted whitespace-nowrap ml-2 flex items-center uppercase tracking-widest">
+                    <span className="text-xs font-mono text-text-muted whitespace-nowrap ml-2 flex items-center uppercase tracking-widest">
                       <Clock className="w-3 h-3 mr-1" /> {event.time}
                     </span>
                   </div>
-                  <p className="text-[10px] text-text-secondary font-mono uppercase tracking-widest">
+                  <p className="text-xs text-text-secondary font-mono uppercase tracking-widest">
                     <span className="text-accent">{event.user}</span> · {event.type}
                   </p>
                 </div>
@@ -48,7 +48,7 @@ const SecurityFeed = ({ events }) => {
         </AnimatePresence>
       </div>
 
-      <button className="w-full mt-4 py-3 bg-surface border border-border text-[10px] font-mono uppercase tracking-widest text-text-muted hover:text-accent hover:border-accent transition-colors">
+      <button className="w-full mt-4 py-3 bg-surface border border-border text-xs font-mono uppercase tracking-widest text-text-muted hover:text-accent hover:border-accent transition-colors">
         [ Inspect All Logs ]
       </button>
     </div>

@@ -86,7 +86,7 @@ const ShardMap = () => {
       })}
 
       {/* Labels */}
-      <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-[8px] font-bold text-text-secondary uppercase tracking-[0.2em]">
+      <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-[11px] font-bold text-text-secondary uppercase tracking-[0.2em]">
         <div className="flex items-center">
            <div className={twMerge(
              "w-1.5 h-1.5 rounded-full mr-2",

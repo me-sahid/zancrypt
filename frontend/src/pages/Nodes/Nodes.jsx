@@ -103,28 +103,28 @@ const Nodes = () => {
         <Card className="bg-primary-accent/5 border-primary-accent/20">
           <CardContent className="p-6">
             <Server className="w-8 h-8 text-primary-accent mb-4" />
-            <p className="text-[10px] text-text-secondary font-bold uppercase tracking-widest">Total Cluster Nodes</p>
+            <p className="text-xs text-text-secondary font-bold uppercase tracking-widest">Total Cluster Nodes</p>
             <p className="text-3xl font-black text-text-primary">{nodes.length}</p>
           </CardContent>
         </Card>
         <Card className="bg-status-success/5 border-status-success/20">
           <CardContent className="p-6">
             <ShieldCheck className="w-8 h-8 text-status-success mb-4" />
-            <p className="text-[10px] text-text-secondary font-bold uppercase tracking-widest">Active & Operational</p>
+            <p className="text-xs text-text-secondary font-bold uppercase tracking-widest">Active & Operational</p>
             <p className="text-3xl font-black text-text-primary">{healthyCount}</p>
           </CardContent>
         </Card>
         <Card className="bg-status-danger/5 border-status-danger/20">
           <CardContent className="p-6">
             <AlertTriangle className="w-8 h-8 text-status-danger mb-4" />
-            <p className="text-[10px] text-text-secondary font-bold uppercase tracking-widest">Offline / Degraded</p>
+            <p className="text-xs text-text-secondary font-bold uppercase tracking-widest">Offline / Degraded</p>
             <p className="text-3xl font-black text-text-primary">{nodes.length - healthyCount}</p>
           </CardContent>
         </Card>
         <Card className="bg-status-warning/5 border-status-warning/20">
           <CardContent className="p-6">
             <Zap className="w-8 h-8 text-status-warning mb-4" />
-            <p className="text-[10px] text-text-secondary font-bold uppercase tracking-widest">Replication Factor</p>
+            <p className="text-xs text-text-secondary font-bold uppercase tracking-widest">Replication Factor</p>
             <p className="text-3xl font-black text-text-primary">x2</p>
           </CardContent>
         </Card>
@@ -164,7 +164,7 @@ const Nodes = () => {
                     <h3 className="text-2xl font-black text-text-primary tracking-tight">{node.name}</h3>
                     <Badge variant={node.status === 'success' ? 'success' : 'danger'}>{node.health}</Badge>
                   </div>
-                  <div className="flex flex-wrap items-center gap-4 text-[10px] text-text-secondary uppercase font-bold tracking-widest">
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-text-secondary uppercase font-bold tracking-widest">
                     <span className="flex items-center px-2 py-1 rounded bg-white/5"><Globe className="w-3 h-3 mr-1.5" /> {node.region}</span>
                     <span className="flex items-center px-2 py-1 rounded bg-white/5"><HardDrive className="w-3 h-3 mr-1.5" /> {node.provider}</span>
                     {node.isHealthy && (
@@ -174,9 +174,9 @@ const Nodes = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-10 flex-1 w-full xl:max-w-3xl">
-                 <div className="space-y-3">
-                    <div className="flex justify-between text-[10px] font-black uppercase text-text-secondary tracking-widest">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10 flex-1 w-full xl:max-w-3xl">
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-xs font-black uppercase text-text-secondary tracking-widest">
                       <span>Node Utilization</span>
                       <span className={node.isHealthy ? "text-primary-accent" : "text-status-danger"}>{node.isHealthy ? `${node.load}%` : 'OFFLINE'}</span>
                     </div>
@@ -191,17 +191,17 @@ const Nodes = () => {
 
                  <div className="flex flex-wrap items-center gap-6 sm:gap-8">
                     <div>
-                      <p className="text-[10px] text-text-secondary font-bold uppercase mb-1">Stored Shards</p>
+                      <p className="text-xs text-text-secondary font-bold uppercase mb-1">Stored Shards</p>
                       <p className="text-xl font-black text-text-primary">{node.isHealthy ? node.shards : '--'}</p>
                     </div>
                     <div className="hidden sm:block w-px h-8 bg-border" />
                     <div>
-                      <p className="text-[10px] text-text-secondary font-bold uppercase mb-1">Storage Used</p>
+                      <p className="text-xs text-text-secondary font-bold uppercase mb-1">Storage Used</p>
                       <p className="text-xl font-black text-text-primary">{node.isHealthy ? formatStorage(node.storageUsed) : '--'}</p>
                     </div>
                     <div className="hidden sm:block w-px h-8 bg-border" />
                     <div>
-                      <p className="text-[10px] text-text-secondary font-bold uppercase mb-1">Local Latency</p>
+                      <p className="text-xs text-text-secondary font-bold uppercase mb-1">Local Latency</p>
                       <p className="text-xl font-black text-text-primary">{node.isHealthy ? `${node.latency}ms` : 'Inf'}</p>
                     </div>
                  </div>
@@ -210,7 +210,7 @@ const Nodes = () => {
                     <button 
                       onClick={() => handleToggleNode(node.id, node.isHealthy)}
                       className={twMerge(
-                        "flex items-center justify-center space-x-2 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-xl w-full xl:w-auto",
+                        "flex items-center justify-center space-x-2 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 shadow-xl w-full xl:w-auto",
                         node.isHealthy 
                           ? "bg-status-danger/10 text-status-danger border border-status-danger/20 hover:bg-status-danger/20" 
                           : "bg-status-success/10 text-status-success border border-status-success/20 hover:bg-status-success/20"

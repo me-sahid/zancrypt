@@ -46,7 +46,7 @@ const SecureInput = React.forwardRef(({ className, type, label, error, leftIcon,
         )}
       </div>
       {error && (
-        <p className="mt-1.5 font-mono text-[10px] text-danger">
+        <p className="mt-1.5 font-mono text-xs text-danger">
           {error}
         </p>
       )}

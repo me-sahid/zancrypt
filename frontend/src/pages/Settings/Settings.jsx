@@ -96,14 +96,14 @@ const Settings = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Navigation Sidebar */}
-        <div className="space-y-2">
+        <div className="flex flex-row md:flex-col overflow-x-auto md:overflow-x-visible space-x-2 md:space-x-0 md:space-y-2 pb-2 md:pb-0 scrollbar-none shrink-0">
            {tabs.map((item) => {
              const isActive = activeTab === item.label;
              return (
                <button 
                  key={item.label} 
                  onClick={() => setActiveTab(item.label)}
-                 className={`w-full flex items-center space-x-3 px-4 py-3 font-mono text-xs uppercase tracking-widest transition-colors ${isActive ? 'bg-accent/10 text-accent border border-accent/20' : 'text-text-muted hover:bg-surface hover:text-text-primary border border-transparent'}`}
+                 className={`flex items-center space-x-3 px-4 py-3 font-mono text-xs uppercase tracking-widest transition-colors shrink-0 md:w-full ${isActive ? 'bg-accent/10 text-accent border border-accent/20' : 'text-text-muted hover:bg-surface hover:text-text-primary border border-transparent'}`}
                >
                   <item.icon className="w-4 h-4" />
                   <span>{item.label}</span>
@@ -122,7 +122,7 @@ const Settings = () => {
                 <div className="p-6 space-y-6">
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest">Display Name</label>
+                        <label className="text-xs font-mono text-text-muted uppercase tracking-widest">Display Name</label>
                         <input 
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
@@ -131,7 +131,7 @@ const Settings = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest">Email Alias [READ ONLY]</label>
+                        <label className="text-xs font-mono text-text-muted uppercase tracking-widest">Email Alias [READ ONLY]</label>
                         <input 
                           value={user?.email || ''}
                           readOnly
@@ -139,7 +139,7 @@ const Settings = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest">Storage Region</label>
+                        <label className="text-xs font-mono text-text-muted uppercase tracking-widest">Storage Region</label>
                         <select
                           value={region}
                           onChange={(e) => setRegion(e.target.value)}
@@ -156,7 +156,7 @@ const Settings = () => {
                       <button 
                         onClick={handleSaveProfile}
                         disabled={isSavingProfile}
-                        className="px-6 py-2 border border-accent text-accent font-mono text-[10px] uppercase tracking-widest hover:bg-accent hover:text-white transition-colors disabled:opacity-50"
+                        className="px-6 py-2 border border-accent text-accent font-mono text-xs uppercase tracking-widest hover:bg-accent hover:text-white transition-colors disabled:opacity-50"
                       >
                         {isSavingProfile ? '[ Saving... ]' : '[ Save State ]'}
                       </button>
@@ -201,7 +201,7 @@ const Settings = () => {
                     </p>
                     <button 
                       onClick={handleRevokeSessions}
-                      className="px-6 py-2 bg-transparent border border-danger text-danger font-mono text-[10px] uppercase tracking-widest hover:bg-danger/10 transition-colors"
+                      className="px-6 py-2 bg-transparent border border-danger text-danger font-mono text-xs uppercase tracking-widest hover:bg-danger/10 transition-colors"
                     >
                       [ Revoke All Sessions ]
                     </button>
@@ -220,7 +220,7 @@ const Settings = () => {
                      <div className="flex items-center justify-between p-4 hover:bg-void transition-colors">
                         <div>
                           <p className="text-text-primary uppercase tracking-widest">Email Notifications</p>
-                          <p className="text-text-muted text-[10px] mt-1">Security and share activity via email</p>
+                           <p className="text-text-muted text-xs mt-1">Security and share activity via email</p>
                         </div>
                         <button 
                           onClick={() => settings.setSetting('emailNotifications', !settings.emailNotifications)}
@@ -232,7 +232,7 @@ const Settings = () => {
                      <div className="flex items-center justify-between p-4 border-t border-border hover:bg-void transition-colors">
                         <div>
                           <p className="text-text-primary uppercase tracking-widest">In-App Push Alerts</p>
-                          <p className="text-text-muted text-[10px] mt-1">Live browser toasts for network events</p>
+                          <p className="text-text-muted text-xs mt-1">Live browser toasts for network events</p>
                         </div>
                         <button 
                           onClick={() => settings.setSetting('inAppAlerts', !settings.inAppAlerts)}
@@ -246,7 +246,7 @@ const Settings = () => {
 
                <button 
                  onClick={handleMarkAlertsRead}
-                 className="w-full py-3 bg-surface border border-border text-text-muted font-mono text-[10px] uppercase tracking-widest hover:text-text-primary hover:border-text-primary transition-colors"
+                 className="w-full py-3 bg-surface border border-border text-text-muted font-mono text-xs uppercase tracking-widest hover:text-text-primary hover:border-text-primary transition-colors"
                >
                  [ Mark All Read ]
                </button>
@@ -262,7 +262,7 @@ const Settings = () => {
                    <div className="flex items-center justify-between p-4 hover:bg-void transition-colors">
                       <div>
                         <p className="text-text-primary uppercase tracking-widest">Auto Shard Replication</p>
-                        <p className="text-text-muted text-[10px] mt-1 max-w-xs">Clone data shards across regional nodes for high availability.</p>
+                        <p className="text-text-muted text-xs mt-1 max-w-xs">Clone data shards across regional nodes for high availability.</p>
                       </div>
                       <button 
                         onClick={() => settings.setSetting('autoReplication', !settings.autoReplication)}
@@ -274,7 +274,7 @@ const Settings = () => {
                    <div className="flex items-center justify-between p-4 border-t border-border hover:bg-void transition-colors">
                       <div>
                         <p className="text-text-primary uppercase tracking-widest">Telemetry Polling</p>
-                        <p className="text-text-muted text-[10px] mt-1 max-w-xs">Periodically fetch node health and vault telemetry data.</p>
+                        <p className="text-text-muted text-xs mt-1 max-w-xs">Periodically fetch node health and vault telemetry data.</p>
                       </div>
                       <button 
                         onClick={() => settings.setSetting('telemetryPolling', !settings.telemetryPolling)}
@@ -291,20 +291,20 @@ const Settings = () => {
              <div className="bg-surface border border-border">
                 <div className="p-4 border-b border-border bg-surface-raised flex items-center justify-between">
                   <h3 className="font-mono text-xs text-text-primary uppercase tracking-widest">Storage Node Cluster</h3>
-                  <button onClick={fetchNodes} className="text-[10px] text-accent uppercase tracking-widest hover:underline flex items-center font-mono">
+                  <button onClick={fetchNodes} className="text-xs text-accent uppercase tracking-widest hover:underline flex items-center font-mono">
                     <CheckCircle2 className="w-3 h-3 mr-1" /> Ping
                   </button>
                 </div>
                 <div className="p-6">
                   {isLoadingNodes ? (
-                    <div className="py-8 text-center text-accent text-[10px] font-mono uppercase tracking-widest animate-pulse">[ Scanning Nodes... ]</div>
+                    <div className="py-8 text-center text-accent text-xs font-mono uppercase tracking-widest animate-pulse">[ Scanning Nodes... ]</div>
                   ) : nodesData ? (
                     <div className="space-y-6">
                       <div className="p-4 bg-accent/5 border border-accent/20 flex items-start space-x-3">
                         <CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" />
                         <div className="font-mono text-xs">
                           <p className="text-accent uppercase tracking-widest">Cluster Status: {nodesData.nodes}</p>
-                          <p className="text-text-muted text-[10px] mt-2 leading-relaxed">
+                          <p className="text-text-muted text-xs mt-2 leading-relaxed">
                             {nodesData.active_nodes === 'simulated' ? 'Using simulated local node network.' : 'Connected to global Zancrypt relay.'} <br/>
                             Expected Nodes: {nodesData.expected_count || 5}.
                           </p>
@@ -315,17 +315,17 @@ const Settings = () => {
                         {['US East', 'US West', 'EU Central', 'AP South', 'AP Northeast'].map((regionName) => (
                           <div key={regionName} className="p-3 bg-void border border-border">
                             <div className="flex items-center justify-between mb-3">
-                              <p className="text-[9px] font-mono text-text-muted uppercase tracking-widest">{regionName}</p>
+                              <p className="text-[11px] font-mono text-text-muted uppercase tracking-widest">{regionName}</p>
                               <div className="w-1.5 h-1.5 bg-accent animate-pulse"></div>
                             </div>
-                            <p className="text-[10px] font-mono text-text-primary uppercase">node-{regionName.toLowerCase().replace(' ', '-')}</p>
-                            <p className="text-[9px] font-mono text-accent mt-2 uppercase tracking-widest">Lat: {Math.floor(Math.random() * 40 + 10)}ms</p>
+                            <p className="text-xs font-mono text-text-primary uppercase">node-{regionName.toLowerCase().replace(' ', '-')}</p>
+                            <p className="text-[11px] font-mono text-accent mt-2 uppercase tracking-widest">Lat: {Math.floor(Math.random() * 40 + 10)}ms</p>
                           </div>
                         ))}
                       </div>
                     </div>
                   ) : (
-                    <div className="py-8 text-center text-danger text-[10px] font-mono uppercase tracking-widest">Failed to establish connection</div>
+                    <div className="py-8 text-center text-danger text-xs font-mono uppercase tracking-widest">Failed to establish connection</div>
                   )}
                 </div>
              </div>
