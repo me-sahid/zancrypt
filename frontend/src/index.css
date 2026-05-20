@@ -1,27 +1,78 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-primary-bg: #030712;
-  --color-surface-primary: #030712;
-  --color-surface-secondary: #080C18;
-  --color-surface-elevated: #0F172A;
-  --color-primary-accent: #3B82F6;
-  --color-security: #06B6D4;
-  --color-status-success: #10B981;
-  --color-status-warning: #F59E0B;
-  --color-status-danger: #EF4444;
-  --color-text-primary: #F8FAFC;
-  --color-text-secondary: #94A3B8;
-  --color-border: rgba(255,255,255,0.06);
-  
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --color-void: #050507;
+  --color-surface: #0c0c10;
+  --color-surface-raised: #121218;
+  --color-surface-elevated: #161622;
+  --color-border: #1e1e28;
+  --color-border-active: #2e2e3e;
+  --color-text-primary: #e8e8f0;
+  --color-text-secondary: #8888a0;
+  --color-text-muted: #444456;
+  --color-accent: #4fffb0;
+  --color-accent-dim: #1a3d2e;
+  --color-danger: #ff4455;
+  --color-warning: #ffaa33;
+  --color-node-active: #4fffb0;
+  --color-node-inactive: #ff4455;
+  --color-cipher-text: #3a3a50;
+  --color-primary-accent: var(--color-accent);
+  --color-primary-bg: var(--color-void);
+
+  --font-display: 'Instrument Serif', 'Newsreader', Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
 }
+
+/* Light Theme Overrides */
+html.light {
+  --color-void: #f4f4f8;
+  --color-surface: #ffffff;
+  --color-surface-raised: #eeeef5;
+  --color-surface-elevated: #f8f8fc;
+  --color-border: #d0d0e0;
+  --color-border-active: #b0b0cc;
+  --color-text-primary: #0d0d1a;
+  --color-text-secondary: #505068;
+  --color-text-muted: #9090a8;
+  --color-accent: #d97757;
+  --color-accent-dim: #fdf0eb;
+  --color-danger: #e53e4d;
+  --color-warning: #d97706;
+  --color-node-active: #d97757;
+  --color-node-inactive: #e53e4d;
+  --color-cipher-text: #d8d8e8;
+}
+
 
 @layer base {
   body {
-    @apply bg-surface-primary text-text-primary font-sans antialiased overflow-x-hidden;
+    @apply bg-void text-text-primary font-sans antialiased overflow-x-hidden;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -20vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60vw;
+    height: 60vh;
+    background: radial-gradient(ellipse at center, var(--color-accent) 0%, transparent 70%);
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: -1;
   }
 
   /* Custom Scrollbars */
@@ -33,47 +84,18 @@
     @apply bg-transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-border rounded-full hover:bg-text-secondary/20 transition-colors;
+    @apply bg-border rounded-full hover:bg-border-active transition-colors;
   }
 
-  selection {
-    @apply bg-primary-accent/30 text-primary-accent;
+  ::selection {
+    @apply bg-accent/20 text-accent;
   }
 }
 
 @layer utilities {
-  .glass-panel {
-    @apply bg-surface-secondary/75 backdrop-blur-md border border-border/50;
-    transform: translateZ(0);
-    backface-visibility: hidden;
-  }
-  
-  .infrastructure-glow {
-    @apply shadow-[0_0_20px_rgba(59,130,246,0.06)];
-  }
-
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-br from-white to-white/60;
-  }
-
-  .animate-pulse-slow {
-    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: .5; }
-  }
-
   .safari-hardware-accel {
     transform: translateZ(0);
     backface-visibility: hidden;
-  }
-
-  .safari-backdrop-blur {
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
-    transform: translateZ(0);
   }
 }
 

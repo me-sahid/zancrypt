@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Lock, Mail, ArrowRight, ShieldCheck, Globe, AlertCircle } from 'lucide-react';
+import { Lock, Mail, ShieldCheck, AlertCircle, ScanFace } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import gsap from 'gsap';
 import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
+import SecureInput from '../../components/ui/SecureInput';
 import { useAuthStore } from '../../store/useStore';
 import api from '../../services/api';
-
+import CipherText from '../../components/crypto/CipherText';
 import { authenticatePasskey } from '../../utils/webauthn';
-import { deriveKey } from '../../utils/crypto';
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -18,6 +18,7 @@ const Login = () => {
   const [showFallback, setShowFallback] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated, setAuth } = useAuthStore();
+  const vizRef = useRef(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -25,16 +26,33 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  // Visualizer Animation
+  useEffect(() => {
+    let ctx = gsap.context(() => {
+      const tl = gsap.timeline({ repeat: -1 });
+      tl.to('.auth-line', {
+        height: '100%',
+        duration: 2,
+        ease: 'power2.inOut',
+        stagger: 0.2,
+      }).to('.auth-line', {
+        opacity: 0,
+        duration: 0.5,
+        stagger: 0.1,
+      }, "+=1");
+    }, vizRef);
+    return () => ctx.revert();
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Biometric Flow
     if (!showFallback) {
       toast.loading("Initiating zero-knowledge challenge...", { id: 'auth-toast' });
 
       try {
-        const startResponse = await api.post('/auth/login/start', { email: email });
+        const startResponse = await api.post('/auth/login/start', { email });
         const { options, session_id } = startResponse.data;
 
         toast.loading("Awaiting biometric confirmation...", { id: 'auth-toast' });
@@ -42,7 +60,7 @@ const Login = () => {
 
         toast.loading("Verifying cryptographic signature...", { id: 'auth-toast' });
         const verifyResponse = await api.post('/auth/login/verify', {
-          session_id: session_id,
+          session_id,
           response: assertion
         });
 
@@ -51,20 +69,17 @@ const Login = () => {
         toast.success('Access granted via Biometrics.', { id: 'auth-toast' });
         navigate('/dashboard');
       } catch (error) {
-        console.error('Login failed:', error);
         const errorMsg = error.response?.data?.detail || error.message || 'Authentication failed';
         toast.error(`${errorMsg}. Switching to Access Key.`, { id: 'auth-toast' });
         setShowFallback(true);
       } finally {
         setIsLoading(false);
       }
-    }
-    // Fallback Access Key Flow
-    else {
+    } else {
       toast.loading("Verifying identity via Access Key...", { id: 'auth-toast' });
       try {
         const response = await api.post('/auth/login/fallback', {
-          email: email,
+          email,
           access_key: accessKey
         });
 
@@ -82,35 +97,32 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-primary-bg flex items-center justify-center p-6 relative overflow-hidden">
-      <div className="absolute inset-0 z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-accent/5 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-security/5 blur-[120px] rounded-full" />
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md relative z-10"
-      >
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-accent shadow-2xl shadow-primary-accent/20 mb-6">
-            <Lock className="w-8 h-8 text-white" />
+    <div className="min-h-screen flex bg-void overflow-hidden">
+      {/* LEFT COLUMN: Form (40%) */}
+      <div className="w-full lg:w-[40%] bg-surface flex flex-col justify-center p-8 lg:p-16 relative z-10 border-r border-border shadow-2xl">
+        <Link to="/" className="absolute top-8 left-8 flex items-center space-x-2 group">
+          <div className="w-7 h-7 bg-accent rounded-sm flex items-center justify-center">
+            <Lock className="w-3.5 h-3.5 text-void" />
           </div>
-          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Authentication</h1>
-          <p className="text-text-secondary mt-2">Enter your credentials to access the vault.</p>
-        </div>
+          <span className="font-display italic text-[18px] text-text-primary group-hover:text-accent transition-colors">
+            Zancrypt
+          </span>
+        </Link>
 
-        <div className="glass-elevated rounded-2xl p-8">
+        <div className="w-full max-w-sm mx-auto">
+          <h1 className="text-3xl font-display text-text-primary mb-2">Authenticate</h1>
+          <p className="font-mono text-[11px] text-text-muted uppercase tracking-widest mb-10">
+            Establish Secure Session
+          </p>
+
           <form onSubmit={handleSubmit} className="space-y-6">
-            <Input
-              label="Email"
+            <SecureInput
+              label="Email Address"
               name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="example@email.com"
+              placeholder="operator@system.io"
               required
               leftIcon={<Mail className="w-4 h-4" />}
             />
@@ -123,7 +135,7 @@ const Login = () => {
                   exit={{ opacity: 0, height: 0 }}
                   className="space-y-4 overflow-hidden"
                 >
-                  <Input
+                  <SecureInput
                     label="Access Key"
                     name="accessKey"
                     type="password"
@@ -133,66 +145,96 @@ const Login = () => {
                     required
                     leftIcon={<Lock className="w-4 h-4" />}
                   />
-                  <div className="flex items-center space-x-2 text-[10px] text-status-warning bg-status-warning/10 p-2 rounded-lg border border-status-warning/20">
-                    <AlertCircle className="w-3 h-3" />
-                    <span>Biometric verification failed. Use your security key.</span>
+                  <div className="flex items-start space-x-2 text-[10px] text-warning bg-warning/10 p-3 rounded-md border border-warning/20 font-mono uppercase tracking-wider">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    <span>Biometric challenge failed. Fallback to access key required.</span>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
             {!showFallback && (
-              <div className="flex items-center space-x-3 p-4 bg-surface-secondary/50 rounded-xl border border-border">
-                <div className="p-2 rounded-lg bg-primary-accent/10">
-                  <ShieldCheck className="w-5 h-5 text-primary-accent" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-text-primary leading-tight">Biometric Identity</p>
-                  <p className="text-[10px] text-text-secondary">Passwordless access using WebAuthn protocol.</p>
-                </div>
+              <div className="flex flex-col items-center justify-center p-8 border border-border border-dashed rounded-md bg-surface-raised mb-6">
+                <ScanFace className="w-12 h-12 text-accent mb-4" strokeWidth={1} />
+                <p className="font-mono text-xs text-text-primary uppercase tracking-widest mb-1">Passkey Ready</p>
+                <p className="font-sans text-[11px] text-text-secondary text-center">
+                  Use Touch ID, Face ID, or YubiKey for zero-knowledge authentication.
+                </p>
               </div>
             )}
 
             <Button
               type="submit"
               variant="primary"
-              className="w-full py-6 text-lg group"
+              className="w-full h-12"
               isLoading={isLoading}
-              rightIcon={<ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
             >
-              {showFallback ? 'Verify Security Key' : 'Verify Identity'}
+              {showFallback ? '[ Authenticate ]' : '[ Request Challenge ]'}
             </Button>
 
             {showFallback && (
               <button
                 type="button"
                 onClick={() => setShowFallback(false)}
-                className="w-full text-[10px] text-text-secondary hover:text-primary-accent uppercase tracking-widest font-bold transition-colors"
+                className="w-full font-mono text-[10px] text-text-muted hover:text-accent uppercase tracking-widest transition-colors mt-4"
               >
-                Retry Biometrics
+                Retry Passkey
               </button>
             )}
           </form>
 
-          <div className="mt-8 pt-8 border-t border-white/5 text-center">
-            <p className="text-sm text-text-secondary">
-              New node administrator?{' '}
-              <Link to="/register" className="text-primary-accent font-bold hover:underline">Register Instance</Link>
+          <div className="mt-12 text-center">
+            <p className="font-sans text-xs text-text-secondary">
+              No vault assigned?{' '}
+              <Link to="/register" className="text-accent hover:underline font-mono uppercase tracking-widest text-[10px]">
+                Initialize
+              </Link>
             </p>
           </div>
         </div>
+      </div>
 
-        <div className="mt-8 flex items-center justify-center space-x-6 text-[10px] text-text-secondary uppercase tracking-[0.2em] font-medium opacity-50">
-          <div className="flex items-center">
-            <Globe className="w-3 h-3 mr-2" />
-            256-Bit SSL
+      {/* RIGHT COLUMN: Visualization (60%) */}
+      <div className="hidden lg:flex w-[60%] relative items-center justify-center" ref={vizRef}>
+        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-5 pointer-events-none" />
+        
+        <div className="relative w-full max-w-2xl h-[600px] flex items-center justify-between px-16">
+          {/* Client Node */}
+          <div className="w-24 h-24 border border-border bg-surface flex flex-col items-center justify-center rounded-sm z-10 shadow-[0_0_20px_rgba(79,255,176,0.1)]">
+            <ShieldCheck className="w-8 h-8 text-accent mb-2" />
+            <span className="font-mono text-[9px] text-text-muted uppercase tracking-widest">Client</span>
           </div>
-          <div className="flex items-center">
-            <ShieldCheck className="w-3 h-3 mr-2" />
-            AES-256 GCM
+
+          {/* Connection Lines */}
+          <div className="flex-1 h-32 relative mx-8 flex items-center justify-between">
+            <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-border -translate-y-1/2" />
+            
+            {/* Animated Data streams */}
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="absolute left-0 w-full h-16 flex items-center" style={{ top: `${i * 25 + 15}%` }}>
+                <div className="auth-line w-full h-0 bg-accent/20 origin-left" />
+                <span className="absolute left-1/2 -translate-x-1/2 font-mono text-[8px] text-accent opacity-50 bg-void px-2">
+                  <CipherText text={i === 0 ? 'W3C_WEBAUTHN' : i === 1 ? 'AES_256_GCM' : 'HKDF_SHA256'} duration={2000} delay={i * 500} />
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Server Node */}
+          <div className="w-24 h-24 border border-border bg-surface flex flex-col items-center justify-center rounded-sm z-10">
+            <Lock className="w-8 h-8 text-text-secondary mb-2" />
+            <span className="font-mono text-[9px] text-text-muted uppercase tracking-widest">Zancrypt</span>
           </div>
         </div>
-      </motion.div>
+
+        {/* Terminal Output Overlay */}
+        <div className="absolute bottom-12 right-12 w-80 bg-surface/80 backdrop-blur-md border border-border p-4 rounded-sm font-mono text-[10px] text-text-muted leading-relaxed">
+          <div>&gt; INIT_SESSION</div>
+          <div>&gt; AWAITING_CHALLENGE</div>
+          <div className="text-accent">&gt; PUB_KEY_CRYPTOGRAPHY_ENABLED</div>
+          <div>&gt; ZERO_KNOWLEDGE_PROOF: READY</div>
+        </div>
+      </div>
     </div>
   );
 };

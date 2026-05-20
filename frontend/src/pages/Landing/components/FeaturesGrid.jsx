@@ -47,10 +47,10 @@ const FeaturesGrid = () => {
   }, []);
 
   return (
-    <section id="features" ref={containerRef} className="py-32 px-8 bg-primary-bg border-y border-white/5">
+    <section id="features" ref={containerRef} className="py-32 px-8 bg-void border-y border-border/40">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-20">
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Uncompromising Infrastructure</h2>
+          <h2 className="text-3xl md:text-5xl font-bold text-text-primary mb-6">Uncompromising Infrastructure</h2>
           <p className="text-lg text-text-secondary max-w-2xl mx-auto">
             Built from the ground up for absolute security and extreme resilience. Every component is designed with a zero-trust, highly-available philosophy.
           </p>
@@ -58,16 +58,16 @@ const FeaturesGrid = () => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {features.map((feature, i) => (
-            <div key={i} className="feature-card group relative p-6 rounded-2xl bg-surface-elevated/20 border border-white/5 overflow-hidden transition-all duration-500 hover:border-primary-accent/30 hover:bg-surface-elevated/60">
+            <div key={i} className="feature-card group relative p-6 rounded-2xl bg-surface/30 border border-border/40 overflow-hidden transition-all duration-500 hover:border-accent/40 hover:bg-surface-raised/40">
               {/* Hover Glow Effect */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-primary-accent/20 rounded-full blur-[50px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-accent/10 rounded-full blur-[50px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
               
-              <div className="w-12 h-12 rounded-xl bg-surface-secondary border border-white/10 flex items-center justify-center mb-5 relative z-10 group-hover:scale-110 group-hover:bg-primary-accent/10 transition-all duration-300">
-                <feature.icon className="w-5 h-5 text-text-secondary group-hover:text-primary-accent transition-colors" />
+              <div className="w-12 h-12 rounded-xl bg-surface-raised border border-border/40 flex items-center justify-center mb-5 relative z-10 group-hover:scale-110 group-hover:bg-accent/10 transition-all duration-300">
+                <feature.icon className="w-5 h-5 text-text-secondary group-hover:text-accent transition-colors" />
               </div>
               
-              <h3 className="text-lg font-bold text-white mb-2 relative z-10 group-hover:text-primary-accent transition-colors">{feature.title}</h3>
-              <p className="text-sm text-text-secondary leading-relaxed relative z-10 group-hover:text-white/70 transition-colors">
+              <h3 className="text-lg font-bold text-text-primary mb-2 relative z-10 group-hover:text-accent transition-colors">{feature.title}</h3>
+              <p className="text-sm text-text-secondary leading-relaxed relative z-10 group-hover:text-text-primary/80 transition-colors">
                 {feature.desc}
               </p>
             </div>

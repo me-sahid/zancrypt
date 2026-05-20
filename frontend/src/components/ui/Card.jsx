@@ -6,10 +6,8 @@ const Card = ({ className, children, glass = true, elevated = false, ...props })
   return (
     <div
       className={twMerge(
-        'rounded-xl border border-border overflow-hidden transition-all duration-300',
-        glass && 'bg-surface-secondary/40 backdrop-blur-sm',
-        !glass && 'bg-surface-secondary',
-        elevated && 'shadow-2xl shadow-black/40 bg-surface-elevated/60',
+        'rounded-lg border border-border bg-surface overflow-hidden transition-colors duration-300',
+        elevated && 'border-border-active bg-surface-raised',
         className
       )}
       {...props}

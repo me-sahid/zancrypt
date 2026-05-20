@@ -1,55 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
   Database, 
   Server, 
   ShieldCheck, 
-  Activity, 
   HardDrive,
-  Cpu,
-  Globe,
-  Zap,
-  Sparkles
+  Activity,
+  FileText
 } from 'lucide-react';
-import Button from '../../components/ui/Button';
 import { useDashboardStore } from '../../store/useDashboardStore';
 import { useAuthStore } from '../../store/useStore';
 import { useSimulationEngine } from '../../hooks/useSimulationEngine';
 import MetricCard from '../../components/dashboard/MetricCard';
-import TrafficChart from '../../components/dashboard/TrafficChart';
 import NodeStatusGrid from '../../components/dashboard/NodeStatusGrid';
-import ShardMap from '../../components/dashboard/ShardMap';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
-import { twMerge } from 'tailwind-merge';
-import { fileService, adminService, dashboardService } from '../../services/vaultServices';
-
-const metricsData = [
-  { name: '00:00', throughput: 400, requests: 2400 },
-  { name: '04:00', throughput: 300, requests: 1380 },
-  { name: '08:00', throughput: 600, requests: 9800 },
-  { name: '12:00', throughput: 478, requests: 3900 },
-  { name: '16:00', throughput: 189, requests: 4800 },
-  { name: '20:00', throughput: 239, requests: 3800 },
-  { name: '23:59', throughput: 349, requests: 4300 },
-];
+import { fileService, adminService } from '../../services/vaultServices';
 
 const Dashboard = () => {
-  // Start the simulation engine
   useSimulationEngine();
   
-  const { metrics, nodes, events, files, setFiles, setNodes, updateMetrics } = useDashboardStore();
-
-  const { token } = useAuthStore();
-
-  const formatStorage = (bytes) => {
-    if (!bytes) return { value: 0, suffix: ' Bytes' };
-    const k = 1024;
-    const sizes = [' Bytes', ' KB', ' MB', ' GB', ' TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    const val = parseFloat((bytes / Math.pow(k, i)));
-    return { value: val, suffix: sizes[i] };
-  };
+  const { metrics, nodes, files, setFiles, setNodes, updateMetrics } = useDashboardStore();
+  const { user } = useAuthStore();
 
   useEffect(() => {
     let isMounted = true;
@@ -72,12 +43,10 @@ const Dashboard = () => {
             });
           }
           if (nodesRes?.data) {
-            // Map backend data to frontend structure
             const mappedNodes = nodesRes.data.map(n => {
               const capacityGB = n.node_metadata?.capacity_gb || 1024;
               const capacityBytes = capacityGB * 1024 * 1024 * 1024;
               const storageUsed = n.storage_used || 0;
-              // If healthy, show real utilization based on storage, else 0.
               const loadPercent = n.healthy ? Math.min(100, Math.max(0.1, (storageUsed / capacityBytes) * 100)) : 0;
               
               return {
@@ -86,7 +55,7 @@ const Dashboard = () => {
                 region: n.region,
                 health: n.healthy ? 'Healthy' : 'Offline',
                 load: parseFloat(loadPercent.toFixed(2)),
-                latency: n.healthy ? 25 : 0, // Real 25ms base latency for active nodes
+                latency: n.healthy ? 25 : 0,
                 shards: (n.shards || []).length,
                 provider: n.provider,
                 status: n.healthy ? 'success' : 'danger',
@@ -106,207 +75,132 @@ const Dashboard = () => {
       isMounted = false; 
       clearInterval(interval);
     };
-  }, [setFiles, setNodes]);
+  }, [setFiles, setNodes, updateMetrics]);
 
-  // Safety checks to prevent crashing if metrics are missing
-  const safeMetrics = metrics || {
-    latency: 0,
-    totalStorage: 0,
-    securityScore: 100,
-    throughput: 0,
-    activeShards: 0
-  };
-
-  // Only real cloud-backed nodes shown in overview (Backblaze B2 + Supabase)
   const CLOUD_PROVIDERS = ['S3', 'SUPABASE'];
   const cloudNodes = (nodes || []).filter(n => CLOUD_PROVIDERS.includes(n.provider));
 
-  const { user } = useAuthStore();
-
   const formatTotalStorage = (bytes) => {
-    if (!bytes || bytes === 0) {
-      return { value: '0', suffix: ' Bytes' };
-    }
-    if (bytes < 1024) {
-      return { value: bytes.toFixed(2), suffix: ' Bytes' };
-    } else if (bytes < 1048576) {
-      return { value: (bytes / 1024).toFixed(2), suffix: ' KB' };
-    } else if (bytes < 1073741824) {
-      return { value: (bytes / 1048576).toFixed(2), suffix: ' MB' };
-    } else {
-      return { value: (bytes / 1073741824).toFixed(2), suffix: ' GB' };
-    }
+    if (!bytes || bytes === 0) return { value: '0', suffix: ' B' };
+    if (bytes < 1024) return { value: bytes.toFixed(2), suffix: ' B' };
+    if (bytes < 1048576) return { value: (bytes / 1024).toFixed(2), suffix: ' KB' };
+    if (bytes < 1073741824) return { value: (bytes / 1048576).toFixed(2), suffix: ' MB' };
+    return { value: (bytes / 1073741824).toFixed(2), suffix: ' GB' };
   };
 
+  const safeMetrics = metrics || { totalStorage: 0, securityScore: 100 };
   const realTotalStorage = files.reduce((acc, f) => acc + (f.file_size || 0), 0);
   const displayStorage = Math.max(safeMetrics.totalStorage || 0, realTotalStorage);
   
   const storageInfo = formatTotalStorage(displayStorage);
-  const storageVal = storageInfo.value;
-  const storageSuffix = storageInfo.suffix;
-
-  const securityVal = safeMetrics.securityScore || 100;
-  const securitySuffix = "%";
-
-  const filesVal = files ? files.length : 0;
-  
   const liveNodesCount = nodes ? nodes.filter(n => n.health === 'Healthy').length : 0;
-  const nodesVal = liveNodesCount;
 
   return (
     <div className="space-y-8 pb-10">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-6">
         <div>
-          <h1 className="text-4xl font-black text-text-primary tracking-tight">
-            Welcome back, <span className="text-primary-accent">{user?.full_name?.split(' ')[0] || user?.username || 'Commander'}</span>
+          <h1 className="font-mono text-2xl text-text-primary tracking-widest uppercase">
+            Dashboard
           </h1>
-          <p className="text-text-secondary mt-1 font-medium flex items-center text-sm">
-            <span className="w-2 h-2 rounded-full bg-status-success mr-2" />
-            System status: <span className="text-status-success ml-1 font-bold">Optimal & Encrypted</span>
+          <p className="text-text-muted mt-2 font-mono text-xs uppercase tracking-widest">
+            Welcome, {user?.full_name?.split(' ')[0] || user?.username || 'Operator'}
           </p>
         </div>
         
-        <div className="flex items-center space-x-3">
-          <Link to="/uploads" className="px-5 py-2.5 rounded-xl bg-primary-accent text-white font-bold text-sm shadow-lg shadow-primary-accent/30 hover:scale-105 active:scale-95 transition-all flex items-center">
-             <Zap className="w-4 h-4 mr-2 fill-current" />
-             Upload New File
-          </Link>
-        </div>
+        <Link to="/uploads" className="px-6 py-3 border border-accent text-accent font-mono text-[10px] uppercase tracking-widest hover:bg-accent/10 transition-colors">
+          [ Init Upload ]
+        </Link>
       </div>
 
-      {/* Onboarding Alert for Profile Personalization */}
-      {(user?.full_name === 'No Name' || !user?.full_name) && (
-        <Card className="bg-primary-accent/5 border border-primary-accent/20 rounded-2xl p-6 relative overflow-hidden">
-          <div className="absolute top-[-10%] right-[-10%] w-[20%] h-[50%] bg-primary-accent/10 blur-[80px] rounded-full pointer-events-none" />
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-            <div className="space-y-2">
-              <h3 className="font-bold text-lg text-white flex items-center">
-                <Sparkles className="w-5 h-5 mr-2 text-primary-accent" />
-                Personalize Your Secure Vault
-              </h3>
-              <p className="text-text-secondary text-sm max-w-2xl leading-relaxed">
-                Welcome to your distributed zero-knowledge cloud storage. Please update your profile alias to customize your node dashboard experience.
-              </p>
-            </div>
-            <Link to="/profile">
-              <Button variant="primary" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold px-5 py-2.5 rounded-xl whitespace-nowrap shadow-lg shadow-blue-500/20 active:scale-95 transition-all text-xs">
-                Set Vault Alias
-              </Button>
-            </Link>
-          </div>
-        </Card>
-      )}
-
-      {/* Simplified Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard 
           label="Total Storage" 
-          value={storageVal} 
-          suffix={storageSuffix} 
+          value={storageInfo.value} 
+          suffix={storageInfo.suffix} 
           icon={HardDrive} 
-          trend="In Use" 
+          trend="NOMINAL" 
           isPositive={true} 
         />
         <MetricCard 
-          label="Security Status" 
-          value={securityVal} 
-          suffix={securitySuffix} 
+          label="Security Protocol" 
+          value={safeMetrics.securityScore || 100} 
+          suffix="%" 
           icon={ShieldCheck} 
-          trend="Protected" 
+          trend="LOCKED" 
           isPositive={true} 
         />
         <MetricCard 
-          label="Stored Files" 
-          value={filesVal} 
+          label="Encrypted Items" 
+          value={files ? files.length : 0} 
           icon={Database} 
-          trend="Active" 
-          isPositive={true} 
         />
         <MetricCard 
-          label="Cloud Nodes" 
-          value={cloudNodes.length > 0 ? cloudNodes.filter(n => n.health === 'Healthy').length : nodesVal} 
+          label="Active Nodes" 
+          value={cloudNodes.length > 0 ? cloudNodes.filter(n => n.health === 'Healthy').length : liveNodesCount} 
           icon={Server} 
-          trend="Live" 
+          trend="ONLINE" 
           isPositive={true} 
         />
       </div>
 
-      {/* Main Grid: Files & Nodes */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Files Preview */}
-        <Card className="lg:col-span-2 flex flex-col min-h-[400px]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle className="text-xl">Recent Files</CardTitle>
-              <CardDescription>Your recently uploaded and synchronized data.</CardDescription>
+        <div className="lg:col-span-2 flex flex-col bg-surface border border-border h-[400px]">
+          <div className="flex items-center justify-between p-4 border-b border-border">
+            <div className="font-mono text-[11px] uppercase tracking-widest text-text-muted flex items-center">
+              <FileText className="w-3.5 h-3.5 mr-2" />
+              Recent Ciphertexts
             </div>
-            <Link to="/vault" className="text-[10px] font-bold text-primary-accent hover:underline uppercase tracking-widest">
-              View All
+            <Link to="/vault" className="text-accent hover:underline font-mono text-[10px] uppercase tracking-widest">
+              View Log
             </Link>
-          </CardHeader>
-          <CardContent className="flex-1 pt-6">
+          </div>
+          
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
             {files.length > 0 ? (
-              <div className="space-y-4">
-                {files.slice(0, 5).map((file, i) => {
-                  const getFileIcon = (filename) => {
-                    const ext = filename?.split('.').pop()?.toLowerCase();
-                    switch (ext) {
-                      case 'pdf': return <Database className="w-5 h-5 text-status-danger" />;
-                      case 'png': case 'jpg': case 'jpeg': return <Globe className="w-5 h-5 text-security" />;
-                      default: return <Database className="w-5 h-5 text-primary-accent" />;
-                    }
-                  };
-
-                  return (
-                    <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-surface-secondary/50 border border-border/50">
-                      <div className="flex items-center space-x-4">
-                        <div className="p-2 rounded-lg bg-primary-accent/10">
-                          {getFileIcon(file.encrypted_filename)}
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-text-primary truncate max-w-[200px]">
-                            {file.encrypted_filename || file.filename || file.name}
-                          </p>
-                          <p className="text-[10px] text-text-secondary uppercase font-bold tracking-tight">
-                            {file.file_size ? (file.file_size / 1024 / 1024).toFixed(2) + ' MB' : '0 MB'} • Synced
-                          </p>
-                        </div>
+              <div className="space-y-1">
+                {files.slice(0, 6).map((file, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 hover:bg-surface-raised transition-colors group">
+                    <div className="flex items-center min-w-0">
+                      <div className="w-6 h-6 border border-border flex items-center justify-center mr-3 bg-void">
+                        <FileText className="w-3 h-3 text-text-secondary" />
                       </div>
-                      <Link to="/vault" className="p-2 text-text-secondary hover:text-primary-accent transition-colors">
-                        <Zap className="w-4 h-4" />
-                      </Link>
+                      <div className="truncate">
+                        <p className="font-mono text-[11px] text-text-primary truncate">
+                          {file.encrypted_filename || file.filename || file.name}
+                        </p>
+                        <p className="font-mono text-[9px] text-text-muted">
+                          {file.file_size ? (file.file_size / 1024).toFixed(1) + ' KB' : '0 KB'}
+                        </p>
+                      </div>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-center opacity-50">
-                <Database className="w-12 h-12 mb-4 text-text-secondary" />
-                <p className="text-sm font-bold">No files found in vault</p>
-                <p className="text-xs">Start by uploading your first file.</p>
+              <div className="h-full flex flex-col items-center justify-center text-center">
+                <FileText className="w-6 h-6 mb-2 text-text-muted" />
+                <p className="font-mono text-[10px] text-text-muted uppercase tracking-widest">Vault Empty</p>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* Cloud Storage Node Health */}
-        <Card className="h-fit">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle>Cloud Storage</CardTitle>
-              <CardDescription>
-                {cloudNodes.filter(n => n.health === 'Healthy').length} of {cloudNodes.length} nodes operational
-              </CardDescription>
+        {/* Node Health Grid */}
+        <div className="bg-surface border border-border h-[400px] flex flex-col">
+          <div className="flex items-center justify-between p-4 border-b border-border">
+            <div className="font-mono text-[11px] uppercase tracking-widest text-text-muted flex items-center">
+              <Activity className="w-3.5 h-3.5 mr-2" />
+              Node Matrix
             </div>
-            <span className="text-[8px] font-bold uppercase tracking-widest px-2 py-1 rounded bg-status-success/10 text-status-success border border-status-success/20">
-              Live
-            </span>
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
             <NodeStatusGrid nodes={cloudNodes} />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

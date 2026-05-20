@@ -4,7 +4,32 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import { silentRefresh } from './services/api';
+import { useThemeStore } from './store/useThemeStore';
 import './index.css';
+
+// Apply persisted theme before first paint to avoid flash
+(function bootstrapTheme() {
+  try {
+    const stored = localStorage.getItem('zancrypt-theme');
+    const theme = stored ? JSON.parse(stored)?.state?.theme : 'dark';
+    if (theme === 'light') {
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+    }
+  } catch {
+    // defaults to dark
+  }
+})();
+
+// Keep html class in sync with theme store changes
+useThemeStore.subscribe((state) => {
+  if (state.theme === 'light') {
+    document.documentElement.classList.add('light');
+  } else {
+    document.documentElement.classList.remove('light');
+  }
+});
 
 // Clear chunk failure reload flag on successful load
 if (sessionStorage.getItem('zancrypt-reload-on-chunk-fail')) {

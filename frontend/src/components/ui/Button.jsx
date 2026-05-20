@@ -15,12 +15,12 @@ const Button = React.forwardRef(({
 }, ref) => {
   
   const variants = {
-    primary: 'bg-primary-accent text-white hover:bg-blue-600 shadow-lg shadow-primary-accent/20',
-    secondary: 'bg-surface-elevated text-text-primary border border-border hover:bg-surface-secondary',
-    ghost: 'bg-transparent text-text-secondary hover:bg-surface-secondary hover:text-text-primary',
-    danger: 'bg-status-danger text-white hover:bg-red-600 shadow-lg shadow-status-danger/20',
-    outline: 'bg-transparent border border-primary-accent text-primary-accent hover:bg-primary-accent/10',
-    security: 'bg-security text-white hover:bg-cyan-600 shadow-lg shadow-security/20',
+    primary: 'bg-accent text-void hover:brightness-110 shadow-none border border-transparent font-mono tracking-widest uppercase text-sm',
+    secondary: 'bg-surface-raised text-text-primary border border-border hover:border-border-active',
+    ghost: 'bg-transparent border border-border text-text-secondary hover:text-text-primary hover:border-border-active',
+    danger: 'bg-danger text-white hover:bg-red-600',
+    outline: 'bg-transparent border border-accent text-accent hover:bg-accent/10',
+    security: 'bg-void text-accent border border-accent hover:bg-accent/10',
   };
 
   const sizes = {
@@ -36,7 +36,7 @@ const Button = React.forwardRef(({
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
       className={twMerge(
-        'relative inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-accent disabled:pointer-events-none disabled:opacity-50',
+        'relative inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:border-accent disabled:pointer-events-none disabled:opacity-50',
         variants[variant],
         sizes[size],
         className

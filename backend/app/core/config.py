@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = Field("production", env="ENVIRONMENT")
     APP_NAME: str = Field("secure-distributed-file-vault", env="APP_NAME")
     DEBUG: bool = Field(False, env="DEBUG")
-    SECRET_KEY: str = Field("super-secret-key-change-me", env="SECRET_KEY")
+    SECRET_KEY: str = Field(..., env="SECRET_KEY")
 
     # Database
     DATABASE_URL: PostgresDsn
@@ -33,7 +33,7 @@ class Settings(BaseSettings):
 
     # Security
     RATE_LIMIT: str = Field("100/minute", env="RATE_LIMIT")
-    CORS_ORIGINS: List[str] = Field(["*"], env="CORS_ORIGINS")
+    CORS_ORIGINS: List[str] = Field([], env="CORS_ORIGINS")
     TRUSTED_PROXIES: List[str] = Field(["127.0.0.1"], env="TRUSTED_PROXIES")
     BCRYPT_ROUNDS: int = Field(12, env="BCRYPT_ROUNDS")
 

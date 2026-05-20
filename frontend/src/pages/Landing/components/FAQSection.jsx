@@ -25,14 +25,14 @@ const FAQItem = ({ question, answer, isOpen, onClick }) => {
   }, [isOpen]);
 
   return (
-    <div className="border-b border-white/5 last:border-0">
+    <div className="border-b border-border/40 last:border-0">
       <button 
         className="w-full py-6 flex items-center justify-between text-left focus:outline-none group"
         onClick={onClick}
       >
-        <span className="text-lg font-medium text-white group-hover:text-primary-accent transition-colors">{question}</span>
-        <div className="w-8 h-8 rounded-full bg-surface-elevated/50 flex items-center justify-center shrink-0 ml-4 group-hover:bg-primary-accent/20 transition-colors">
-          {isOpen ? <Minus className="w-4 h-4 text-primary-accent" /> : <Plus className="w-4 h-4 text-text-secondary group-hover:text-primary-accent" />}
+        <span className="text-lg font-medium text-text-primary group-hover:text-accent transition-colors">{question}</span>
+        <div className="w-8 h-8 rounded-full bg-surface-raised/50 flex items-center justify-center shrink-0 ml-4 group-hover:bg-accent/20 transition-colors">
+          {isOpen ? <Minus className="w-4 h-4 text-accent" /> : <Plus className="w-4 h-4 text-text-secondary group-hover:text-accent" />}
         </div>
       </button>
       <div 
@@ -94,16 +94,16 @@ const FAQSection = () => {
   ];
 
   return (
-    <section ref={containerRef} className="py-32 px-8 bg-primary-bg border-y border-white/5 relative">
+    <section ref={containerRef} className="py-32 px-8 bg-void border-y border-border/40 relative">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Frequently Asked Questions</h2>
+          <h2 className="text-3xl md:text-5xl font-bold text-text-primary mb-6">Frequently Asked Questions</h2>
           <p className="text-lg text-text-secondary">
             Deep dive into our architecture, security guarantees, and infrastructure design.
           </p>
         </div>
-
-        <div className="faq-container bg-surface-elevated/20 border border-white/5 rounded-2xl p-8 backdrop-blur-sm">
+ 
+        <div className="faq-container bg-surface/30 border border-border/40 rounded-2xl p-8 backdrop-blur-sm">
           {faqs.map((faq, index) => (
             <FAQItem 
               key={index}

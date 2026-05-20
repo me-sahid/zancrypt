@@ -16,6 +16,7 @@ import {
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import NotificationBell from './NotificationBell';
+import ThemeToggle from '../ui/ThemeToggle';
 
 const TopNav = () => {
   const { user, logout } = useAuthStore();
@@ -83,6 +84,8 @@ const TopNav = () => {
         </div>
 
         <NotificationBell />
+
+        <ThemeToggle />
 
         <div className="h-8 w-[1px] bg-border" />
 
