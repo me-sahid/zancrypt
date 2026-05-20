@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Settings as SettingsIcon, User, Bell, Shield, Server, Cpu, Key, LogOut, CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from '../../store/useStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -11,12 +10,10 @@ const Settings = () => {
   const { user, setAuth, token, logout } = useAuthStore();
   const settings = useSettingsStore();
   
-  // Profile State
   const [fullName, setFullName] = useState(user?.full_name || '');
   const [region, setRegion] = useState(user?.region || 'us-east');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
-  // Nodes State
   const [nodesData, setNodesData] = useState(null);
   const [isLoadingNodes, setIsLoadingNodes] = useState(false);
 
@@ -32,7 +29,7 @@ const Settings = () => {
     try {
       const res = await api.put('/auth/profile', { full_name: fullName, region });
       setAuth(res.data, token);
-      toast.success('Profile updated successfully');
+      toast.success('Profile updated');
     } catch (err) {
       toast.error('Failed to update profile');
     } finally {
@@ -43,7 +40,7 @@ const Settings = () => {
   const handleRevokeSessions = async () => {
     try {
       await api.post('/auth/logout');
-      toast.success('All active sessions revoked. Logging out...');
+      toast.success('All sessions revoked');
       logout();
     } catch (err) {
       toast.error('Failed to revoke sessions');
@@ -53,9 +50,9 @@ const Settings = () => {
   const handleMarkAlertsRead = async () => {
     try {
       await api.post('/api/notifications/mark-read');
-      toast.success('All alerts marked as read');
+      toast.success('Alerts marked read');
     } catch (err) {
-      toast.error('Failed to mark alerts as read');
+      toast.error('Failed to mark read');
     }
   };
 
@@ -65,16 +62,14 @@ const Settings = () => {
       const res = await api.get('/health/nodes');
       setNodesData(res.data);
     } catch (err) {
-      toast.error('Failed to fetch nodes health');
+      toast.error('Failed to fetch nodes');
     } finally {
       setIsLoadingNodes(false);
     }
   };
 
   useEffect(() => {
-    if (activeTab === 'Nodes') {
-      fetchNodes();
-    }
+    if (activeTab === 'Nodes') fetchNodes();
   }, [activeTab]);
 
   const tabs = [
@@ -86,10 +81,21 @@ const Settings = () => {
   ];
 
   return (
-    <div className="space-y-8 max-w-4xl pb-10">
-      <h1 className="text-4xl font-black text-text-primary tracking-tight">System Settings</h1>
+    <div className="space-y-6 max-w-5xl pb-20">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-6">
+        <div>
+          <h1 className="font-mono text-2xl text-text-primary tracking-widest uppercase flex items-center">
+            <SettingsIcon className="w-5 h-5 mr-3 text-accent" />
+            System Configuration
+          </h1>
+          <p className="text-text-muted mt-2 font-mono text-xs uppercase tracking-widest">
+            Core Environment Variables
+          </p>
+        </div>
+      </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* Navigation Sidebar */}
         <div className="space-y-2">
            {tabs.map((item) => {
              const isActive = activeTab === item.label;
@@ -97,7 +103,7 @@ const Settings = () => {
                <button 
                  key={item.label} 
                  onClick={() => setActiveTab(item.label)}
-                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all font-bold text-sm ${isActive ? 'bg-primary-accent/10 text-primary-accent' : 'text-text-secondary hover:bg-surface-elevated hover:text-text-primary'}`}
+                 className={`w-full flex items-center space-x-3 px-4 py-3 font-mono text-xs uppercase tracking-widest transition-colors ${isActive ? 'bg-accent/10 text-accent border border-accent/20' : 'text-text-muted hover:bg-surface hover:text-text-primary border border-transparent'}`}
                >
                   <item.icon className="w-4 h-4" />
                   <span>{item.label}</span>
@@ -106,35 +112,38 @@ const Settings = () => {
            })}
         </div>
 
-        <div className="md:col-span-3 space-y-6">
+        {/* Content Area */}
+        <div className="md:col-span-3">
            {activeTab === 'Profile' && (
-             <Card>
-                <CardHeader><CardTitle>Profile Configuration</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div className="bg-surface border border-border">
+                <div className="p-4 border-b border-border bg-surface-raised">
+                   <h3 className="font-mono text-xs text-text-primary uppercase tracking-widest">Identity Config</h3>
+                </div>
+                <div className="p-6 space-y-6">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-text-secondary uppercase">Display Name</label>
+                        <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest">Display Name</label>
                         <input 
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
-                          className="w-full bg-surface-elevated border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-accent text-white" 
+                          className="w-full bg-void border border-border focus:border-accent font-mono text-xs text-text-primary py-2 px-3 outline-none transition-colors" 
                           placeholder="Your Name" 
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-text-secondary uppercase">Email Alias (Read-only)</label>
+                        <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest">Email Alias [READ ONLY]</label>
                         <input 
                           value={user?.email || ''}
                           readOnly
-                          className="w-full bg-surface-elevated/50 border border-border/50 rounded-lg px-4 py-2 text-sm text-text-secondary cursor-not-allowed" 
+                          className="w-full bg-void/50 border border-border/50 font-mono text-xs text-text-muted py-2 px-3 outline-none cursor-not-allowed" 
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-text-secondary uppercase">Storage Region</label>
+                        <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest">Storage Region</label>
                         <select
                           value={region}
                           onChange={(e) => setRegion(e.target.value)}
-                          className="w-full bg-surface-elevated border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-accent text-white"
+                          className="w-full bg-void border border-border focus:border-accent font-mono text-xs text-text-primary py-2 px-3 outline-none transition-colors appearance-none"
                         >
                           <option value="us-east">US East (N. Virginia)</option>
                           <option value="eu-central">EU Central (Frankfurt)</option>
@@ -143,174 +152,183 @@ const Settings = () => {
                         </select>
                       </div>
                    </div>
-                   <div className="pt-4 flex justify-end">
+                   <div className="pt-4 border-t border-border flex justify-end">
                       <button 
                         onClick={handleSaveProfile}
                         disabled={isSavingProfile}
-                        className="px-6 py-2 rounded-lg bg-primary-accent text-white font-bold text-sm shadow-lg shadow-primary-accent/20 hover:bg-blue-600 transition-colors disabled:opacity-50"
+                        className="px-6 py-2 border border-accent text-accent font-mono text-[10px] uppercase tracking-widest hover:bg-accent hover:text-white transition-colors disabled:opacity-50"
                       >
-                        {isSavingProfile ? 'Saving...' : 'Save Changes'}
+                        {isSavingProfile ? '[ Saving... ]' : '[ Save State ]'}
                       </button>
                    </div>
-                </CardContent>
-             </Card>
+                </div>
+             </div>
            )}
 
            {activeTab === 'Security' && (
              <div className="space-y-6">
-               <Card>
-                  <CardHeader><CardTitle className="flex items-center space-x-2"><Shield className="w-5 h-5 text-emerald-400" /><span>Zero-Knowledge Identity</span></CardTitle></CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-sm text-text-secondary leading-relaxed">
-                      Your identity and master decryption keys are secured by Zero-Knowledge architecture. Zancrypt does not store your master key. Recovery requires your original device passkey or your emergency fallback access key.
+               <div className="bg-surface border border-accent">
+                  <div className="p-4 border-b border-accent bg-accent/5">
+                     <h3 className="font-mono text-xs text-accent uppercase tracking-widest flex items-center">
+                       <Shield className="w-4 h-4 mr-2" />
+                       Zero-Knowledge Identity
+                     </h3>
+                  </div>
+                  <div className="p-6 space-y-4">
+                    <p className="font-mono text-xs text-text-muted leading-relaxed">
+                      Your master decryption keys are never stored on Zancrypt servers. Recovery requires your original device passkey.
                     </p>
-                    <div className="flex items-center space-x-3 p-3 bg-surface-elevated rounded-xl border border-border">
-                      <Key className="w-5 h-5 text-primary-accent" />
-                      <div className="text-sm">
-                        <p className="font-bold text-white">Identity Verifier Salt</p>
-                        <p className="text-xs text-text-secondary font-mono mt-0.5">{user?.master_key_salt || 'N/A'}</p>
+                    <div className="flex items-center space-x-3 p-4 bg-void border border-border">
+                      <Key className="w-5 h-5 text-accent" />
+                      <div className="text-xs font-mono">
+                        <p className="text-text-primary uppercase tracking-widest mb-1">Identity Verifier Salt</p>
+                        <p className="text-text-muted">{user?.master_key_salt || 'N/A'}</p>
                       </div>
                     </div>
-                  </CardContent>
-               </Card>
+                  </div>
+               </div>
 
-               <Card>
-                  <CardHeader><CardTitle className="text-red-400 flex items-center space-x-2"><LogOut className="w-5 h-5" /><span>Session Management</span></CardTitle></CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-sm text-text-secondary">
-                      Revoke all active sessions to secure your account. This will invalidate all your tokens on other devices and log you out immediately.
+               <div className="bg-surface border border-danger">
+                  <div className="p-4 border-b border-danger bg-danger/5">
+                     <h3 className="font-mono text-xs text-danger uppercase tracking-widest flex items-center">
+                       <LogOut className="w-4 h-4 mr-2" />
+                       Session Matrix
+                     </h3>
+                  </div>
+                  <div className="p-6 space-y-4">
+                    <p className="font-mono text-xs text-text-muted">
+                      Revoke all active sessions across all devices. This will invalidate all tokens instantly.
                     </p>
                     <button 
                       onClick={handleRevokeSessions}
-                      className="px-6 py-2 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 font-bold text-sm hover:bg-red-500/20 transition-colors"
+                      className="px-6 py-2 bg-transparent border border-danger text-danger font-mono text-[10px] uppercase tracking-widest hover:bg-danger/10 transition-colors"
                     >
-                      Revoke All Sessions
+                      [ Revoke All Sessions ]
                     </button>
-                  </CardContent>
-               </Card>
+                  </div>
+               </div>
              </div>
            )}
 
            {activeTab === 'Alerts' && (
              <div className="space-y-6">
-               <Card>
-                  <CardHeader><CardTitle>Notification Preferences</CardTitle></CardHeader>
-                  <CardContent className="space-y-4 text-text-secondary text-sm">
-                     <div className="flex items-center justify-between">
+               <div className="bg-surface border border-border">
+                  <div className="p-4 border-b border-border bg-surface-raised">
+                     <h3 className="font-mono text-xs text-text-primary uppercase tracking-widest">Notification Channels</h3>
+                  </div>
+                  <div className="p-0 font-mono text-xs">
+                     <div className="flex items-center justify-between p-4 hover:bg-void transition-colors">
                         <div>
-                          <p className="font-bold text-white">Email Notifications</p>
-                          <p className="text-xs mt-0.5">Receive security and share activity via email</p>
+                          <p className="text-text-primary uppercase tracking-widest">Email Notifications</p>
+                          <p className="text-text-muted text-[10px] mt-1">Security and share activity via email</p>
                         </div>
                         <button 
                           onClick={() => settings.setSetting('emailNotifications', !settings.emailNotifications)}
-                          className={`w-10 h-5 rounded-full relative transition-colors ${settings.emailNotifications ? 'bg-primary-accent' : 'bg-surface-elevated border border-border'}`}
+                          className={`w-8 h-4 border transition-colors ${settings.emailNotifications ? 'bg-accent/20 border-accent' : 'bg-void border-border'}`}
                         >
-                          <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${settings.emailNotifications ? 'right-1' : 'left-1'}`} />
+                          <div className={`h-full w-4 bg-accent transition-all ${settings.emailNotifications ? 'ml-auto' : 'mr-auto'}`} />
                         </button>
                      </div>
-                     <div className="flex items-center justify-between border-t border-border pt-4">
+                     <div className="flex items-center justify-between p-4 border-t border-border hover:bg-void transition-colors">
                         <div>
-                          <p className="font-bold text-white">In-App Push Alerts</p>
-                          <p className="text-xs mt-0.5">Get live browser toasts for network events</p>
+                          <p className="text-text-primary uppercase tracking-widest">In-App Push Alerts</p>
+                          <p className="text-text-muted text-[10px] mt-1">Live browser toasts for network events</p>
                         </div>
                         <button 
                           onClick={() => settings.setSetting('inAppAlerts', !settings.inAppAlerts)}
-                          className={`w-10 h-5 rounded-full relative transition-colors ${settings.inAppAlerts ? 'bg-primary-accent' : 'bg-surface-elevated border border-border'}`}
+                          className={`w-8 h-4 border transition-colors ${settings.inAppAlerts ? 'bg-accent/20 border-accent' : 'bg-void border-border'}`}
                         >
-                          <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${settings.inAppAlerts ? 'right-1' : 'left-1'}`} />
+                          <div className={`h-full w-4 bg-accent transition-all ${settings.inAppAlerts ? 'ml-auto' : 'mr-auto'}`} />
                         </button>
                      </div>
-                  </CardContent>
-               </Card>
+                  </div>
+               </div>
 
-               <Card>
-                 <CardContent className="pt-6">
-                   <button 
-                     onClick={handleMarkAlertsRead}
-                     className="w-full py-2.5 rounded-lg border border-border text-text-secondary font-bold text-sm hover:bg-surface-elevated hover:text-white transition-colors"
-                   >
-                     Mark All System Alerts as Read
-                   </button>
-                 </CardContent>
-               </Card>
+               <button 
+                 onClick={handleMarkAlertsRead}
+                 className="w-full py-3 bg-surface border border-border text-text-muted font-mono text-[10px] uppercase tracking-widest hover:text-text-primary hover:border-text-primary transition-colors"
+               >
+                 [ Mark All Read ]
+               </button>
              </div>
            )}
 
            {activeTab === 'Infrastructure' && (
-             <Card>
-                <CardHeader><CardTitle>Infrastructure Preferences</CardTitle></CardHeader>
-                <CardContent className="space-y-4 text-text-secondary text-sm">
-                   <div className="flex items-center justify-between">
+             <div className="bg-surface border border-border">
+                <div className="p-4 border-b border-border bg-surface-raised">
+                   <h3 className="font-mono text-xs text-text-primary uppercase tracking-widest">System Parameters</h3>
+                </div>
+                <div className="p-0 font-mono text-xs">
+                   <div className="flex items-center justify-between p-4 hover:bg-void transition-colors">
                       <div>
-                        <p className="font-bold text-white">Automatic Shard Replication</p>
-                        <p className="text-xs mt-0.5 max-w-[280px]">Automatically clone data shards across regional nodes for high availability.</p>
+                        <p className="text-text-primary uppercase tracking-widest">Auto Shard Replication</p>
+                        <p className="text-text-muted text-[10px] mt-1 max-w-xs">Clone data shards across regional nodes for high availability.</p>
                       </div>
                       <button 
                         onClick={() => settings.setSetting('autoReplication', !settings.autoReplication)}
-                        className={`w-10 h-5 rounded-full relative transition-colors ${settings.autoReplication ? 'bg-primary-accent' : 'bg-surface-elevated border border-border'}`}
+                        className={`w-8 h-4 border transition-colors ${settings.autoReplication ? 'bg-accent/20 border-accent' : 'bg-void border-border'}`}
                       >
-                        <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${settings.autoReplication ? 'right-1' : 'left-1'}`} />
+                        <div className={`h-full w-4 bg-accent transition-all ${settings.autoReplication ? 'ml-auto' : 'mr-auto'}`} />
                       </button>
                    </div>
-                   <div className="flex items-center justify-between border-t border-border pt-4">
+                   <div className="flex items-center justify-between p-4 border-t border-border hover:bg-void transition-colors">
                       <div>
-                        <p className="font-bold text-white">Real-time Telemetry Polling</p>
-                        <p className="text-xs mt-0.5 max-w-[280px]">Periodically fetch node health and vault telemetry data.</p>
+                        <p className="text-text-primary uppercase tracking-widest">Telemetry Polling</p>
+                        <p className="text-text-muted text-[10px] mt-1 max-w-xs">Periodically fetch node health and vault telemetry data.</p>
                       </div>
                       <button 
                         onClick={() => settings.setSetting('telemetryPolling', !settings.telemetryPolling)}
-                        className={`w-10 h-5 rounded-full relative transition-colors ${settings.telemetryPolling ? 'bg-primary-accent' : 'bg-surface-elevated border border-border'}`}
+                        className={`w-8 h-4 border transition-colors ${settings.telemetryPolling ? 'bg-accent/20 border-accent' : 'bg-void border-border'}`}
                       >
-                        <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${settings.telemetryPolling ? 'right-1' : 'left-1'}`} />
+                        <div className={`h-full w-4 bg-accent transition-all ${settings.telemetryPolling ? 'ml-auto' : 'mr-auto'}`} />
                       </button>
                    </div>
-                </CardContent>
-             </Card>
+                </div>
+             </div>
            )}
 
            {activeTab === 'Nodes' && (
-             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Storage Nodes Cluster</CardTitle>
-                  <button onClick={fetchNodes} className="text-xs text-primary-accent hover:underline flex items-center">
-                    <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                    Refresh Status
+             <div className="bg-surface border border-border">
+                <div className="p-4 border-b border-border bg-surface-raised flex items-center justify-between">
+                  <h3 className="font-mono text-xs text-text-primary uppercase tracking-widest">Storage Node Cluster</h3>
+                  <button onClick={fetchNodes} className="text-[10px] text-accent uppercase tracking-widest hover:underline flex items-center font-mono">
+                    <CheckCircle2 className="w-3 h-3 mr-1" /> Ping
                   </button>
-                </CardHeader>
-                <CardContent>
+                </div>
+                <div className="p-6">
                   {isLoadingNodes ? (
-                    <div className="py-8 text-center text-text-secondary text-sm animate-pulse">Checking node health...</div>
+                    <div className="py-8 text-center text-accent text-[10px] font-mono uppercase tracking-widest animate-pulse">[ Scanning Nodes... ]</div>
                   ) : nodesData ? (
-                    <div className="space-y-4">
-                      <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-start space-x-3">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-bold text-emerald-400">Cluster Status: {nodesData.nodes}</p>
-                          <p className="text-xs text-emerald-400/80 mt-1">
-                            {nodesData.active_nodes === 'simulated' ? 'Using simulated local node network.' : 'Connected to global Zancrypt relay.'} 
-                            &nbsp;Expected Nodes: {nodesData.expected_count || 5}.
+                    <div className="space-y-6">
+                      <div className="p-4 bg-accent/5 border border-accent/20 flex items-start space-x-3">
+                        <CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                        <div className="font-mono text-xs">
+                          <p className="text-accent uppercase tracking-widest">Cluster Status: {nodesData.nodes}</p>
+                          <p className="text-text-muted text-[10px] mt-2 leading-relaxed">
+                            {nodesData.active_nodes === 'simulated' ? 'Using simulated local node network.' : 'Connected to global Zancrypt relay.'} <br/>
+                            Expected Nodes: {nodesData.expected_count || 5}.
                           </p>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2">
+                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                         {['US East', 'US West', 'EU Central', 'AP South', 'AP Northeast'].map((regionName) => (
-                          <div key={regionName} className="p-3 bg-surface-elevated border border-border rounded-xl">
-                            <div className="flex items-center justify-between mb-2">
-                              <p className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">{regionName}</p>
-                              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                          <div key={regionName} className="p-3 bg-void border border-border">
+                            <div className="flex items-center justify-between mb-3">
+                              <p className="text-[9px] font-mono text-text-muted uppercase tracking-widest">{regionName}</p>
+                              <div className="w-1.5 h-1.5 bg-accent animate-pulse"></div>
                             </div>
-                            <p className="text-xs font-mono text-text-primary">node-{regionName.toLowerCase().replace(' ', '-')}</p>
-                            <p className="text-[10px] text-text-secondary mt-1">Latency: {Math.floor(Math.random() * 40 + 10)}ms</p>
+                            <p className="text-[10px] font-mono text-text-primary uppercase">node-{regionName.toLowerCase().replace(' ', '-')}</p>
+                            <p className="text-[9px] font-mono text-accent mt-2 uppercase tracking-widest">Lat: {Math.floor(Math.random() * 40 + 10)}ms</p>
                           </div>
                         ))}
                       </div>
                     </div>
                   ) : (
-                    <div className="py-8 text-center text-text-secondary text-sm">Failed to load nodes data.</div>
+                    <div className="py-8 text-center text-danger text-[10px] font-mono uppercase tracking-widest">Failed to establish connection</div>
                   )}
-                </CardContent>
-             </Card>
+                </div>
+             </div>
            )}
 
         </div>

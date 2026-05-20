@@ -42,7 +42,7 @@ const EnterpriseSecurity = () => {
   ];
 
   return (
-    <section id="security" ref={containerRef} className="py-32 px-8 bg-[#050508] border-y border-white/5 relative overflow-hidden">
+    <section id="security" ref={containerRef} className="py-32 px-8 bg-void border-y border-border/40 relative overflow-hidden">
       <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
       
       <div className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-16 items-center">
@@ -51,16 +51,16 @@ const EnterpriseSecurity = () => {
             <ShieldAlert className="w-3.5 h-3.5 mr-2" />
             Cybersecurity Posture
           </div>
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Defensive by Design</h2>
+          <h2 className="text-3xl md:text-5xl font-bold text-text-primary mb-6">Defensive by Design</h2>
           <p className="text-lg text-text-secondary mb-10 leading-relaxed">
             We operate under an assumed-breach mindset. Every layer of the platform is designed to limit blast radius and protect data even if the underlying infrastructure is compromised.
           </p>
 
           <div className="grid sm:grid-cols-2 gap-6">
             {features.map((f, i) => (
-              <div key={i} className="sec-card bg-surface-elevated/20 border border-white/5 p-6 rounded-2xl">
+              <div key={i} className="sec-card bg-surface/40 border border-border/50 p-6 rounded-2xl">
                 <f.icon className="w-6 h-6 text-red-400 mb-4" />
-                <h3 className="text-white font-bold mb-2">{f.title}</h3>
+                <h3 className="text-text-primary font-bold mb-2">{f.title}</h3>
                 <p className="text-sm text-text-secondary">{f.desc}</p>
               </div>
             ))}

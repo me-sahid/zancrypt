@@ -63,12 +63,12 @@ const RealTimeMonitoring = () => {
   ];
 
   return (
-    <section ref={containerRef} className="py-32 px-8 bg-primary-bg border-y border-white/5 relative overflow-hidden">
+    <section ref={containerRef} className="py-32 px-8 bg-void border-y border-border/40 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-blue-500/10 blur-[150px] rounded-full pointer-events-none" />
       
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Unprecedented Visibility</h2>
+          <h2 className="text-3xl md:text-5xl font-bold text-text-primary mb-6">Unprecedented Visibility</h2>
           <p className="text-lg text-text-secondary max-w-2xl mx-auto">
             Monitor your infrastructure with a state-of-the-art Datadog-style telemetry suite built right into the platform. Real-time metrics, instant alerting.
           </p>

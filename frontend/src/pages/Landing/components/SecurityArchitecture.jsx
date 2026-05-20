@@ -59,13 +59,13 @@ const SecurityArchitecture = () => {
   ];
 
   return (
-    <section id="architecture" ref={containerRef} className="bg-primary-bg overflow-hidden relative">
+    <section id="architecture" ref={containerRef} className="bg-void overflow-hidden relative">
       <div ref={triggerRef} className="h-screen flex items-center justify-center relative">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,112,243,0.05)_0%,rgba(0,0,0,0)_70%)]" />
         
         <div className="max-w-7xl mx-auto px-8 w-full z-10">
           <div className="text-center mb-24">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Zero-Knowledge Architecture</h2>
+            <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">Zero-Knowledge Architecture</h2>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto">
               A paradigm shift in data security. Our architecture guarantees mathematically that no one—not even our own engineers—can access your files.
             </p>
@@ -73,17 +73,17 @@ const SecurityArchitecture = () => {
 
           <div className="relative">
             {/* Connection Line */}
-            <div className="absolute top-1/2 left-0 w-full h-0.5 bg-white/5 -translate-y-1/2 hidden md:block" />
-            <div className="arch-line absolute top-1/2 left-0 h-0.5 bg-gradient-to-r from-primary-accent via-blue-500 to-transparent -translate-y-1/2 hidden md:block" />
+            <div className="absolute top-1/2 left-0 w-full h-0.5 bg-border/40 -translate-y-1/2 hidden md:block" />
+            <div className="arch-line absolute top-1/2 left-0 h-0.5 bg-gradient-to-r from-accent via-blue-500 to-transparent -translate-y-1/2 hidden md:block" />
 
             <div className="grid md:grid-cols-3 gap-12 relative z-10">
               {steps.map((step, i) => (
                 <div key={i} className="arch-step flex flex-col items-center text-center">
-                  <div className="w-20 h-20 rounded-2xl bg-surface-elevated border border-white/10 flex items-center justify-center mb-6 shadow-2xl relative">
-                    <div className="absolute inset-0 bg-primary-accent/5 rounded-2xl blur-md" />
-                    <step.icon className="w-8 h-8 text-primary-accent relative z-10" />
+                  <div className="w-20 h-20 rounded-2xl bg-surface border border-border/40 flex items-center justify-center mb-6 shadow-2xl relative">
+                    <div className="absolute inset-0 bg-accent/5 rounded-2xl blur-md" />
+                    <step.icon className="w-8 h-8 text-accent relative z-10" />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
+                  <h3 className="text-xl font-bold text-text-primary mb-3">{step.title}</h3>
                   <p className="text-text-secondary leading-relaxed">{step.desc}</p>
                 </div>
               ))}

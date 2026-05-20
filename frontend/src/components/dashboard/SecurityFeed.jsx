@@ -6,24 +6,24 @@ import { twMerge } from 'tailwind-merge';
 const SecurityFeed = ({ events }) => {
   return (
     <div className="relative">
-      <div className="space-y-4">
+      <div className="space-y-0">
         <AnimatePresence initial={false}>
-          {events.map((event) => (
+          {events.map((event, index) => (
             <motion.div
               key={event.id}
               initial={{ opacity: 0, x: -20, height: 0 }}
               animate={{ opacity: 1, x: 0, height: 'auto' }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: 'spring', stiffness: 500, damping: 40 }}
-              className="group"
+              className="group border-b border-border last:border-0"
             >
-              <div className="flex items-start space-x-4 p-4 rounded-xl bg-surface-elevated/20 border border-border/30 hover:border-primary-accent/30 transition-all hover:bg-surface-elevated/40">
+              <div className="flex items-start space-x-4 p-4 bg-void hover:bg-surface transition-colors cursor-pointer">
                 <div className={twMerge(
-                  "p-2.5 rounded-lg border shrink-0",
-                  event.severity === 'danger' ? "bg-status-danger/10 border-status-danger/20 text-status-danger" :
-                  event.severity === 'warning' ? "bg-status-warning/10 border-status-warning/20 text-status-warning" :
-                  event.severity === 'success' ? "bg-status-success/10 border-status-success/20 text-status-success" :
-                  "bg-surface-elevated border-border text-text-secondary"
+                  "p-2 border shrink-0",
+                  event.severity === 'danger' ? "border-danger text-danger bg-danger/5" :
+                  event.severity === 'warning' ? "border-warning text-warning bg-warning/5" :
+                  event.severity === 'success' ? "border-accent text-accent bg-accent/5" :
+                  "border-border text-text-muted bg-surface"
                 )}>
                   {event.severity === 'danger' ? <AlertTriangle className="w-4 h-4" /> :
                    event.severity === 'success' ? <CheckCircle2 className="w-4 h-4" /> :
@@ -32,14 +32,14 @@ const SecurityFeed = ({ events }) => {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-0.5">
-                    <p className="text-sm font-bold text-text-primary truncate">{event.event}</p>
-                    <span className="text-[10px] text-text-secondary whitespace-nowrap ml-2 flex items-center">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-sm font-mono text-text-primary truncate">{event.event}</p>
+                    <span className="text-[10px] font-mono text-text-muted whitespace-nowrap ml-2 flex items-center uppercase tracking-widest">
                       <Clock className="w-3 h-3 mr-1" /> {event.time}
                     </span>
                   </div>
-                  <p className="text-[10px] text-text-secondary uppercase font-bold tracking-tight">
-                    {event.user} · {event.type}
+                  <p className="text-[10px] text-text-secondary font-mono uppercase tracking-widest">
+                    <span className="text-accent">{event.user}</span> · {event.type}
                   </p>
                 </div>
               </div>
@@ -48,9 +48,8 @@ const SecurityFeed = ({ events }) => {
         </AnimatePresence>
       </div>
 
-      {/* View All Button */}
-      <button className="w-full mt-6 py-3 rounded-xl bg-surface-elevated/50 border border-border/50 text-[10px] font-bold uppercase tracking-[0.2em] text-text-secondary hover:text-primary-accent hover:border-primary-accent/30 transition-all">
-        Inspect All Security Logs
+      <button className="w-full mt-4 py-3 bg-surface border border-border text-[10px] font-mono uppercase tracking-widest text-text-muted hover:text-accent hover:border-accent transition-colors">
+        [ Inspect All Logs ]
       </button>
     </div>
   );

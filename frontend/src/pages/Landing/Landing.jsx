@@ -1,60 +1,48 @@
-import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
+import React, { useEffect, useRef, Suspense, lazy } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-// Synchronous critical-path imports
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
+import HowItWorksSection from './components/HowItWorksSection';
+import PricingSection from './components/PricingSection';
+import FeaturesGrid from './components/FeaturesGrid';
+import EnterpriseSecurity from './components/EnterpriseSecurity';
 
-// Lazy below-the-fold imports
-const TrustedInfrastructure = lazy(() => import('./components/TrustedInfrastructure'));
-const SecurityArchitecture = lazy(() => import('./components/SecurityArchitecture'));
-const DistributedNodeVisualizer = lazy(() => import('./components/DistributedNodeVisualizer'));
-const ZeroKnowledgeFlow = lazy(() => import('./components/ZeroKnowledgeFlow'));
-const FeaturesGrid = lazy(() => import('./components/FeaturesGrid'));
-const EncryptionWorkflow = lazy(() => import('./components/EncryptionWorkflow'));
-const InfrastructureMetrics = lazy(() => import('./components/InfrastructureMetrics'));
-const RealTimeMonitoring = lazy(() => import('./components/RealTimeMonitoring'));
-const EnterpriseSecurity = lazy(() => import('./components/EnterpriseSecurity'));
-const PerformanceSection = lazy(() => import('./components/PerformanceSection'));
-const AuthenticationShowcase = lazy(() => import('./components/AuthenticationShowcase'));
-const ApiDeveloper = lazy(() => import('./components/ApiDeveloper'));
-const Testimonials = lazy(() => import('./components/Testimonials'));
-const FAQSection = lazy(() => import('./components/FAQSection'));
-const CTASection = lazy(() => import('./components/CTASection'));
 const Footer = lazy(() => import('./components/Footer'));
 
-// Register ScrollTrigger
 gsap.registerPlugin(ScrollTrigger);
 
 const Landing = () => {
   const containerRef = useRef(null);
 
   useEffect(() => {
-    // Initial ScrollTrigger update
     ScrollTrigger.refresh();
   }, []);
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#0a0a0c] text-white selection:bg-primary-accent/30 selection:text-white font-sans overflow-y-auto scroll-smooth">
+    <div ref={containerRef} className="min-h-screen bg-void text-text-primary selection:bg-accent/20 selection:text-accent font-sans overflow-x-hidden scroll-smooth">
       <Navbar />
       <HeroSection />
-      <Suspense fallback={<div className="h-40 flex items-center justify-center text-text-secondary/40 text-xs">Loading Zancrypt Infrastructure...</div>}>
-        <TrustedInfrastructure />
-        <SecurityArchitecture />
-        <DistributedNodeVisualizer />
-        <ZeroKnowledgeFlow />
+
+      {/* FEATURES section */}
+      <section id="features">
         <FeaturesGrid />
-        <EncryptionWorkflow />
-        <InfrastructureMetrics />
-        <RealTimeMonitoring />
+      </section>
+
+      {/* ARCHITECTURE section */}
+      <section id="architecture">
+        <HowItWorksSection />
+      </section>
+
+
+      {/* SECURITY section */}
+      <section id="security">
         <EnterpriseSecurity />
-        <PerformanceSection />
-        <AuthenticationShowcase />
-        <ApiDeveloper />
-        <Testimonials />
-        <FAQSection />
-        <CTASection />
+      </section>
+
+      <PricingSection />
+      <Suspense fallback={<div className="h-40 flex items-center justify-center font-mono text-text-muted text-[10px] uppercase tracking-widest">Loading...</div>}>
         <Footer />
       </Suspense>
     </div>
