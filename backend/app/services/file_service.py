@@ -106,7 +106,7 @@ class FileService:
                                 file_id=file.id,
                                 node_id=node.id,
                                 shard_hash=sa["hash"],
-                                provider=node.provider.lower() if node.provider in ("S3", "SUPABASE") else "local",
+                                provider=node.provider.lower() if node.provider in ("S3", "SUPABASE", "STORJ") else "local",
                                 replica_index=idx,
                                 status="available",
                                 shard_size=size
