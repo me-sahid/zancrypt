@@ -32,7 +32,7 @@ const menuItems = [
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { isSidebarOpenMobile, setSidebarOpenMobile, metrics } = useDashboardStore();
+  const { isSidebarOpenMobile, setSidebarOpenMobile, metrics, files } = useDashboardStore();
   const [isMobileView, setIsMobileView] = useState(false);
 
   useEffect(() => {
@@ -155,7 +155,8 @@ const Sidebar = () => {
             <span className="text-text-secondary">Storage Vault</span>
             <span className="text-text-primary">
               {(() => {
-                const bytes = metrics?.totalStorage || 0;
+                const realTotalStorage = (files || []).reduce((acc, f) => acc + (f.file_size || 0), 0);
+                const bytes = Math.max(metrics?.totalStorage || 0, realTotalStorage);
                 const gb = bytes / (1024 * 1024 * 1024);
                 if (gb < 0.1) {
                   const mb = bytes / (1024 * 1024);
@@ -168,7 +169,7 @@ const Sidebar = () => {
           <div className="w-full h-1.5 bg-border/50 rounded-full overflow-hidden">
             <div 
               className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(100, Math.max(0.5, ((metrics?.totalStorage || 0) / (1 * 1024 * 1024 * 1024)) * 100))}%` }}
+              style={{ width: `${Math.min(100, Math.max(0.5, ((Math.max(metrics?.totalStorage || 0, (files || []).reduce((acc, f) => acc + (f.file_size || 0), 0))) / (1 * 1024 * 1024 * 1024)) * 100))}%` }}
             />
           </div>
         </div>

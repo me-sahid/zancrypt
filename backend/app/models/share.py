@@ -21,6 +21,9 @@ class Share(Base):
     allow_downloads = Column(Boolean, default=True, nullable=False)
     delete_original = Column(Boolean, default=False, nullable=False)
     notify_on_expire = Column(Boolean, default=True, nullable=False)
+    # VULN-010: server-side timer enforcement
+    first_accessed_at = Column(DateTime(timezone=True), nullable=True)  # Set on first wrapper download
+    wrapper_timer_seconds = Column(Integer, nullable=True)   # TTL stored at wrapper-generation time
 
     file = relationship("File")
     owner = relationship("User")

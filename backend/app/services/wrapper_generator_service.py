@@ -6,16 +6,20 @@ into a single zero-dependency self-destructing HTML wrapper.
 """
 import base64
 import hashlib
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
 
-def generate_self_destruct_wrapper(options: Dict[str, Any]) -> bytes:
+def generate_self_destruct_wrapper(options: Dict[str, Any]) -> Tuple[bytes, str]:
     """
     Generates a zero-dependency HTML file containing a secure countdown,
     XOR-obfuscated bytes, and memory scrubbing routines.
     
+    Returns a (html_bytes, key_hash) tuple.
+    The key_hash must be placed in the URL fragment (#key=<key_hash>) by the
+    caller — it is NOT embedded in the HTML, so it cannot be read from the file.
+    
     Expected options schema:
     {
-        "file_bytes": bytes,        # Decrypted or raw encrypted file bytes
+        "file_bytes": bytes,        # Raw encrypted shard bytes
         "file_name": str,          # Original filename e.g. 'contract.pdf'
         "mime_type": str,          # MIME type e.g. 'application/pdf'
         "timer_seconds": int,      # Countdown time in seconds
@@ -32,11 +36,14 @@ def generate_self_destruct_wrapper(options: Dict[str, Any]) -> bytes:
     share_token = options["share_token"]
     owner_name = options["owner_name"]
     
-    # 1. Derive repeating obfuscation key from the share token
+    # NOTE: The obfuscation key is NO LONGER embedded in the HTML.
+    # It is passed via the URL fragment (#key=<hex>) by the frontend when generating the download link.
+    # The hex-encoded key_hash is only used to XOR the bytes on the Python side.
+    # The recipient's browser reads window.location.hash to recover it at download time.
     key_hash = hashlib.sha256(share_token.encode('utf-8')).hexdigest()
     key_bytes = bytes.fromhex(key_hash)
     
-    # 2. XOR obfuscate the bytes to obscure from simple browser DevTools scans
+    # 2. XOR obfuscate the bytes (obscures raw bytes from network/disk scans)
     obfuscated_bytes = bytearray(len(file_bytes))
     for i in range(len(file_bytes)):
         obfuscated_bytes[i] = file_bytes[i] ^ key_bytes[i % len(key_bytes)]
@@ -261,9 +268,10 @@ def generate_self_destruct_wrapper(options: Dict[str, Any]) -> bytes:
     </div>
 
     <script>
-        // Injected cryptographic payloads
+        // Injected payload — obfuscated bytes only. Key is NOT embedded here.
+        // The decryption key is read from window.location.hash (#key=<hex>) at runtime.
         let ENCRYPTED_PAYLOAD = "{encrypted_b64}";
-        let WRAPPER_KEY = "{key_hash}";
+        let WRAPPER_KEY = null; // Will be set from URL hash
         const TIMER_SECONDS = {timer_seconds};
         const FILE_NAME = "{file_name}";
         const MIME_TYPE = "{mime_type}";
@@ -292,6 +300,20 @@ def generate_self_destruct_wrapper(options: Dict[str, Any]) -> bytes:
         }};
 
         document.addEventListener("DOMContentLoaded", () => {{
+            // 0. Read decryption key from URL fragment — it is NEVER embedded in this file
+            const hashParams = new URLSearchParams(window.location.hash.slice(1));
+            WRAPPER_KEY = hashParams.get("key");
+            if (!WRAPPER_KEY) {{
+                document.getElementById("mainContainer").innerHTML = `
+                    <div style="color:#ef4444;font-size:18px;font-weight:700;text-align:center;padding:40px">
+                        ⚠ Missing decryption key.<br>
+                        <span style="font-size:13px;color:#94a3b8;font-weight:400">
+                        Open this file using the full shared link including the #key= fragment.
+                        </span>
+                    </div>`;
+                return;
+            }}
+
             // 1. Verify local storage status locks
             if (safeStorage.getItem("zct_destroyed_" + FILE_ID)) {{
                 showDestroyedScreen();
@@ -448,4 +470,4 @@ def generate_self_destruct_wrapper(options: Dict[str, Any]) -> bytes:
 </body>
 </html>
 """
-    return html_template.encode('utf-8')
+    return html_template.encode('utf-8'), key_hash

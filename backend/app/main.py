@@ -11,6 +11,7 @@ from app.middleware.exception_handler import register_exception_handlers
 from app.middleware.logging_middleware import StructuredLoggingMiddleware
 from app.monitoring.prometheus import router as prometheus_router
 from app.monitoring.otel import instrument_app
+from app.middleware.security import security_headers_middleware
 import app.models
 
 setup_tracing()
@@ -34,6 +35,9 @@ app.add_middleware(AuthMiddleware)
 from app.auth.middleware.audit import AuthAuditMiddleware
 app.add_middleware(AuthAuditMiddleware)
 app.add_middleware(StructuredLoggingMiddleware)
+
+# Apply security response headers to all responses
+app.middleware("http")(security_headers_middleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,

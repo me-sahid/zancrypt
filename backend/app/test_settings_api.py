@@ -45,7 +45,7 @@ def test_settings():
     login_res = requests.post(f"{BASE_URL}/auth/login/fallback", json={
         "email": email,
         "access_key": access_key
-    })
+    }, timeout=10)
     assert login_res.status_code == 200, f"Login failed: {login_res.text}"
     token = login_res.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
@@ -54,7 +54,7 @@ def test_settings():
     put_res = requests.put(f"{BASE_URL}/auth/profile", json={
         "full_name": "Updated Name",
         "region": "ap-northeast"
-    }, headers=headers)
+    }, headers=headers, timeout=10)
     assert put_res.status_code == 200, f"PUT profile failed: {put_res.text}"
     updated_user = put_res.json()
     assert updated_user["full_name"] == "Updated Name", "Name not updated"
@@ -62,7 +62,7 @@ def test_settings():
     print("PUT /auth/profile tested successfully")
     
     # Test GET Nodes Health
-    nodes_res = requests.get(f"{BASE_URL}/health/nodes")
+    nodes_res = requests.get(f"{BASE_URL}/health/nodes", timeout=10)
     assert nodes_res.status_code == 200, f"GET nodes failed: {nodes_res.text}"
     nodes_data = nodes_res.json()
     assert "active_nodes" in nodes_data, "Missing active_nodes"

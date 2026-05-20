@@ -1,7 +1,7 @@
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from app.security.jwt import decode_access_token
+from app.security.jwt import decode_access_token, is_token_revoked
 from jose import JWTError
 
 class AuthMiddleware(BaseHTTPMiddleware):
@@ -24,6 +24,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
         token = auth_header.split(" ")[1]
         try:
             payload = decode_access_token(token)
+            if is_token_revoked(payload):
+                return JSONResponse(status_code=401, content={"detail": "Token has been revoked"})
             request.state.user_id = int(payload.get("sub"))
         except (JWTError, ValueError, TypeError):
             return JSONResponse(status_code=401, content={"detail": "Invalid or expired token"})
