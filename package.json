@@ -1,5 +1,5 @@
 {
-  "name": "yuuvault-root",
+  "name": "zancrypt-root",
   "version": "1.0.0",
   "description": "Root workspace compatibility layer for B2 integration tests",
   "main": "storage.js",

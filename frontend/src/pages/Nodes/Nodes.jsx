@@ -77,7 +77,7 @@ const Nodes = () => {
     (node.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (node.region || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (node.provider || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (node.id || '').toLowerCase().includes(searchQuery.toLowerCase())
+    String(node.id || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (

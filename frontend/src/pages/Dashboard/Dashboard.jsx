@@ -55,25 +55,35 @@ const Dashboard = () => {
     let isMounted = true;
     const fetchStats = async () => {
       try {
-        const [filesRes, nodesRes, metricsRes] = await Promise.all([
+        const [filesResult, nodesResult, metricsResult] = await Promise.allSettled([
           fileService.listFiles(),
           adminService.getNodes(),
           adminService.getSystemMetrics()
         ]);
 
         if (isMounted) {
-          if (filesRes?.data) setFiles(filesRes.data);
-          if (metricsRes?.data) {
-            updateMetrics({
-              totalStorage: metricsRes.data.total_storage_bytes || 0,
-              securityScore: 100,
-              networkHealth: metricsRes.data.network_health_score,
-              activeShards: metricsRes.data.total_files * 4,
-            });
+          if (filesResult.status === 'fulfilled' && filesResult.value?.data) {
+            setFiles(filesResult.value.data);
+          } else if (filesResult.status === 'rejected') {
+            console.error('Failed to fetch files:', filesResult.reason);
           }
-          if (nodesRes?.data) {
+
+          if (metricsResult.status === 'fulfilled' && metricsResult.value?.data) {
+            const data = metricsResult.value.data;
+            updateMetrics({
+              totalStorage: data.total_storage_bytes || 0,
+              securityScore: 100,
+              networkHealth: data.network_health_score,
+              activeShards: data.total_files * 4,
+            });
+          } else if (metricsResult.status === 'rejected') {
+            console.error('Failed to fetch metrics:', metricsResult.reason);
+          }
+
+          if (nodesResult.status === 'fulfilled' && nodesResult.value?.data) {
+            const data = nodesResult.value.data;
             // Map backend data to frontend structure
-            const mappedNodes = nodesRes.data.map(n => {
+            const mappedNodes = data.map(n => {
               const capacityGB = n.node_metadata?.capacity_gb || 1024;
               const capacityBytes = capacityGB * 1024 * 1024 * 1024;
               const storageUsed = n.storage_used || 0;
@@ -94,6 +104,8 @@ const Dashboard = () => {
               };
             });
             setNodes(mappedNodes);
+          } else if (nodesResult.status === 'rejected') {
+            console.error('Failed to fetch nodes:', nodesResult.reason);
           }
         }
       } catch (error) {

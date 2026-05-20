@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/useStore';
 import { useNetworkStore } from '../store/useNetworkStore';
+import { getAuthHeader } from '../utils/auth';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/',
@@ -9,10 +10,10 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  // Read token from the in-memory getter (never from localStorage)
-  const token = useAuthStore.getState().token;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  // Read token via the unified getAuthHeader helper
+  const authHeaders = getAuthHeader();
+  if (authHeaders.Authorization) {
+    config.headers.Authorization = authHeaders.Authorization;
   }
   // Let axios auto-set Content-Type for FormData (multipart/form-data with boundary)
   // Only set JSON for non-FormData requests
