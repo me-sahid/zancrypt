@@ -7,6 +7,11 @@ import { silentRefresh } from './services/api';
 import { useThemeStore } from './store/useThemeStore';
 import './index.css';
 
+// Clear localStorage completely if both old/renamed auth keys exist simultaneously
+if (localStorage.getItem('zancrypt-auth') && localStorage.getItem('yuuvault-auth')) {
+  localStorage.clear();
+}
+
 // Apply persisted theme before first paint to avoid flash
 (function bootstrapTheme() {
   try {

@@ -33,6 +33,19 @@ if missing_supabase_vars:
     print(f"[CRITICAL] Missing Supabase env vars: {', '.join(missing_supabase_vars)}", file=sys.stderr)
     sys.exit(1)
 
+# ─── Startup validation: Storj S3 (Node 3) ───────────────────────────────────
+required_storj_vars = [
+    ("STORJ_ENDPOINT", settings.STORJ_ENDPOINT),
+    ("STORJ_REGION", settings.STORJ_REGION),
+    ("STORJ_ACCESS_KEY", settings.STORJ_ACCESS_KEY),
+    ("STORJ_SECRET_KEY", settings.STORJ_SECRET_KEY),
+    ("STORJ_BUCKET", settings.STORJ_BUCKET),
+]
+missing_storj_vars = [name for name, val in required_storj_vars if not val or str(val).strip() == ""]
+if missing_storj_vars:
+    print(f"[CRITICAL] Missing Storj env vars: {', '.join(missing_storj_vars)}", file=sys.stderr)
+    sys.exit(1)
+
 try:
     import aioboto3
     from botocore.config import Config
@@ -50,6 +63,13 @@ def _s3_client_kwargs(provider: str) -> dict:
             "aws_secret_access_key": settings.SUPABASE_SECRET_KEY,
             "region_name": settings.SUPABASE_REGION,
         }
+    if provider == "STORJ":
+        return {
+            "endpoint_url": settings.STORJ_ENDPOINT,
+            "aws_access_key_id": settings.STORJ_ACCESS_KEY,
+            "aws_secret_access_key": settings.STORJ_SECRET_KEY,
+            "region_name": settings.STORJ_REGION,
+        }
     # Default: Backblaze B2
     return {
         "endpoint_url": settings.B2_ENDPOINT,
@@ -63,12 +83,14 @@ def _bucket_for(provider: str) -> str:
     """Return the correct bucket name for the given provider."""
     if provider == "SUPABASE":
         return settings.SUPABASE_BUCKET
+    if provider == "STORJ":
+        return settings.STORJ_BUCKET
     return settings.B2_BUCKET
 
 
 def _is_cloud_provider(provider: str) -> bool:
     """True for any provider that uses S3-compatible cloud storage."""
-    return provider in ("S3", "SUPABASE")
+    return provider in ("S3", "SUPABASE", "STORJ")
 
 
 class NodeManager:
@@ -117,6 +139,7 @@ class NodeManager:
                                 Bucket=bucket,
                                 Key=f"{node_name.lower()}/{shard_id}",
                                 Body=data,
+                                ContentLength=len(data),
                             )
                         break  # success
                     except Exception as e:

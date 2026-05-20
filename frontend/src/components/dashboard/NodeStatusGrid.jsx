@@ -5,8 +5,16 @@ import { Server, Globe, Cloud } from 'lucide-react';
 import NodeDot from '../crypto/NodeDot';
 
 const PROVIDER_LABELS = {
-  S3: 'AWS',
-  SUPABASE: 'Supabase',
+  S3: 'Backblaze B2',
+  SUPABASE: 'Supabase S3',
+  STORJ: 'Storj S3',
+};
+
+// Provider accent colors
+const PROVIDER_COLORS = {
+  S3: 'text-orange-400',
+  SUPABASE: 'text-emerald-400',
+  STORJ: 'text-cyan-400',
 };
 
 const NodeStatusGrid = ({ nodes }) => {

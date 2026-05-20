@@ -26,24 +26,34 @@ const Dashboard = () => {
     let isMounted = true;
     const fetchStats = async () => {
       try {
-        const [filesRes, nodesRes, metricsRes] = await Promise.all([
+        const [filesResult, nodesResult, metricsResult] = await Promise.allSettled([
           fileService.listFiles(),
           adminService.getNodes(),
           adminService.getSystemMetrics()
         ]);
 
         if (isMounted) {
-          if (filesRes?.data) setFiles(filesRes.data);
-          if (metricsRes?.data) {
-            updateMetrics({
-              totalStorage: metricsRes.data.total_storage_bytes || 0,
-              securityScore: 100,
-              networkHealth: metricsRes.data.network_health_score,
-              activeShards: metricsRes.data.total_files * 4,
-            });
+          if (filesResult.status === 'fulfilled' && filesResult.value?.data) {
+            setFiles(filesResult.value.data);
+          } else if (filesResult.status === 'rejected') {
+            console.error('Failed to fetch files:', filesResult.reason);
           }
-          if (nodesRes?.data) {
-            const mappedNodes = nodesRes.data.map(n => {
+          if (metricsResult.status === 'fulfilled' && metricsResult.value?.data) {
+            const data = metricsResult.value.data;
+            updateMetrics({
+              totalStorage: data.total_storage_bytes || 0,
+              securityScore: 100,
+              networkHealth: data.network_health_score,
+              activeShards: data.total_files * 4,
+            });
+          } else if (metricsResult.status === 'rejected') {
+            console.error('Failed to fetch metrics:', metricsResult.reason);
+          }
+
+          if (nodesResult.status === 'fulfilled' && nodesResult.value?.data) {
+            const data = nodesResult.value.data;
+            // Map backend data to frontend structure
+            const mappedNodes = data.map(n => {
               const capacityGB = n.node_metadata?.capacity_gb || 1024;
               const capacityBytes = capacityGB * 1024 * 1024 * 1024;
               const storageUsed = n.storage_used || 0;
@@ -59,10 +69,12 @@ const Dashboard = () => {
                 shards: (n.shards || []).length,
                 provider: n.provider,
                 status: n.healthy ? 'success' : 'danger',
-                isCloudNode: ['S3', 'SUPABASE'].includes(n.provider)
+                isCloudNode: ['S3', 'SUPABASE', 'STORJ'].includes(n.provider)
               };
             });
             setNodes(mappedNodes);
+          } else if (nodesResult.status === 'rejected') {
+            console.error('Failed to fetch nodes:', nodesResult.reason);
           }
         }
       } catch (error) {
@@ -77,7 +89,17 @@ const Dashboard = () => {
     };
   }, [setFiles, setNodes, updateMetrics]);
 
-  const CLOUD_PROVIDERS = ['S3', 'SUPABASE'];
+  // Safety checks to prevent crashing if metrics are missing
+  const safeMetrics = metrics || {
+    latency: 0,
+    totalStorage: 0,
+    securityScore: 100,
+    throughput: 0,
+    activeShards: 0
+  };
+
+  // Only real cloud-backed nodes shown in overview (Backblaze B2 + Supabase)
+  const CLOUD_PROVIDERS = ['S3', 'SUPABASE', 'STORJ'];
   const cloudNodes = (nodes || []).filter(n => CLOUD_PROVIDERS.includes(n.provider));
 
   const formatTotalStorage = (bytes) => {
@@ -88,7 +110,6 @@ const Dashboard = () => {
     return { value: (bytes / 1073741824).toFixed(2), suffix: ' GB' };
   };
 
-  const safeMetrics = metrics || { totalStorage: 0, securityScore: 100 };
   const realTotalStorage = files.reduce((acc, f) => acc + (f.file_size || 0), 0);
   const displayStorage = Math.max(safeMetrics.totalStorage || 0, realTotalStorage);
   

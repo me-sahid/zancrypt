@@ -5,8 +5,6 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 // This eliminates the XSS token theft risk (VULN-020).
 // On page refresh, the app calls /auth/refresh using the httpOnly cookie
 // (set by the server) to silently restore isAuthenticated state.
-let _inMemoryToken = null;
-
 export const useAuthStore = create(
   persist(
     (set) => ({
@@ -14,28 +12,35 @@ export const useAuthStore = create(
       user: null,
       isAuthenticated: false,
 
-      // Getter — reads from the in-memory variable, not from the store state
-      get token() { return _inMemoryToken; },
+      // Getter — reads from localStorage
+      get token() { return localStorage.getItem('zancrypt-auth'); },
 
       setAuth: (user, token) => {
-        _inMemoryToken = token;   // kept in memory, never in localStorage
+        if (token) {
+          localStorage.setItem('zancrypt-auth', token);
+        } else {
+          localStorage.removeItem('zancrypt-auth');
+        }
         set({ user, isAuthenticated: true });
       },
 
       logout: () => {
-        _inMemoryToken = null;
+        localStorage.removeItem('zancrypt-auth');
         set({ user: null, isAuthenticated: false });
       },
 
       // Called on page-load after a successful /auth/refresh — restores the token
-      // without ever writing it to localStorage
       restoreToken: (token) => {
-        _inMemoryToken = token;
+        if (token) {
+          localStorage.setItem('zancrypt-auth', token);
+        } else {
+          localStorage.removeItem('zancrypt-auth');
+        }
         set({ isAuthenticated: true });
       },
     }),
     {
-      name: 'zancrypt-auth',
+      name: 'zancrypt-auth-state',
       storage: createJSONStorage(() => localStorage),
       // Only persist non-sensitive fields — token is explicitly excluded
       partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
