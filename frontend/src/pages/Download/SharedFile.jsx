@@ -526,7 +526,7 @@ const SharedFile = () => {
               <span className="font-bold text-xs text-slate-200 block truncate max-w-[200px] sm:max-w-[400px]">
                 {activeFile.fileName}
               </span>
-              <div className="flex items-center space-x-3.5 mt-0.5 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+              <div className="flex items-center space-x-3.5 mt-0.5 text-xs text-slate-500 font-bold uppercase tracking-wider">
                 <span className="hover:text-slate-300 transition-colors">File</span>
                 <span className="hover:text-slate-300 transition-colors">View</span>
                 <span className="hover:text-slate-300 transition-colors">Help</span>
@@ -535,7 +535,7 @@ const SharedFile = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <span className="hidden sm:inline-flex items-center text-[10px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full px-2.5 py-1 font-bold uppercase tracking-wider">
+            <span className="hidden sm:inline-flex items-center text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full px-2.5 py-1 font-bold uppercase tracking-wider">
               <ShieldCheck className="w-3.5 h-3.5 mr-1" />
               Fully Decrypted locally
             </span>
@@ -566,7 +566,7 @@ const SharedFile = () => {
           {/* Side Bar Panel (only for Multi Decrypted Assets) */}
           {isMultiDecrypted && (
             <div className="lg:col-span-1 bg-[#0f1423]/50 border border-white/[0.04] rounded-2xl p-4 flex flex-col space-y-3 max-h-[70vh] overflow-y-auto custom-scrollbar shadow-2xl">
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-1 flex items-center">
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2 mb-1 flex items-center">
                 <Layers className="w-3.5 h-3.5 mr-2 text-indigo-400" />
                 Bundle Assets ({decryptedFile.length})
               </h4>
@@ -602,7 +602,7 @@ const SharedFile = () => {
                         <p className={`text-xs font-bold truncate ${isActive ? 'text-blue-400' : 'text-slate-300'}`}>
                           {item.fileName}
                         </p>
-                        <p className="text-[10px] text-slate-500 font-mono mt-0.5">{formatSize(item.fileSize)}</p>
+                        <p className="text-xs text-slate-500 font-mono mt-0.5">{formatSize(item.fileSize)}</p>
                       </div>
                     </button>
                   );
@@ -664,7 +664,7 @@ const SharedFile = () => {
                         <button onClick={() => skipTime(-10)} className="text-white hover:text-blue-400 transition-colors cursor-pointer">
                           <RotateCcw className="w-4 h-4" />
                         </button>
-                        <span className="text-[10px] text-slate-300 font-mono">
+                        <span className="text-xs text-slate-300 font-mono">
                           {formatTime(currentTime)} / {formatTime(duration)}
                         </span>
                       </div>
@@ -682,7 +682,7 @@ const SharedFile = () => {
                             step="0.05"
                             value={isMuted ? 0 : volume}
                             onChange={handleVolumeChange}
-                            className="w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                            className="hidden sm:block w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-blue-500"
                           />
                         </div>
                         
@@ -691,7 +691,7 @@ const SharedFile = () => {
                           <select 
                             value={playbackSpeed}
                             onChange={handleSpeedChange}
-                            className="bg-transparent text-[10px] text-slate-300 outline-none border-none cursor-pointer font-bold uppercase tracking-wider"
+                            className="bg-transparent text-xs text-slate-300 outline-none border-none cursor-pointer font-bold uppercase tracking-wider"
                           >
                             <option value="0.5" className="bg-[#0f1423]">0.5x</option>
                             <option value="1" className="bg-[#0f1423]">1.0x</option>
@@ -729,7 +729,7 @@ const SharedFile = () => {
               ) : activeFile.fileType === 'text' ? (
                 // Text viewer component
                 <div className="w-full max-w-4xl h-[60vh] rounded-2xl border border-[#1e293b] bg-slate-950 p-6 overflow-y-auto font-mono text-xs text-slate-300 relative shadow-inner">
-                  <div className="absolute top-3 right-3 text-[9px] uppercase tracking-wider text-slate-500 font-bold px-2 py-0.5 rounded bg-slate-900 border border-slate-800">
+                  <div className="absolute top-3 right-3 text-[11px] uppercase tracking-wider text-slate-500 font-bold px-2 py-0.5 rounded bg-slate-900 border border-slate-800">
                     decrypted.log
                   </div>
                   <pre className="whitespace-pre-wrap select-text leading-relaxed text-left">{activeFile.textContent}</pre>
@@ -753,28 +753,28 @@ const SharedFile = () => {
 
                   <div>
                     <h3 className="font-bold text-sm text-slate-200 truncate">{activeFile.fileName}</h3>
-                    <p className="text-[10px] text-slate-500 font-mono mt-1 uppercase tracking-widest">
+                    <p className="text-xs text-slate-500 font-mono mt-1 uppercase tracking-widest">
                       {formatSize(activeFile.fileSize)} • distributed registry
                     </p>
                   </div>
 
                   {/* Nodes diagram */}
                   <div className="bg-[#080b13] border border-[#1e293b]/40 rounded-2xl p-4 flex flex-col space-y-2.5">
-                    <div className="flex items-center justify-between text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-white/5 pb-2">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-white/5 pb-2">
                       <span>VM cluster location</span>
                       <span className="text-emerald-400">Reassembled</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                       <div className="p-2 rounded-xl bg-white/[0.02] border border-white/5 text-center">
-                        <p className="text-[8px] text-slate-500 uppercase tracking-widest font-bold">Mumbai</p>
+                        <p className="text-[11px] text-slate-500 uppercase tracking-widest font-bold">Mumbai</p>
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mx-auto mt-1" />
                       </div>
                       <div className="p-2 rounded-xl bg-white/[0.02] border border-white/5 text-center">
-                        <p className="text-[8px] text-slate-500 uppercase tracking-widest font-bold">Frankfurt</p>
+                        <p className="text-[11px] text-slate-500 uppercase tracking-widest font-bold">Frankfurt</p>
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mx-auto mt-1" />
                       </div>
                       <div className="p-2 rounded-xl bg-white/[0.02] border border-white/5 text-center">
-                        <p className="text-[8px] text-slate-500 uppercase tracking-widest font-bold">Tokyo</p>
+                        <p className="text-[11px] text-slate-500 uppercase tracking-widest font-bold">Tokyo</p>
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mx-auto mt-1" />
                       </div>
                     </div>
@@ -803,7 +803,7 @@ const SharedFile = () => {
         </main>
 
         {/* Footer */}
-        <footer className="w-full text-center py-6 text-[10px] text-slate-600 font-mono border-t border-white/[0.02] relative z-10">
+        <footer className="w-full text-center py-6 text-xs text-slate-600 font-mono border-t border-white/[0.02] relative z-10">
           Zancrypt secure distributed node reassembly engine. ZERO-KNOWLEDGE PREVIEW.
         </footer>
       </div>
@@ -829,7 +829,7 @@ const SharedFile = () => {
           </Link>
           <div>
             <h2 className="font-bold text-sm tracking-wide text-slate-200">Zancrypt</h2>
-            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">Distributed Zero-Knowledge Storage</p>
+            <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">Distributed Zero-Knowledge Storage</p>
           </div>
         </div>
       </header>
@@ -885,7 +885,7 @@ const SharedFile = () => {
             // Metadata verified. Ready for AES decryption
             <motion.div 
               key="verified"
-              className="max-w-lg w-full bg-[#0c0f1d]/75 border border-white/[0.04] p-8 rounded-3xl shadow-2xl text-center space-y-7 relative overflow-hidden backdrop-blur-md"
+              className="max-w-lg w-full bg-[#0c0f1d]/75 border border-white/[0.04] p-6 sm:p-8 rounded-3xl shadow-2xl text-center space-y-7 relative overflow-hidden backdrop-blur-md"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
@@ -897,14 +897,14 @@ const SharedFile = () => {
               </div>
 
               <div className="space-y-2">
-                <div className="inline-flex items-center text-[9px] bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-full px-2.5 py-1 font-bold uppercase tracking-wider">
+                <div className="inline-flex items-center text-[11px] bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-full px-2.5 py-1 font-bold uppercase tracking-wider">
                   <ShieldCheck className="w-3 h-3 mr-1" />
                   Verified Zero-Knowledge Asset Bundle
                 </div>
                 <h3 className="font-bold text-lg text-slate-100 mt-2">
                   {isMultiDetails ? 'Shared Secure Bundle' : singleFile?.encrypted_filename}
                 </h3>
-                <p className="text-[10px] text-slate-500 font-mono mt-1 uppercase tracking-widest">
+                <p className="text-xs text-slate-500 font-mono mt-1 uppercase tracking-widest">
                   {isMultiDetails 
                     ? `${totalFiles} Files • Reassembled across VM nodes`
                     : `${formatSize(singleFile?.file_size)} • 4 cryptographic shards`}
@@ -916,8 +916,8 @@ const SharedFile = () => {
                 <div className="bg-[#080b14] border border-[#1e293b]/40 rounded-2xl p-3 text-left max-h-40 overflow-y-auto space-y-2 custom-scrollbar">
                   {fileDetails.map(f => (
                     <div key={f.share_id} className="flex items-center justify-between text-xs py-1.5 border-b border-white/[0.02] last:border-b-0">
-                      <span className="text-slate-300 font-medium truncate max-w-[240px]">{f.encrypted_filename}</span>
-                      <span className="text-slate-500 font-mono text-[10px]">{formatSize(f.file_size)}</span>
+                      <span className="text-slate-300 font-medium truncate max-w-[140px] xs:max-w-[180px] sm:max-w-[240px]">{f.encrypted_filename}</span>
+                      <span className="text-slate-500 font-mono text-xs">{formatSize(f.file_size)}</span>
                     </div>
                   ))}
                 </div>
@@ -926,7 +926,7 @@ const SharedFile = () => {
               {/* Progress Stepper during live assembly */}
               {decryptStep > 0 && decryptStep < 5 && (
                 <div className="bg-[#080a14] border border-[#1e293b]/40 rounded-2xl p-4 space-y-3.5">
-                  <div className="flex items-center justify-between text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                     <span>Assembly Progress</span>
                     <span className="text-blue-400 font-mono">
                       {decryptStep === 1 ? 'VM HANDSHAKE' :
@@ -968,7 +968,7 @@ const SharedFile = () => {
                   <span>Decrypt & Mount Live Preview</span>
                 </Button>
                 
-                <p className="text-[10px] text-slate-500 select-none leading-relaxed px-4">
+                <p className="text-xs text-slate-500 select-none leading-relaxed px-4">
                   All segments remain fully encrypted until reassembled and decrypted in this browser. Plain content is never stored on backend infrastructure.
                 </p>
               </div>
@@ -979,7 +979,7 @@ const SharedFile = () => {
       </main>
 
       {/* Footer */}
-      <footer className="w-full text-center py-6 text-[10px] text-slate-600 font-mono border-t border-white/[0.02] relative z-10">
+      <footer className="w-full text-center py-6 text-xs text-slate-600 font-mono border-t border-white/[0.02] relative z-10">
         Zancrypt secure distributed node reassembly engine.
       </footer>
     </div>

@@ -40,7 +40,7 @@ const NotFound = () => {
           </Button>
         </div>
 
-        <div className="mt-12 flex items-center justify-center space-x-2 text-[10px] text-text-secondary font-bold uppercase tracking-[0.2em] opacity-40">
+        <div className="mt-12 flex items-center justify-center space-x-2 text-xs text-text-secondary font-bold uppercase tracking-[0.2em] opacity-40">
            <AlertTriangle className="w-3 h-3" />
            <span>Error Ref: ERR_SHARD_NULL_0x404</span>
         </div>

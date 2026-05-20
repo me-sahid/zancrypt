@@ -449,7 +449,7 @@ const Upload = () => {
                         <File className="w-5 h-5 text-text-secondary" />
                         <div>
                           <p className="text-sm font-medium text-text-primary">{file.name}</p>
-                          <p className="text-[10px] text-text-secondary uppercase">{file.size}</p>
+                          <p className="text-xs text-text-secondary uppercase">{file.size}</p>
                         </div>
                       </div>
                       {file.status === 'completed' ? (
@@ -532,7 +532,7 @@ const Upload = () => {
                         </div>
                         <div>
                           <p className="text-sm font-bold text-text-primary uppercase tracking-tight">{step.label}</p>
-                          <p className="text-[10px] text-text-secondary">{step.desc}</p>
+                          <p className="text-xs text-text-secondary">{step.desc}</p>
                         </div>
                       </div>
                     );

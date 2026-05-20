@@ -115,7 +115,7 @@ const TopNav = () => {
                 className="absolute right-0 mt-2 w-56 bg-surface-elevated/95 border border-border rounded-2xl shadow-2xl overflow-hidden py-2 z-50 backdrop-blur-xl safari-hardware-accel safari-backdrop-blur"
               >
                 <div className="px-4 py-3 border-b border-border/50 mb-1">
-                  <p className="text-[10px] text-text-secondary font-bold uppercase tracking-widest">Active Identity</p>
+                  <p className="text-xs text-text-secondary font-bold uppercase tracking-widest">Active Identity</p>
                   <p className="text-xs font-bold text-text-primary truncate">{user?.email}</p>
                 </div>
 

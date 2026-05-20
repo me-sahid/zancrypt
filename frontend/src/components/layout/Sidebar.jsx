@@ -104,7 +104,7 @@ const Sidebar = () => {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       className={twMerge(
-                        "ml-4 whitespace-nowrap font-mono text-[10px] uppercase tracking-widest",
+                        "ml-4 whitespace-nowrap font-mono text-xs uppercase tracking-widest",
                         isActive ? "text-accent" : ""
                       )}
                     >
@@ -121,10 +121,10 @@ const Sidebar = () => {
       {/* Storage Quota Block */}
       {(!isCollapsed || isMobileView) && (
         <div className="px-6 py-6 border-t border-border">
-          <div className="flex items-center justify-between text-[9px] font-mono mb-2 uppercase tracking-widest text-text-muted">
+          <div className="flex items-center justify-between text-[11px] font-mono mb-2 uppercase tracking-widest text-text-muted">
             <span>Storage Usage</span>
           </div>
-          <div className="flex items-center justify-between font-mono text-[10px] mb-3">
+          <div className="flex items-center justify-between font-mono text-xs mb-3">
             <span className="text-text-primary">
               {(() => {
                 const realTotalStorage = (files || []).reduce((acc, f) => acc + (f.file_size || 0), 0);
@@ -152,7 +152,7 @@ const Sidebar = () => {
         {isMobileView ? (
           <button
             onClick={() => setSidebarOpenMobile(false)}
-            className="flex items-center justify-center w-full h-12 bg-void text-text-muted hover:text-text-primary transition-colors hover:bg-surface-raised font-mono text-[10px] uppercase tracking-widest"
+            className="flex items-center justify-center w-full h-12 bg-void text-text-muted hover:text-text-primary transition-colors hover:bg-surface-raised font-mono text-xs uppercase tracking-widest"
           >
             <ChevronLeft className="w-4 h-4 mr-2" />
             <span>Close</span>

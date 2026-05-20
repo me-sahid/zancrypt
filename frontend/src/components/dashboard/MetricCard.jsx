@@ -38,7 +38,7 @@ const MetricCard = ({ label, value, suffix, icon: Icon, trend, isPositive, class
         
         {trend && (
           <div className={twMerge(
-            "flex items-center px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest border",
+            "flex items-center px-2 py-0.5 text-[11px] font-mono uppercase tracking-widest border",
             isPositive 
               ? "text-accent bg-transparent border-accent/20" 
               : "text-warning bg-transparent border-warning/20"
@@ -49,7 +49,7 @@ const MetricCard = ({ label, value, suffix, icon: Icon, trend, isPositive, class
       </div>
 
       <div className="space-y-2">
-        <p className="text-[10px] font-mono text-text-muted uppercase tracking-[0.1em]">{label}</p>
+        <p className="text-xs font-mono text-text-muted uppercase tracking-[0.1em]">{label}</p>
         <div className="flex items-baseline space-x-1">
           <h3 className="text-3xl font-mono text-text-primary tracking-tight">
             {typeof value === 'number' ? (

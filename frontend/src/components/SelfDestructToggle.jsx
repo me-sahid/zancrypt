@@ -114,7 +114,7 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
                   <h4 className="text-sm font-black text-slate-100 uppercase tracking-wider leading-none">
                     Self-Destruct HTML Wrapper
                   </h4>
-                  <p className="text-[10px] text-slate-400 mt-1">
+                  <p className="text-xs text-slate-400 mt-1">
                     Zero-trust client-side executing container
                   </p>
                 </div>
@@ -171,7 +171,7 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
                     setIsEnabled(false);
                     setIsDone(false);
                   }}
-                  className="flex items-center space-x-1 text-[10px] font-bold text-slate-400 hover:text-white uppercase tracking-wider bg-slate-800/40 border border-slate-700/30 px-2 py-1 rounded-lg transition-all"
+                  className="flex items-center space-x-1 text-xs font-bold text-slate-400 hover:text-white uppercase tracking-wider bg-slate-800/40 border border-slate-700/30 px-2 py-1 rounded-lg transition-all"
                 >
                   <Undo2 className="w-3 h-3" />
                   <span>Teaser Mode</span>
@@ -180,7 +180,7 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
 
               {/* Expiry Selector button group */}
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                   Local Expiration Duration
                 </label>
                 <div className="grid grid-cols-5 gap-1">
@@ -193,7 +193,7 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
                         setTimerSeconds(opt.seconds);
                         setIsDone(false);
                       }}
-                      className={`py-2 px-0.5 text-[9px] font-black rounded-lg border transition-all ${
+                      className={`py-2 px-0.5 text-[11px] font-black rounded-lg border transition-all ${
                         !isCustom && timerSeconds === opt.seconds
                           ? 'bg-rose-500/10 border-rose-500 text-rose-300 shadow-md shadow-rose-500/5'
                           : 'bg-[#0f172a] border-[#1e293b] text-slate-400 hover:text-white hover:bg-slate-800'
@@ -208,7 +208,7 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
                       setIsCustom(true);
                       setIsDone(false);
                     }}
-                    className={`py-2 px-0.5 text-[9px] font-black rounded-lg border transition-all ${
+                    className={`py-2 px-0.5 text-[11px] font-black rounded-lg border transition-all ${
                       isCustom
                         ? 'bg-rose-500/10 border-rose-500 text-rose-300 shadow-md shadow-rose-500/5'
                         : 'bg-[#0f172a] border-[#1e293b] text-slate-400 hover:text-white hover:bg-slate-800'
@@ -227,7 +227,7 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
                   className="p-3 bg-[#0a0d16] border border-rose-500/10 rounded-xl grid grid-cols-2 gap-2"
                 >
                   <div className="space-y-1">
-                    <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                       Hours
                     </label>
                     <input
@@ -240,7 +240,7 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                       Minutes
                     </label>
                     <input
@@ -258,7 +258,7 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
               {/* Red Warning Card */}
               <div className="flex items-start space-x-2.5 p-3 bg-rose-500/5 border border-rose-500/15 rounded-xl text-rose-200">
                 <ShieldAlert className="w-4.5 h-4.5 shrink-0 text-rose-500 mt-0.5" />
-                <div className="text-[10px] leading-relaxed">
+                <div className="text-xs leading-relaxed">
                   <p className="font-bold text-rose-400 uppercase tracking-wider">Destruction Warning:</p>
                   <p className="mt-0.5 text-slate-300">
                     The compiled HTML container will permanently decrypt strictly in-memory and completely shred itself <strong>{
@@ -272,14 +272,14 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
 
               {/* Copy Wrapper Link Panel */}
               <div className="space-y-1.5 pt-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex justify-between items-center">
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex justify-between items-center">
                   <span>Direct Destruction Link</span>
-                  <span className="text-[8px] font-bold text-rose-400 lowercase tracking-normal bg-rose-500/10 px-1.5 py-0.5 rounded-full">
+                  <span className="text-[11px] font-bold text-rose-400 lowercase tracking-normal bg-rose-500/10 px-1.5 py-0.5 rounded-full">
                     recipient downloads html directly
                   </span>
                 </label>
                 <div className="flex items-center space-x-1.5">
-                  <div className="flex-1 bg-[#070913] border border-[#1e293b]/60 rounded-lg px-2.5 py-2 text-[10px] text-slate-300 font-mono overflow-x-auto whitespace-nowrap scrollbar-none select-all cursor-text select-text leading-tight">
+                  <div className="flex-1 bg-[#070913] border border-[#1e293b]/60 rounded-lg px-2.5 py-2 text-xs text-slate-300 font-mono overflow-x-auto whitespace-nowrap scrollbar-none select-all cursor-text select-text leading-tight">
                     {`${baseUrl || window.location.origin}/api/share/w/${shareToken}?t=${timerSeconds}`}
                   </div>
                   <button
@@ -318,7 +318,7 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
                   className="flex items-center space-x-2.5 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400"
                 >
                   <CheckCircle className="w-4 h-4 shrink-0 text-emerald-500" />
-                  <div className="text-[10px] font-semibold leading-tight">
+                  <div className="text-xs font-semibold leading-tight">
                     Protected wrapper downloaded! Share this `.html` file with your recipient.
                   </div>
                 </motion.div>

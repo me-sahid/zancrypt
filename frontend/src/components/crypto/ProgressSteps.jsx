@@ -24,7 +24,7 @@ const ProgressSteps = ({ steps = [], currentStep = 0 }) => {
             )}
             
             {/* The Step Indicator */}
-            <div className={`w-5 h-5 flex items-center justify-center rounded-sm z-10 font-mono text-[10px] transition-colors ${
+            <div className={`w-5 h-5 flex items-center justify-center rounded-sm z-10 font-mono text-xs transition-colors ${
               isCompleted ? 'bg-accent text-void' : 
               isActive ? 'border border-accent text-accent shadow-[0_0_8px_rgba(79,255,176,0.2)]' : 
               'border border-border text-text-muted bg-void'

@@ -44,3 +44,17 @@ async def health_postgres(session: AsyncSession = Depends(get_async_session)) ->
 @router.get("/nodes")
 async def health_nodes() -> dict[str, str]:
     return {"status": "ok", "active_nodes": "simulated", "expected_count": "5"}
+
+@router.get("/stats")
+async def health_stats(session: AsyncSession = Depends(get_async_session)) -> dict:
+    try:
+        from app.models.file import File
+        from sqlalchemy import select, func
+        result = await session.execute(
+            select(func.count(File.id)).where(File.is_deleted == False)
+        )
+        count = result.scalar() or 0
+        return {"status": "ok", "vaults_count": count}
+    except Exception:
+        return {"status": "error", "vaults_count": 0}
+

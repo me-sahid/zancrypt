@@ -288,7 +288,7 @@ export default function RecycleBin() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-[#1e293b]/60 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-[#0f172a]/20">
+              <tr class="border-b border-[#1e293b]/60 text-xs font-bold text-slate-400 uppercase tracking-widest bg-[#0f172a]/20">
                 <th className="py-4 px-6 w-12 text-center select-none">
                   <input
                     type="checkbox"
@@ -411,7 +411,7 @@ export default function RecycleBin() {
                         <CheckCircle2 className="w-6 h-6" />
                       </div>
                       <p className="text-slate-300 text-xs font-bold uppercase tracking-wider">Recycle Bin is empty</p>
-                      <p className="text-slate-500 text-[10px] mt-1">Soft-deleted items will appear here for recovery or destruction.</p>
+                      <p className="text-slate-500 text-xs mt-1">Soft-deleted items will appear here for recovery or destruction.</p>
                     </div>
                   </td>
                 </tr>
@@ -439,7 +439,7 @@ export default function RecycleBin() {
                   <p className="text-sm font-bold text-slate-100">
                     {Object.values(selectedIds).filter(Boolean).length} items selected
                   </p>
-                  <p className="text-[10px] text-slate-400">Recycle Bin bulk operations active</p>
+                  <p className="text-xs text-slate-400">Recycle Bin bulk operations active</p>
                 </div>
               </div>
               

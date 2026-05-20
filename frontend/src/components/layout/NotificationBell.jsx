@@ -102,7 +102,7 @@ const NotificationBell = () => {
             <div className="px-4 py-3 border-b border-border/50 flex items-center justify-between">
               <h3 className="text-sm font-bold text-white">Notifications</h3>
               {unreadCount > 0 && (
-                <span className="text-[10px] font-bold px-2 py-0.5 bg-rose-500/20 text-rose-400 rounded-full">
+                <span className="text-xs font-bold px-2 py-0.5 bg-rose-500/20 text-rose-400 rounded-full">
                   {unreadCount} New
                 </span>
               )}
@@ -113,7 +113,7 @@ const NotificationBell = () => {
                 <div className="p-6 text-center">
                   <CheckCircle2 className="w-8 h-8 text-emerald-500/50 mx-auto mb-2" />
                   <p className="text-xs font-bold text-slate-400">You're all caught up!</p>
-                  <p className="text-[10px] text-slate-500 mt-1">No new ephemeral deletion alerts.</p>
+                  <p className="text-xs text-slate-500 mt-1">No new ephemeral deletion alerts.</p>
                 </div>
               ) : (
                 <div className="divide-y divide-[#1e293b]/50">
@@ -130,10 +130,10 @@ const NotificationBell = () => {
                             {notif.file_name}
                           </p>
                           <div className="flex items-center justify-between mt-2">
-                            <span className="text-[10px] font-medium text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full">
+                            <span className="text-xs font-medium text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full">
                               {getTriggerText(notif.trigger)}
                             </span>
-                            <span className="text-[10px] text-slate-500">
+                            <span className="text-xs text-slate-500">
                               {new Date(notif.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>

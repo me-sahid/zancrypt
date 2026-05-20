@@ -145,7 +145,7 @@ const Login = () => {
                     required
                     leftIcon={<Lock className="w-4 h-4" />}
                   />
-                  <div className="flex items-start space-x-2 text-[10px] text-warning bg-warning/10 p-3 rounded-md border border-warning/20 font-mono uppercase tracking-wider">
+                  <div className="flex items-start space-x-2 text-xs text-warning bg-warning/10 p-3 rounded-md border border-warning/20 font-mono uppercase tracking-wider">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                     <span>Biometric challenge failed. Fallback to access key required.</span>
                   </div>
@@ -176,7 +176,7 @@ const Login = () => {
               <button
                 type="button"
                 onClick={() => setShowFallback(false)}
-                className="w-full font-mono text-[10px] text-text-muted hover:text-accent uppercase tracking-widest transition-colors mt-4"
+                className="w-full font-mono text-xs text-text-muted hover:text-accent uppercase tracking-widest transition-colors mt-4"
               >
                 Retry Passkey
               </button>
@@ -186,7 +186,7 @@ const Login = () => {
           <div className="mt-12 text-center">
             <p className="font-sans text-xs text-text-secondary">
               No vault assigned?{' '}
-              <Link to="/register" className="text-accent hover:underline font-mono uppercase tracking-widest text-[10px]">
+              <Link to="/register" className="text-accent hover:underline font-mono uppercase tracking-widest text-xs">
                 Initialize
               </Link>
             </p>
@@ -202,7 +202,7 @@ const Login = () => {
           {/* Client Node */}
           <div className="w-24 h-24 border border-border bg-surface flex flex-col items-center justify-center rounded-sm z-10 shadow-[0_0_20px_rgba(79,255,176,0.1)]">
             <ShieldCheck className="w-8 h-8 text-accent mb-2" />
-            <span className="font-mono text-[9px] text-text-muted uppercase tracking-widest">Client</span>
+            <span className="font-mono text-[11px] text-text-muted uppercase tracking-widest">Client</span>
           </div>
 
           {/* Connection Lines */}
@@ -213,7 +213,7 @@ const Login = () => {
             {[0, 1, 2].map((i) => (
               <div key={i} className="absolute left-0 w-full h-16 flex items-center" style={{ top: `${i * 25 + 15}%` }}>
                 <div className="auth-line w-full h-0 bg-accent/20 origin-left" />
-                <span className="absolute left-1/2 -translate-x-1/2 font-mono text-[8px] text-accent opacity-50 bg-void px-2">
+                <span className="absolute left-1/2 -translate-x-1/2 font-mono text-[11px] text-accent opacity-50 bg-void px-2">
                   <CipherText text={i === 0 ? 'W3C_WEBAUTHN' : i === 1 ? 'AES_256_GCM' : 'HKDF_SHA256'} duration={2000} delay={i * 500} />
                 </span>
               </div>
@@ -223,12 +223,12 @@ const Login = () => {
           {/* Server Node */}
           <div className="w-24 h-24 border border-border bg-surface flex flex-col items-center justify-center rounded-sm z-10">
             <Lock className="w-8 h-8 text-text-secondary mb-2" />
-            <span className="font-mono text-[9px] text-text-muted uppercase tracking-widest">Zancrypt</span>
+            <span className="font-mono text-[11px] text-text-muted uppercase tracking-widest">Zancrypt</span>
           </div>
         </div>
 
         {/* Terminal Output Overlay */}
-        <div className="absolute bottom-12 right-12 w-80 bg-surface/80 backdrop-blur-md border border-border p-4 rounded-sm font-mono text-[10px] text-text-muted leading-relaxed">
+        <div className="absolute bottom-12 right-12 w-80 bg-surface/80 backdrop-blur-md border border-border p-4 rounded-sm font-mono text-xs text-text-muted leading-relaxed">
           <div>&gt; INIT_SESSION</div>
           <div>&gt; AWAITING_CHALLENGE</div>
           <div className="text-accent">&gt; PUB_KEY_CRYPTOGRAPHY_ENABLED</div>

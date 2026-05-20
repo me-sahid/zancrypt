@@ -129,7 +129,7 @@ const Dashboard = () => {
           </p>
         </div>
         
-        <Link to="/uploads" className="px-6 py-3 border border-accent text-accent font-mono text-[10px] uppercase tracking-widest hover:bg-accent/10 transition-colors">
+        <Link to="/uploads" className="px-6 py-3 border border-accent text-accent font-mono text-xs uppercase tracking-widest hover:bg-accent/10 transition-colors">
           [ Init Upload ]
         </Link>
       </div>
@@ -175,7 +175,7 @@ const Dashboard = () => {
               <FileText className="w-3.5 h-3.5 mr-2" />
               Recent Ciphertexts
             </div>
-            <Link to="/vault" className="text-accent hover:underline font-mono text-[10px] uppercase tracking-widest">
+            <Link to="/vault" className="text-accent hover:underline font-mono text-xs uppercase tracking-widest">
               View Log
             </Link>
           </div>
@@ -193,7 +193,7 @@ const Dashboard = () => {
                         <p className="font-mono text-[11px] text-text-primary truncate">
                           {file.encrypted_filename || file.filename || file.name}
                         </p>
-                        <p className="font-mono text-[9px] text-text-muted">
+                        <p className="font-mono text-[11px] text-text-muted">
                           {file.file_size ? (file.file_size / 1024).toFixed(1) + ' KB' : '0 KB'}
                         </p>
                       </div>
@@ -204,7 +204,7 @@ const Dashboard = () => {
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-center">
                 <FileText className="w-6 h-6 mb-2 text-text-muted" />
-                <p className="font-mono text-[10px] text-text-muted uppercase tracking-widest">Vault Empty</p>
+                <p className="font-mono text-xs text-text-muted uppercase tracking-widest">Vault Empty</p>
               </div>
             )}
           </div>

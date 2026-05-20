@@ -54,12 +54,12 @@ const CountdownCell = ({ share, onExpire }) => {
   }, [expiresAt, isActive]);
 
   if (!isActive || isExpired) {
-    return <span className="font-mono text-[10px] uppercase text-text-muted">Expired</span>;
+    return <span className="font-mono text-xs uppercase text-text-muted">Expired</span>;
   }
 
   if (!expiresAt) {
     return (
-      <span className="font-mono text-[10px] text-accent uppercase tracking-widest flex items-center">
+      <span className="font-mono text-xs text-accent uppercase tracking-widest flex items-center">
         <span className="w-1.5 h-1.5 bg-accent mr-2 animate-pulse" />
         Infinite
       </span>
@@ -154,7 +154,7 @@ const ShareHistory = () => {
             exit={{ opacity: 0 }}
           >
             <Loader2 className="w-6 h-6 text-accent animate-spin" />
-            <p className="font-mono text-[10px] text-text-muted uppercase tracking-widest">Retrieving Share Matrix...</p>
+            <p className="font-mono text-xs text-text-muted uppercase tracking-widest">Retrieving Share Matrix...</p>
           </motion.div>
         ) : shares.length > 0 ? (
           <motion.div 
@@ -165,7 +165,7 @@ const ShareHistory = () => {
           >
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-surface-raised border-b border-border text-[9px] font-mono text-text-muted uppercase tracking-widest">
+                <tr className="bg-surface-raised border-b border-border text-[11px] font-mono text-text-muted uppercase tracking-widest">
                   <th className="px-6 py-4 hidden sm:table-cell">Label</th>
                   <th className="px-6 py-4">Target Asset</th>
                   <th className="px-6 py-4 hidden md:table-cell">Downloads</th>
@@ -209,22 +209,22 @@ const ShareHistory = () => {
                     </td>
                     <td className="px-6 py-4 hidden sm:table-cell">
                       {share.is_active ? (
-                        <span className="text-accent text-[9px] uppercase tracking-widest">Active</span>
+                        <span className="text-accent text-[11px] uppercase tracking-widest">Active</span>
                       ) : (
-                        <span className="text-danger text-[9px] uppercase tracking-widest">Revoked</span>
+                        <span className="text-danger text-[11px] uppercase tracking-widest">Revoked</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
                       {share.is_active ? (
                         <button
                           onClick={() => setShareToRevoke(share)}
-                          className="text-text-muted hover:text-danger transition-colors uppercase text-[9px] tracking-widest inline-flex items-center"
+                          className="text-text-muted hover:text-danger transition-colors uppercase text-[11px] tracking-widest inline-flex items-center"
                         >
                           <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                           Revoke
                         </button>
                       ) : (
-                        <span className="text-text-muted text-[9px] uppercase tracking-widest">Revoked</span>
+                        <span className="text-text-muted text-[11px] uppercase tracking-widest">Revoked</span>
                       )}
                     </td>
                   </tr>
@@ -240,7 +240,7 @@ const ShareHistory = () => {
             animate={{ opacity: 1, y: 0 }}
           >
             <Share2 className="w-8 h-8 text-text-muted mx-auto mb-4" />
-            <p className="font-mono text-[10px] text-text-muted uppercase tracking-widest">No Shared Links Found</p>
+            <p className="font-mono text-xs text-text-muted uppercase tracking-widest">No Shared Links Found</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -276,14 +276,14 @@ const ShareHistory = () => {
                     <button
                       onClick={() => setShareToRevoke(null)}
                       disabled={isRevoking}
-                      className="flex-1 py-2 border border-border font-mono text-[10px] text-text-muted hover:text-text-primary uppercase tracking-widest transition-colors"
+                      className="flex-1 py-2 border border-border font-mono text-xs text-text-muted hover:text-text-primary uppercase tracking-widest transition-colors"
                     >
                       [ Cancel ]
                     </button>
                     <button
                       onClick={confirmRevoke}
                       disabled={isRevoking}
-                      className="flex-1 py-2 bg-transparent border border-danger text-danger hover:bg-danger/10 font-mono text-[10px] uppercase tracking-widest transition-colors"
+                      className="flex-1 py-2 bg-transparent border border-danger text-danger hover:bg-danger/10 font-mono text-xs uppercase tracking-widest transition-colors"
                     >
                       {isRevoking ? '[ Revoking... ]' : '[ Revoke ]'}
                     </button>

@@ -20,13 +20,13 @@ const Audit = () => (
           {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
             <div key={i} className="px-6 py-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors">
                <div className="flex items-center space-x-4">
-                  <div className="w-8 h-8 rounded bg-surface-elevated flex items-center justify-center text-[10px] font-bold text-text-secondary">{i}</div>
+                  <div className="w-8 h-8 rounded bg-surface-elevated flex items-center justify-center text-xs font-bold text-text-secondary">{i}</div>
                   <div>
                     <p className="text-sm font-bold text-text-primary">System Integrity Scan #{1024 + i}</p>
-                    <p className="text-[10px] text-text-secondary uppercase">2h ago · AUTOMATED · TOKYO-ALPHA</p>
+                    <p className="text-xs text-text-secondary uppercase">2h ago · AUTOMATED · TOKYO-ALPHA</p>
                   </div>
                </div>
-               <span className="text-[10px] font-black text-status-success uppercase tracking-widest">SUCCESS</span>
+               <span className="text-xs font-black text-status-success uppercase tracking-widest">SUCCESS</span>
             </div>
           ))}
         </div>
