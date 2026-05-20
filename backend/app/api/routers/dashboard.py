@@ -1,5 +1,7 @@
+import json
 import time
-from typing import Dict, Tuple
+from typing import Optional
+
 from fastapi import APIRouter, Depends
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,23 +13,28 @@ from app.models.shard_registry import ShardRegistry
 
 router = APIRouter()
 
-# In-memory stats cache: user_id -> (timestamp, stats_dict)
-STATS_CACHE: Dict[int, Tuple[float, dict]] = {}
 CACHE_TTL = 30  # seconds
+
+def _get_redis():
+    from app.core.config import settings
+    import redis
+    return redis.from_url(settings.REDIS_URL)
+
 
 @router.get("/stats")
 async def get_dashboard_stats(
     current_user = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session)
 ) -> dict:
-    current_time = time.time()
+    cache_key = f"dashboard_stats:{current_user.id}"
     
-    # 1. Check in-memory cache
-    cached_entry = STATS_CACHE.get(current_user.id)
-    if cached_entry:
-        cached_time, cached_data = cached_entry
-        if current_time - cached_time < CACHE_TTL:
-            return cached_data
+    # 1. Check Redis cache
+    try:
+        cached = _get_redis().get(cache_key)
+        if cached:
+            return json.loads(cached)
+    except Exception:
+        pass  # Redis unavailable — fall through to DB query
 
     # 2. Query database for real-time stats
     
@@ -75,13 +82,17 @@ async def get_dashboard_stats(
         valid_shards = valid_shards_res.scalar() or 0
         security_score = round((valid_shards / total_shards) * 100)
 
-    # 3. Save to cache and return response
+    # 3. Save to Redis and return response
     stats_data = {
         "total_storage_bytes": total_storage_bytes,
         "stored_files": stored_files,
         "active_nodes": active_nodes,
         "security_score": security_score
     }
-    STATS_CACHE[current_user.id] = (current_time, stats_data)
+    try:
+        _get_redis().setex(cache_key, CACHE_TTL, json.dumps(stats_data))
+    except Exception:
+        pass  # Redis unavailable — return fresh data without caching
     
     return stats_data
+

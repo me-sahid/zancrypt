@@ -2,17 +2,24 @@ import secrets
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional
 from uuid import UUID
+from urllib.parse import quote
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from app.api.deps import get_async_session, get_current_user
 from app.models.file import File
 from app.models.manifest import Manifest
 from app.models.share import Share
+
+logger = logging.getLogger(__name__)
+limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter()
 
@@ -376,7 +383,10 @@ async def generate_wrapper(
         "share_token": payload.share_token,
         "owner_name": current_user.username or "Anonymous User",
     }
-    wrapper_html_bytes = generate_self_destruct_wrapper(wrapper_options)
+    wrapper_html_bytes, key_hash = generate_self_destruct_wrapper(wrapper_options)
+
+    # VULN-010 fix: Store the timer value on the Share record so the server can enforce it
+    db_share.wrapper_timer_seconds = payload.timer_seconds
 
     # 7. Record to Audit Log
     audit = AuditLog(
@@ -394,11 +404,16 @@ async def generate_wrapper(
     session.add(audit)
     await session.commit()
 
+
     # 8. Stream as dynamic attachment file download
+    # The key_hash is returned in a header so the frontend can append it to the URL fragment.
+    # It is intentionally NOT embedded in the HTML file (see VULN-003 fix).
     filename = payload.file_name or db_file.encrypted_filename
-    safe_filename = filename.replace('"', '\\"')
+    encoded_filename = quote(filename)
     headers = {
-        "Content-Disposition": f'attachment; filename="{safe_filename}_zancrypt_protected.html"'
+        "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}_zancrypt_protected.html",
+        "X-Wrapper-Key": key_hash,
+        "Access-Control-Expose-Headers": "X-Wrapper-Key",
     }
     return Response(
         content=wrapper_html_bytes,
@@ -407,6 +422,7 @@ async def generate_wrapper(
     )
 
 @router.post("/destroyed")
+@limiter.limit("20/minute")
 async def wrapper_destroyed(
     payload: WrapperDestroyedRequest,
     request: Request,
@@ -415,6 +431,7 @@ async def wrapper_destroyed(
     """
     Best-effort callback receiver when wrapper client-side self-destructs.
     Inserts record into wrapper_destructions.
+    Rate limited to 20/minute per IP to prevent telemetry flooding.
     """
     user_agent = request.headers.get("user-agent", "")[:500]
     
@@ -513,10 +530,30 @@ async def download_public_wrapper(
             detail="This share link has reached its maximum download limit"
         )
 
+    # VULN-010 fix: Server-side wrapper timer enforcement
+    # Use the stored timer from the share record (not the client-supplied ?t= param)
+    effective_timer = db_share.wrapper_timer_seconds or t
+    if db_share.first_accessed_at is not None and db_share.wrapper_timer_seconds:
+        first_tz = db_share.first_accessed_at
+        if first_tz.tzinfo is None:
+            first_tz = first_tz.replace(tzinfo=timezone.utc)
+        elapsed = (datetime.now(timezone.utc) - first_tz).total_seconds()
+        if elapsed > db_share.wrapper_timer_seconds:
+            db_share.is_active = False
+            await session.commit()
+            raise HTTPException(
+                status_code=status.HTTP_410_GONE,
+                detail="This secure wrapper has expired (server-side timer elapsed)"
+            )
+    elif db_share.first_accessed_at is None:
+        # Stamp first access time
+        db_share.first_accessed_at = datetime.now(timezone.utc)
+
     # Increment download count
     db_share.download_count += 1
     if db_share.max_downloads and db_share.download_count >= db_share.max_downloads:
         db_share.is_active = False
+
 
     # Fetch file details
     db_file = db_share.file
@@ -580,21 +617,25 @@ async def download_public_wrapper(
         "owner_name": owner_name,
     }
     
-    wrapper_html_bytes = generate_self_destruct_wrapper(wrapper_options)
+    wrapper_html_bytes, key_hash = generate_self_destruct_wrapper(wrapper_options)
 
     # Save download count changes
     await session.commit()
 
     # Stream as dynamic attachment file download
+    # Key is returned as a response header — NOT embedded in HTML (VULN-003 fix)
     filename = db_file.encrypted_filename
-    safe_filename = filename.replace('"', '\\"')
+    encoded_filename = quote(filename)
     headers = {
-        "Content-Disposition": f'attachment; filename="{safe_filename}_zancrypt_protected.html"'
+        "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}_zancrypt_protected.html",
+        "X-Wrapper-Key": key_hash,
+        "Access-Control-Expose-Headers": "X-Wrapper-Key",
     }
     return Response(
         content=wrapper_html_bytes,
         media_type="text/html",
         headers=headers
     )
+
 
 

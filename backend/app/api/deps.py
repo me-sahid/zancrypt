@@ -3,6 +3,7 @@ from typing import AsyncGenerator
 from fastapi import Depends, HTTPException, status
 from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.user import UserRole
 
 from app.core.config import settings
 from app.models.session import Session
@@ -34,6 +35,17 @@ async def get_current_user(token: str = Depends(AuthService.oauth2_scheme), sess
     if not user:
         raise credentials_exception
     return user
+
+
+async def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
+    """Requires the current user to have admin role. Raises 403 otherwise."""
+    if current_user.role != UserRole.admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrator access required",
+        )
+    return current_user
+
 
 async def get_storage_router() -> StorageRouter:
     return StorageRouter()

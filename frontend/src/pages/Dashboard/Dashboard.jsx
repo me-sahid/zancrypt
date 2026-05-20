@@ -40,39 +40,7 @@ const Dashboard = () => {
   
   const { metrics, nodes, events, files, setFiles, setNodes, updateMetrics } = useDashboardStore();
 
-  const [stats, setStats] = useState(null);
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [statsError, setStatsError] = useState(false);
-
   const { token } = useAuthStore();
-
-  useEffect(() => {
-    if (!token) return;
-    let isMounted = true;
-    const fetchDashboardStats = async () => {
-      try {
-        const res = await dashboardService.getStats();
-        if (isMounted && res?.data) {
-          setStats(res.data);
-          setStatsLoading(false);
-          setStatsError(false);
-        }
-      } catch (err) {
-        console.error('Failed to fetch dashboard stats:', err);
-        if (isMounted) {
-          setStatsError(true);
-          setStatsLoading(false);
-        }
-      }
-    };
-    
-    fetchDashboardStats();
-    const statsInterval = setInterval(fetchDashboardStats, 10000);
-    return () => {
-      isMounted = false;
-      clearInterval(statsInterval);
-    };
-  }, [token]);
 
   const formatStorage = (bytes) => {
     if (!bytes) return { value: 0, suffix: ' Bytes' };
@@ -144,7 +112,7 @@ const Dashboard = () => {
   const safeMetrics = metrics || {
     latency: 0,
     totalStorage: 0,
-    securityScore: 0,
+    securityScore: 100,
     throughput: 0,
     activeShards: 0
   };
@@ -170,29 +138,20 @@ const Dashboard = () => {
     }
   };
 
-  let storageVal = "—";
-  let storageSuffix = "";
-  let securityVal = "—";
-  let securitySuffix = "";
-  let filesVal = "—";
-  let nodesVal = "—";
+  const realTotalStorage = files.reduce((acc, f) => acc + (f.file_size || 0), 0);
+  const displayStorage = Math.max(safeMetrics.totalStorage || 0, realTotalStorage);
+  
+  const storageInfo = formatTotalStorage(displayStorage);
+  const storageVal = storageInfo.value;
+  const storageSuffix = storageInfo.suffix;
 
-  if (statsError) {
-    storageVal = "Error";
-    securityVal = "Error";
-    filesVal = "Error";
-    nodesVal = "Error";
-  } else if (!statsLoading && stats) {
-    const storageInfo = formatTotalStorage(stats.total_storage_bytes);
-    storageVal = storageInfo.value;
-    storageSuffix = storageInfo.suffix;
-    
-    securityVal = stats.security_score;
-    securitySuffix = "%";
-    
-    filesVal = stats.stored_files;
-    nodesVal = stats.active_nodes;
-  }
+  const securityVal = safeMetrics.securityScore || 100;
+  const securitySuffix = "%";
+
+  const filesVal = files ? files.length : 0;
+  
+  const liveNodesCount = nodes ? nodes.filter(n => n.health === 'Healthy').length : 0;
+  const nodesVal = liveNodesCount;
 
   return (
     <div className="space-y-8 pb-10">

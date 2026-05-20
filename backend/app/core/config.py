@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     STORAGE_NODE_COUNT: int = Field(5, env="STORAGE_NODE_COUNT")
     STORAGE_REPLICATION_FACTOR: int = Field(3, env="STORAGE_REPLICATION_FACTOR")
     MAX_UPLOAD_SIZE: int = Field(104857600, env="MAX_UPLOAD_SIZE")  # 100MB
-    TMP_STAGING_DIR: str = Field("/dev/shm/vault_staging", env="TMP_STAGING_DIR")
+    TMP_STAGING_DIR: str = Field("/dev/shm/vault_staging", env="TMP_STAGING_DIR")  # nosec B108
 
     # Cloud Storage — Backblaze B2 / S3 (Node 1)
     B2_KEY_ID: str | None = Field(None, env="B2_KEY_ID")

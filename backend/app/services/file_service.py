@@ -2,6 +2,9 @@ from typing import AsyncIterator, List, Tuple
 import json
 import hashlib
 import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
 
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy import select, delete
@@ -37,15 +40,19 @@ class FileService:
         if not nodes:
             raise HTTPException(status_code=503, detail="No healthy storage nodes available for distribution")
 
+        # VULN-016 FIX: Compute actual shard byte size server-side instead of trusting client
+        actual_file_size = sum(len(data) for _, data in shards)
+
         # Check storage limit (1 GB Testing Tier)
+        # VULN: Quota bypass race condition fix (row-level lock)
         user_res = await self.session.execute(
-            select(User).where(User.id == user_id)
+            select(User).where(User.id == user_id).with_for_update()
         )
         user = user_res.scalar_one_or_none()
         if user:
             # 1 GB limit in bytes
             limit = 1073741824
-            if (user.storage_used or 0) + file_size > limit:
+            if (user.storage_used or 0) + actual_file_size > limit:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Storage quota exceeded. The Testing Tier limit is 1 GB."
@@ -107,13 +114,9 @@ class FileService:
                             self.session.add(shard_rec)
                             node.storage_used = (node.storage_used or 0) + size
 
-            # 5. Update User storage_used
-            user_res = await self.session.execute(
-                select(User).where(User.id == user_id)
-            )
-            user = user_res.scalar_one_or_none()
+            # 5. User storage_used is already locked and can be safely incremented
             if user:
-                user.storage_used = (user.storage_used or 0) + file_size
+                user.storage_used = (user.storage_used or 0) + actual_file_size
 
             # 6. Audit event
             await self.audit_service.capture_event(
@@ -129,7 +132,7 @@ class FileService:
 
         except Exception as e:
             # ROLLBACK PHYSICAL SHARDS IN CASE OF DB / TIMEOUT / CONCURRENCY FAILURE
-            print(f"[ROLLBACK] Upload failed for file {file.id}. Cleaning up physical shards: {e}")
+            logger.error("[ROLLBACK] Upload failed for file %s. Cleaning up physical shards: %s", file.id, e, exc_info=True)
             rollback_tasks = []
             if shard_assignments:
                 for sa in shard_assignments:
@@ -206,8 +209,10 @@ class FileService:
 
     async def restore_file(self, file_id: int, user_id: int) -> None:
         file = await self.repo.get_owned_file(file_id, user_id)
-        if not file or file.is_deleted == False:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found in Bin")
+        if not file:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+        if not file.is_deleted:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File is not in the Bin")
         
         await self.repo.update_file_record(file_id, user_id, is_deleted=False)
         await self.audit_service.capture_event(user_id, "restore", "files", str(file_id), {})
@@ -230,7 +235,7 @@ class FileService:
                     try:
                         await self.router.node_manager.delete_shard(node, shard_id)
                     except Exception as e:
-                        print(f"[ERROR] [b2] Failed to physically delete shard {shard_id} from node {node}: {e}")
+                        logger.error("[ERROR] [b2] Failed to physically delete shard %s from node %s: %s", shard_id, node, e)
 
         # 2. Storage cleanup: load all shards to decrement node-level storage usage
         shards_res = await self.session.execute(
@@ -250,9 +255,9 @@ class FileService:
             for n in nodes:
                 n.storage_used = max(0, (n.storage_used or 0) - node_storage_to_subtract.get(n.id, 0))
 
-        # 3. Decrement user storage
+        # 3. Decrement user storage with row-level lock
         user_res = await self.session.execute(
-            select(User).where(User.id == user_id)
+            select(User).where(User.id == user_id).with_for_update()
         )
         user = user_res.scalar_one_or_none()
         if user:
