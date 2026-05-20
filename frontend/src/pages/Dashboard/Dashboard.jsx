@@ -100,7 +100,7 @@ const Dashboard = () => {
                 shards: (n.shards || []).length,
                 provider: n.provider,
                 status: n.healthy ? 'success' : 'danger',
-                isCloudNode: ['S3', 'SUPABASE'].includes(n.provider)
+                isCloudNode: ['S3', 'SUPABASE', 'STORJ'].includes(n.provider)
               };
             });
             setNodes(mappedNodes);
@@ -130,7 +130,7 @@ const Dashboard = () => {
   };
 
   // Only real cloud-backed nodes shown in overview (Backblaze B2 + Supabase)
-  const CLOUD_PROVIDERS = ['S3', 'SUPABASE'];
+  const CLOUD_PROVIDERS = ['S3', 'SUPABASE', 'STORJ'];
   const cloudNodes = (nodes || []).filter(n => CLOUD_PROVIDERS.includes(n.provider));
 
   const { user } = useAuthStore();

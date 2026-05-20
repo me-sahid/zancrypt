@@ -1,3 +1,8 @@
+import os
+# Configure AWS SDK checksum compatibility for S3 providers
+os.environ.setdefault("AWS_REQUEST_CHECKSUM_CALCULATION", "when_required")
+os.environ.setdefault("AWS_RESPONSE_CHECKSUM_VALIDATION", "when_required")
+
 from pathlib import Path
 from typing import List
 
@@ -56,6 +61,13 @@ class Settings(BaseSettings):
     SUPABASE_ACCESS_KEY: str | None = Field(None, env="SUPABASE_ACCESS_KEY")
     SUPABASE_SECRET_KEY: str | None = Field(None, env="SUPABASE_SECRET_KEY")
     SUPABASE_BUCKET: str | None = Field(None, env="SUPABASE_BUCKET")
+
+    # Cloud Storage — Storj S3-compatible (Node 3)
+    STORJ_ENDPOINT: str | None = Field(None, env="STORJ_ENDPOINT")
+    STORJ_REGION: str | None = Field(None, env="STORJ_REGION")
+    STORJ_ACCESS_KEY: str | None = Field(None, env="STORJ_ACCESS_KEY")
+    STORJ_SECRET_KEY: str | None = Field(None, env="STORJ_SECRET_KEY")
+    STORJ_BUCKET: str | None = Field(None, env="STORJ_BUCKET")
 
     # Observability
     ENABLE_OTEL: bool = Field(True, env="ENABLE_OTEL")
