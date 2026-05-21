@@ -1,4 +1,5 @@
 import secrets
+import asyncio
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional
 from uuid import UUID
@@ -245,25 +246,25 @@ async def get_shared_file(
             detail="File manifest not found"
         )
 
-    # Fetch shards from storage nodes (failover-enabled rendezvous mapping)
+    # Fetch shards from storage nodes (failover-enabled rendezvous mapping) in parallel
     storage_router = StorageRouter()
-    shards_list = []
     
-    for shard_info in db_manifest.replication_mapping:
+    async def fetch_and_hex(shard_info):
         shard_id = shard_info["shard_id"]
         target_nodes = shard_info["nodes"]
         shard_bytes = await storage_router.fetch_shard(shard_id, target_nodes)
-        
         if not shard_bytes:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Shard registry error: {shard_id} offline across all replication layers"
             )
-        
-        shards_list.append({
+        return {
             "shard_id": shard_id,
             "data": shard_bytes.hex()
-        })
+        }
+        
+    tasks = [fetch_and_hex(info) for info in db_manifest.replication_mapping]
+    shards_list = await asyncio.gather(*tasks)
 
     # Save download count changes
     await session.commit()
@@ -358,20 +359,23 @@ async def generate_wrapper(
             detail="File manifest not found"
         )
 
-    # 5. Reassemble storage shards
+    # 5. Reassemble storage shards in parallel
     storage_router = StorageRouter()
-    file_bytes = b""
-    for shard_info in db_manifest.replication_mapping:
+    
+    async def fetch_one(shard_info):
         shard_id = shard_info["shard_id"]
         target_nodes = shard_info["nodes"]
         shard_bytes = await storage_router.fetch_shard(shard_id, target_nodes)
-        
         if not shard_bytes:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Shard registry error: {shard_id} offline across all replication layers"
             )
-        file_bytes += shard_bytes
+        return shard_bytes
+        
+    tasks = [fetch_one(info) for info in db_manifest.replication_mapping]
+    shards_data = await asyncio.gather(*tasks)
+    file_bytes = b"".join(shards_data)
 
     # 6. Generate wrapper HTML string
     wrapper_options = {
@@ -582,22 +586,23 @@ async def download_public_wrapper(
             detail="File manifest not found"
         )
 
-    # Reassemble shards
+    # Reassemble shards in parallel
     storage_router = StorageRouter()
-    file_bytes = b""
     
-    for shard_info in db_manifest.replication_mapping:
+    async def fetch_one(shard_info):
         shard_id = shard_info["shard_id"]
         target_nodes = shard_info["nodes"]
         shard_bytes = await storage_router.fetch_shard(shard_id, target_nodes)
-        
         if not shard_bytes:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Shard registry error: {shard_id} offline across all replication layers"
             )
+        return shard_bytes
         
-        file_bytes += shard_bytes
+    tasks = [fetch_one(info) for info in db_manifest.replication_mapping]
+    shards_data = await asyncio.gather(*tasks)
+    file_bytes = b"".join(shards_data)
 
     # Fetch owner user to customize HTML
     from app.models.user import User

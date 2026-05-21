@@ -14,8 +14,8 @@ const hexToBytes = (hex) => {
 const getFileCategory = (filename) => {
   if (!filename) return 'document';
   const ext = filename.split('.').pop().toLowerCase();
-  const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'heic', 'heif'];
-  const videoExts = ['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv'];
+  const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'heic', 'heif', 'avif', 'tiff', 'tif', 'bmp', 'ico'];
+  const videoExts = ['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'wmv', 'mts', 'm2ts', 'm4v', 'mpg', 'mpeg', '3gp'];
   
   if (imageExts.includes(ext)) return 'image';
   if (videoExts.includes(ext)) return 'video';
@@ -26,20 +26,36 @@ const getMimeType = (filename) => {
   if (!filename) return 'application/octet-stream';
   const ext = filename.split('.').pop().toLowerCase();
   const mimeTypes = {
+    // Videos
+    'mp4': 'video/mp4',
+    'mov': 'video/quicktime',
+    'webm': 'video/webm',
+    'mkv': 'video/x-matroska',
+    'avi': 'video/x-msvideo',
+    'wmv': 'video/x-ms-wmv',
+    'flv': 'video/x-flv',
+    'mts': 'video/mp2t',
+    'm2ts': 'video/mp2t',
+    'm4v': 'video/x-m4v',
+    'mpg': 'video/mpeg',
+    'mpeg': 'video/mpeg',
+    '3gp': 'video/3gpp',
+    // Images
     'jpg': 'image/jpeg',
     'jpeg': 'image/jpeg',
     'png': 'image/png',
     'webp': 'image/webp',
-    'gif': 'image/gif',
+    'avif': 'image/avif',
     'svg': 'image/svg+xml',
+    'gif': 'image/gif',
     'heic': 'image/heic',
     'heif': 'image/heif',
-    'mp4': 'video/mp4',
-    'mov': 'video/quicktime',
-    'webm': 'video/webm',
-    'ogg': 'video/ogg'
+    'tiff': 'image/tiff',
+    'tif': 'image/tiff',
+    'bmp': 'image/bmp',
+    'ico': 'image/x-icon'
   };
-  return mimeTypes[ext] || 'application/octet-stream';
+  return mimeTypes[ext] || 'video/mp4';
 };
 
 const getPlaceholderThumbnail = (filename) => {
@@ -167,13 +183,22 @@ const getPlaceholderThumbnail = (filename) => {
   return canvas.toDataURL('image/jpeg', 0.85);
 };
 
-const FileThumbnail = ({ file, className }) => {
-  const [thumbnailUrl, setThumbnailUrl] = useState(null);
+const FileThumbnail = ({ file, className, decryptedName }) => {
+  const [thumbnailUrl, setThumbnailUrl] = useState(file.thumbnail || null);
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const filename = file.encrypted_filename || file.filename || file.name || 'unnamed';
+  const filename = decryptedName || file.encrypted_filename || file.filename || file.name || 'unnamed';
   const category = getFileCategory(filename);
+
+  const isStaticImage = thumbnailUrl && (thumbnailUrl.startsWith('data:image/') || thumbnailUrl.startsWith('data:'));
+
+  // Update thumbnailUrl state if file.thumbnail changes
+  useEffect(() => {
+    if (file.thumbnail) {
+      setThumbnailUrl(file.thumbnail);
+    }
+  }, [file.thumbnail]);
 
   // Instantly generate a fallback card
   const generatedPlaceholder = useMemo(() => {
@@ -181,6 +206,8 @@ const FileThumbnail = ({ file, className }) => {
   }, [filename]);
 
   useEffect(() => {
+    if (file.thumbnail) return;
+
     let objectUrl = null;
 
     if (category === 'image' || category === 'video') {
@@ -232,10 +259,10 @@ const FileThumbnail = ({ file, className }) => {
     return () => {
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [file.id, filename, category]);
+  }, [file.id, filename, category, file.thumbnail]);
 
-  // Fallback to beautiful neon card during loading, error, or document types
-  if (category === 'document' || hasError || !thumbnailUrl) {
+  // Fallback to beautiful neon card if we don't have a thumbnail or if there was an error loading it
+  if (hasError || !thumbnailUrl) {
     return (
       <img 
         src={generatedPlaceholder} 
@@ -245,7 +272,7 @@ const FileThumbnail = ({ file, className }) => {
     );
   }
 
-  if (category === 'video') {
+  if (category === 'video' && !isStaticImage) {
     return (
       <div className={`${className} relative overflow-hidden bg-slate-950 flex items-center justify-center rounded-md`}>
         <video 
@@ -270,7 +297,28 @@ const FileThumbnail = ({ file, className }) => {
     );
   }
 
-  // category === 'image'
+  if (category === 'video' && isStaticImage) {
+    return (
+      <div className={`${className} relative overflow-hidden bg-slate-950 flex items-center justify-center rounded-md`}>
+        <img 
+          src={thumbnailUrl} 
+          alt={filename} 
+          className="w-full h-full object-cover"
+          onError={() => setHasError(true)}
+        />
+        {/* Sleek video overlay */}
+        <div className="absolute inset-0 bg-black/15 flex items-center justify-center">
+          <div className="p-1 rounded-full bg-slate-950/60 text-white border border-white/10 backdrop-blur-sm shadow-md">
+            <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // category === 'image' or any other custom thumbnail
   return (
     <img 
       src={thumbnailUrl} 
