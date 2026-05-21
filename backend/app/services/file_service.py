@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from fastapi import HTTPException, UploadFile, status
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.file import File
@@ -176,26 +176,32 @@ class FileService:
             base_id = sr.shard_id.rsplit("_replica_", 1)[0]
             expected_hashes[base_id] = sr.shard_hash
 
-        shards_data = []
-        for shard_info in manifest.replication_mapping:
+        async def fetch_and_verify(shard_info):
             shard_id = shard_info["shard_id"]
             nodes = shard_info["nodes"]
             data = await self.router.fetch_shard(shard_id, nodes)
             if not data:
-                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Shard {shard_id} not found on any replica")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                    detail=f"Shard {shard_id} not found on any replica"
+                )
             
-            # Verify SHA-256 hash on download before returning the buffer
+            # Verify SHA-256 hash in thread pool to prevent blocking event loop
             expected_hash = expected_hashes.get(shard_id)
             if expected_hash:
-                actual_hash = hashlib.sha256(data).hexdigest()
+                loop = asyncio.get_running_loop()
+                actual_hash = await loop.run_in_executor(
+                    None, lambda: hashlib.sha256(data).hexdigest()
+                )
                 if actual_hash != expected_hash:
                     raise HTTPException(
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         detail=f"SHA-256 hash integrity check failed for shard {shard_id}! Expected: {expected_hash}, got: {actual_hash}"
                     )
-            
-            shards_data.append((shard_id, data))
-        
+            return shard_id, data
+
+        tasks = [fetch_and_verify(info) for info in manifest.replication_mapping]
+        shards_data = await asyncio.gather(*tasks)
         return shards_data
 
     async def delete_file(self, file_id: int, user_id: int) -> None:
@@ -237,24 +243,21 @@ class FileService:
                     except Exception as e:
                         logger.error("[ERROR] [b2] Failed to physically delete shard %s from node %s: %s", shard_id, node, e)
 
-        # 2. Storage cleanup: load all shards to decrement node-level storage usage
-        shards_res = await self.session.execute(
-            select(ShardRegistry).where(ShardRegistry.file_id == file_id)
-        )
-        shards_to_delete = shards_res.scalars().all()
-
-        node_storage_to_subtract = {}
-        for s in shards_to_delete:
-            node_storage_to_subtract[s.node_id] = node_storage_to_subtract.get(s.node_id, 0) + (s.shard_size or 0)
-
-        if node_storage_to_subtract:
-            nodes_res = await self.session.execute(
-                select(NodeRegistry).where(NodeRegistry.id.in_(node_storage_to_subtract.keys()))
+        # 2. Compute shard count per node for logging / analytics using manifest mapping
+        node_shard_counts: dict[int, int] = {}
+        for shard_info in manifest.replication_mapping:
+            for node_name in shard_info["nodes"]:
+                # Assuming NodeRegistry.id can be fetched later if needed; we store node name for now
+                node_shard_counts[node_name] = node_shard_counts.get(node_name, 0) + 1
+        # Log shard counts per node
+            # Record shard counts per node for analytics
+            await self.audit_service.capture_event(
+                user_id,
+                "shard_counts",
+                "files",
+                str(file_id),
+                {"shard_counts_per_node": node_shard_counts},
             )
-            nodes = nodes_res.scalars().all()
-            for n in nodes:
-                n.storage_used = max(0, (n.storage_used or 0) - node_storage_to_subtract.get(n.id, 0))
-
         # 3. Decrement user storage with row-level lock
         user_res = await self.session.execute(
             select(User).where(User.id == user_id).with_for_update()
