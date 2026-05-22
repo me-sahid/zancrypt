@@ -9,6 +9,7 @@ import DegradedBanner from './components/network/DegradedBanner';
 import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/useStore';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import { pageContent } from './pages/Static/pageContent';
 
 // Lazy loading other pages
 const Login = lazy(() => import('./pages/Auth/Login'));
@@ -28,6 +29,7 @@ const DownloadPage = lazy(() => import('./pages/Download/Download'));
 const SharedFile = lazy(() => import('./pages/Download/SharedFile'));
 const SharesPage = lazy(() => import('./pages/Shares/Shares'));
 const RecycleBin = lazy(() => import('./pages/RecycleBin/RecycleBin'));
+const PublicInfoPage = lazy(() => import('./pages/Static/PublicInfoPage'));
 
 // Loading Placeholder
 const PageLoader = () => (
@@ -56,6 +58,15 @@ function App() {
           <Route path="/share/:token" element={<SharedFile />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
+          {/* Static Info Pages */}
+          {Object.entries(pageContent).map(([key, content]) => (
+            <Route 
+              key={key} 
+              path={`/${key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}`} 
+              element={<PublicInfoPage {...content} />} 
+            />
+          ))}
 
           {/* Protected Dashboard Routes - Single Shared Layout instance for instant page loads */}
           <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
