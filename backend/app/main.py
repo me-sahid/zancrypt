@@ -1,5 +1,10 @@
+
+# pyrefly: ignore [missing-import]
 from fastapi import FastAPI
+
+# pyrefly: ignore [missing-import]
 from fastapi.middleware.cors import CORSMiddleware
+# pyrefly: ignore [missing-import]
 from slowapi.middleware import SlowAPIMiddleware
 
 from app.api.routers import auth, files, admin, health, share, notifications, dashboard, folders
@@ -40,7 +45,11 @@ app.add_middleware(StructuredLoggingMiddleware)
 app.middleware("http")(security_headers_middleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=[
+        "http://localhost:5173",        # local dev
+        "http://localhost:3000",        # local dev alt
+        "https://zancrypt.pages.dev",   # cloudflare pages
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
