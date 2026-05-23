@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_async_session, get_admin_user, get_current_user
 from app.schemas.admin import AuditEventResponse, NodeHealthResponse, SecurityEventResponse, SystemMetricsResponse
 from app.services.admin_service import AdminService
+import socket
 
 router = APIRouter()
 
@@ -36,4 +37,15 @@ async def toggle_node(
     session: AsyncSession = Depends(get_async_session)
 ):
     return await AdminService(session).toggle_node(node_id, status)
-
+@router.get("/network-ip")
+async def get_network_ip(current_user=Depends(get_current_user)):
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('10.255.255.255', 1))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = '127.0.0.1'
+    finally:
+        if 's' in locals():
+            s.close()
+    return {"ip": ip}

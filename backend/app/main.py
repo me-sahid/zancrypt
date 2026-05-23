@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.middleware import SlowAPIMiddleware
 
-from app.api.routers import auth, files, admin, health, share, notifications, dashboard
+from app.api.routers import auth, files, admin, health, share, notifications, dashboard, folders
 from app.core.config import settings
 from app.core.logging import configure_structured_logging
 from app.core.tracing import setup_tracing
@@ -48,6 +48,7 @@ app.add_middleware(
 from app.auth.api.endpoints import router as enterprise_auth_router
 app.include_router(enterprise_auth_router, prefix="/auth", tags=["auth"])
 app.include_router(files.router, prefix="/files", tags=["files"])
+app.include_router(folders.router, prefix="/api/folders", tags=["folders"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"])
 app.include_router(health.router, prefix="/health", tags=["health"])
 app.include_router(share.router, prefix="/api/share", tags=["share"])
@@ -73,6 +74,7 @@ async def on_startup() -> None:
         await conn.execute(text("ALTER TABLE files ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;"))
         await conn.execute(text("ALTER TABLE files ADD COLUMN IF NOT EXISTS thumbnail TEXT;"))
         await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS allow_downloads BOOLEAN DEFAULT TRUE;"))
+        await conn.execute(text("ALTER TABLE files ADD COLUMN IF NOT EXISTS folder_id INTEGER REFERENCES folders(id);"))
 
     await initialize_nodes()
     instrument_app(app)

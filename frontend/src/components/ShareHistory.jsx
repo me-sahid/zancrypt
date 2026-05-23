@@ -3,8 +3,9 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Share2, Trash2, Download, ShieldAlert,
-  Loader2, Copy, Check
+  Loader2, Copy, Check, QrCode, X, AlertTriangle
 } from 'lucide-react';
+import QRCode from 'qrcode';
 import api from '../services/api';
 import { toast } from 'react-hot-toast';
 
@@ -108,6 +109,17 @@ const ShareHistory = () => {
 
   useEffect(() => {
     fetchShares();
+    // Fetch network IP automatically
+    api.get('/admin/network-ip').then(res => {
+      if (res.data && res.data.ip && res.data.ip !== '127.0.0.1') {
+        const storedIp = localStorage.getItem('zancrypt_sharing_ip');
+        if (!storedIp || storedIp === '192.168.30.73' || storedIp.startsWith('172.')) {
+          localStorage.setItem('zancrypt_sharing_ip', res.data.ip);
+          setCustomSharingIp(res.data.ip);
+          setIpInput(res.data.ip);
+        }
+      }
+    }).catch(() => {});
   }, []);
 
   const confirmRevoke = async () => {
@@ -125,13 +137,42 @@ const ShareHistory = () => {
     }
   };
 
+  const [selectedShare, setSelectedShare] = useState(null);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
+  
+  const [customSharingIp, setCustomSharingIp] = useState(() => localStorage.getItem('zancrypt_sharing_ip') || '192.168.30.73');
+  const [isEditingIp, setIsEditingIp] = useState(false);
+  const [ipInput, setIpInput] = useState(customSharingIp);
+
+  const handleSaveIp = () => {
+    setCustomSharingIp(ipInput);
+    localStorage.setItem('zancrypt_sharing_ip', ipInput);
+    setIsEditingIp(false);
+    // Force QR code to re-render by updating selectedShare reference slightly (hacky but works)
+    if (selectedShare) {
+      setSelectedShare({ ...selectedShare });
+    }
+  };
+
   const getBaseUrl = () => {
     const origin = window.location.origin;
     const hostname = window.location.hostname;
     if (hostname !== 'localhost' && hostname !== '127.0.0.1') return origin;
-    const customSharingIp = localStorage.getItem('zancrypt_sharing_ip') || '192.168.30.73';
     return origin.replace('localhost', customSharingIp);
   };
+
+  useEffect(() => {
+    if (selectedShare) {
+      const fullUrl = `${getBaseUrl()}/share/${selectedShare.share_token}`;
+      QRCode.toDataURL(fullUrl, {
+        width: 160,
+        margin: 1,
+        color: { dark: '#14f195', light: '#000000' }
+      }, (err, url) => {
+        if (!err) setQrCodeDataUrl(url);
+      });
+    }
+  }, [selectedShare]);
 
   const handleCopyLinkOnly = (token) => {
     const fullUrl = `${getBaseUrl()}/share/${token}`;
@@ -140,6 +181,28 @@ const ShareHistory = () => {
       toast.success('URL Base Copied');
       setTimeout(() => setCopiedToken(''), 2000);
     });
+  };
+
+  const handleCopyPassword = (password) => {
+    navigator.clipboard.writeText(password).then(() => {
+      toast.success('Password Copied');
+    });
+  };
+
+  const hasInactiveShares = shares.some(share => {
+    if (!share.is_active) return true;
+    if (share.expires_at && new Date(share.expires_at) < new Date()) return true;
+    return false;
+  });
+
+  const handleClearHistory = async () => {
+    try {
+      await api.delete('/api/share/history/clear');
+      toast.success('Inactive share history cleared');
+      fetchShares();
+    } catch (error) {
+      toast.error('Could not clear history');
+    }
   };
 
   return (
@@ -159,15 +222,28 @@ const ShareHistory = () => {
         ) : shares.length > 0 ? (
           <motion.div 
             key="table-container"
-            className="overflow-x-auto w-full"
+            className="w-full flex flex-col"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <table className="w-full text-left border-collapse">
+            {hasInactiveShares && (
+              <div className="flex justify-end p-4 border-b border-border bg-surface-raised/30">
+                <button
+                  onClick={handleClearHistory}
+                  className="flex items-center text-[11px] font-mono tracking-widest text-text-muted hover:text-danger transition-colors uppercase"
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-2" />
+                  Clear Inactive History
+                </button>
+              </div>
+            )}
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface-raised border-b border-border text-[11px] font-mono text-text-muted uppercase tracking-widest">
                   <th className="px-6 py-4 hidden sm:table-cell">Label</th>
                   <th className="px-6 py-4">Target Asset</th>
+                  <th className="px-6 py-4 hidden lg:table-cell">Password</th>
                   <th className="px-6 py-4 hidden md:table-cell">Downloads</th>
                   <th className="px-6 py-4">TTL (Time to Live)</th>
                   <th className="px-6 py-4 hidden sm:table-cell">Status</th>
@@ -187,14 +263,41 @@ const ShareHistory = () => {
                       <div className="flex items-center space-x-2">
                         <p className="text-text-primary truncate max-w-[150px]">{share.encrypted_filename}</p>
                         {share.is_active && (
-                          <button
-                            onClick={() => handleCopyLinkOnly(share.share_token)}
-                            className="text-text-muted hover:text-accent transition-colors"
-                          >
-                            {copiedToken === share.share_token ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                          </button>
+                          <>
+                            <button
+                              onClick={() => handleCopyLinkOnly(share.share_token)}
+                              className="text-text-muted hover:text-accent transition-colors"
+                              title="Copy URL"
+                            >
+                              {copiedToken === share.share_token ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                            </button>
+                            <button
+                              onClick={() => setSelectedShare(share)}
+                              className="text-text-muted hover:text-accent transition-colors"
+                              title="View QR Code"
+                            >
+                              <QrCode className="w-3.5 h-3.5" />
+                            </button>
+                          </>
                         )}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 hidden lg:table-cell">
+                      {share.share_password ? (
+                        <div className="flex items-center space-x-2">
+                          <span className="text-text-primary text-[11px] bg-void border border-border px-1.5 py-0.5 rounded truncate max-w-[80px]">
+                            {share.share_password}
+                          </span>
+                          <button
+                            onClick={() => handleCopyPassword(share.share_password)}
+                            className="text-text-muted hover:text-accent transition-colors"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-text-muted text-[11px] uppercase tracking-widest opacity-50">None</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 hidden md:table-cell">
                       <div className="flex items-center space-x-1.5">
@@ -230,7 +333,8 @@ const ShareHistory = () => {
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
           </motion.div>
         ) : (
           <motion.div 
@@ -259,40 +363,160 @@ const ShareHistory = () => {
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
-                className="w-full max-w-sm bg-surface border border-border flex flex-col relative z-10 shadow-2xl"
+                className="w-full max-w-sm bg-surface border border-border flex flex-col relative z-10 shadow-2xl p-6 space-y-6"
               >
-                <div className="p-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <ShieldAlert className="w-6 h-6 text-danger" />
-                    <h3 className="font-mono text-sm text-text-primary uppercase tracking-widest">Revoke Link</h3>
-                  </div>
-                  
-                  <p className="font-mono text-xs text-text-secondary mb-4">
-                    Are you sure you want to revoke access to: <br/>
-                    <span className="text-text-primary block mt-2 border border-border p-2 bg-void truncate">{shareToRevoke.encrypted_filename}</span>
-                  </p>
+                <div className="flex items-center space-x-3 text-warning">
+                  <ShieldAlert className="w-6 h-6" />
+                  <h3 className="font-mono text-sm uppercase tracking-widest font-bold">Revoke Access</h3>
+                </div>
+                
+                <p className="text-sm font-mono text-text-secondary leading-relaxed">
+                  Are you sure you want to revoke this link? Anyone with the URL will immediately lose access.
+                </p>
 
-                  <div className="flex space-x-3 mt-6">
-                    <button
-                      onClick={() => setShareToRevoke(null)}
-                      disabled={isRevoking}
-                      className="flex-1 py-2 border border-border font-mono text-xs text-text-muted hover:text-text-primary uppercase tracking-widest transition-colors"
-                    >
-                      [ Cancel ]
-                    </button>
-                    <button
-                      onClick={confirmRevoke}
-                      disabled={isRevoking}
-                      className="flex-1 py-2 bg-transparent border border-danger text-danger hover:bg-danger/10 font-mono text-xs uppercase tracking-widest transition-colors"
-                    >
-                      {isRevoking ? '[ Revoking... ]' : '[ Revoke ]'}
-                    </button>
-                  </div>
+                <div className="flex space-x-3 mt-4">
+                  <button
+                    onClick={() => setShareToRevoke(null)}
+                    className="flex-1 bg-void border border-border hover:bg-surface-raised text-text-primary font-mono text-xs uppercase tracking-widest py-3 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmRevoke}
+                    disabled={isRevoking}
+                    className="flex-1 bg-danger/10 text-danger border border-danger/30 hover:bg-danger hover:text-white font-mono text-xs uppercase tracking-widest py-3 transition-colors disabled:opacity-50 flex justify-center items-center"
+                  >
+                    {isRevoking ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Revoke'}
+                  </button>
                 </div>
               </motion.div>
             </div>
           )}
         </AnimatePresence>,
+        document.body
+      )}
+
+      {/* View Share Modal */}
+      {selectedShare && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-void/90 backdrop-blur-md cursor-pointer" onClick={() => setSelectedShare(null)} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="w-full max-w-md bg-surface border border-border shadow-2xl relative z-10 flex flex-col"
+          >
+            <div className="flex items-center justify-between p-4 border-b border-border bg-void">
+              <div className="flex items-center space-x-3 text-accent">
+                <Share2 className="w-4 h-4" />
+                <h3 className="font-mono text-xs uppercase tracking-widest font-bold">Cryptographic Share</h3>
+              </div>
+              <button onClick={() => setSelectedShare(null)} className="text-text-muted hover:text-text-primary text-[10px] uppercase font-mono tracking-widest transition-colors flex items-center">
+                [ CLOSE ]
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="bg-warning/10 border border-warning/20 p-4 flex items-start space-x-3 text-warning">
+                <AlertTriangle className="w-5 h-5 shrink-0" />
+                <div className="text-xs font-mono">
+                  <p className="font-bold mb-1 uppercase tracking-widest">Security Warning</p>
+                  <p className="opacity-80">This link contains the decryption key. Anyone with it can access the file. Keep it strictly private.</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-mono text-text-muted uppercase tracking-widest">Secure Decryption Link</label>
+                <div className="flex items-center border border-border bg-void">
+                  <input 
+                    type="text" 
+                    readOnly 
+                    value={`${getBaseUrl()}/share/${selectedShare.share_token}`} 
+                    className="flex-1 bg-transparent border-none text-xs font-mono py-3 px-4 text-text-primary outline-none"
+                  />
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${getBaseUrl()}/share/${selectedShare.share_token}`);
+                      toast.success('Link copied');
+                    }} 
+                    className="p-3 border-l border-border hover:bg-surface-raised text-text-muted hover:text-accent transition-colors"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              
+              {selectedShare.share_password && (
+                <div className="space-y-2">
+                  <label className="text-xs font-mono text-text-muted uppercase tracking-widest">Access Password</label>
+                  <div className="flex items-center border border-border bg-void">
+                    <input 
+                      type="text" 
+                      readOnly 
+                      value={selectedShare.share_password} 
+                      className="flex-1 bg-transparent border-none text-xs font-mono py-3 px-4 text-text-primary outline-none"
+                    />
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(selectedShare.share_password);
+                        toast.success('Password copied');
+                      }} 
+                      className="p-3 border-l border-border hover:bg-surface-raised text-text-muted hover:text-accent transition-colors"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-start space-x-6 pt-4 border-t border-border">
+                {qrCodeDataUrl ? (
+                  <div className="bg-void p-2 border border-border rounded">
+                    <img src={qrCodeDataUrl} alt="Share QR Code" className="w-24 h-24" />
+                  </div>
+                ) : (
+                  <div className="w-24 h-24 bg-void border border-border rounded flex items-center justify-center">
+                    <Loader2 className="w-5 h-5 text-accent animate-spin" />
+                  </div>
+                )}
+                <div className="flex-1 space-y-2 pt-2">
+                  <div className="flex items-center text-accent text-xs font-mono uppercase tracking-widest">
+                    <QrCode className="w-3 h-3 mr-2" /> Scan to Retrieve
+                  </div>
+                  <p className="text-xs font-mono text-text-muted">Use mobile device for secure retrieval.</p>
+                  {window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? (
+                      <div className="pt-2 mt-2 border-t border-border">
+                        <div className="flex items-center space-x-2 text-[10px]">
+                          <span>Network IP:</span>
+                          {isEditingIp ? (
+                            <div className="flex items-center space-x-2">
+                              <input 
+                                value={ipInput} 
+                                onChange={e => setIpInput(e.target.value)} 
+                                className="bg-surface border border-border px-1 py-0.5 text-text-primary outline-none w-28"
+                              />
+                              <button onClick={handleSaveIp} className="text-accent hover:underline">Save</button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center space-x-2">
+                              <span className="text-text-primary">{customSharingIp}</span>
+                              <button onClick={() => setIsEditingIp(true)} className="text-accent hover:underline">[Edit]</button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : null}
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-border bg-void flex justify-end">
+               <button onClick={() => setSelectedShare(null)} className="px-6 py-2 border border-accent/50 hover:bg-accent/10 text-accent font-mono text-xs uppercase tracking-widest rounded transition-colors">
+                  Done
+               </button>
+            </div>
+          </motion.div>
+        </div>,
         document.body
       )}
     </div>

@@ -16,7 +16,8 @@ class FileRepository:
         encrypted_metadata: str, 
         file_size: int,
         integrity_hash: str,
-        thumbnail: str = None
+        thumbnail: str = None,
+        folder_id: int = None
     ) -> File:
         file = File(
             owner_id=owner_id,
@@ -25,6 +26,7 @@ class FileRepository:
             file_size=file_size,
             integrity_hash=integrity_hash,
             thumbnail=thumbnail,
+            folder_id=folder_id,
         )
         self.session.add(file)
         await self.session.flush()

@@ -18,6 +18,8 @@ class FileMetadataResponse(BaseModel):
     upload_time: datetime
     integrity_hash: str
     thumbnail: str | None = None
+    folder_id: int | None = None
+    encrypted_metadata: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

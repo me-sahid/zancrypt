@@ -7,7 +7,7 @@ export const authService = {
 };
 
 export const fileService = {
-  listFiles: () => api.get('/files/list'),
+  listFiles: (folderId) => api.get(`/files/list${folderId ? `?folder_id=${folderId}` : ''}`),
   uploadFile: (formData, config = {}) => api.post('/files/upload', formData, config),
   downloadFile: (id) => api.get(`/files/download/${id}`), // Changed to default as we reassemble hex
   deleteFile: (id) => api.delete(`/files/${id}`),
@@ -18,7 +18,16 @@ export const fileService = {
     const formData = new FormData();
     formData.append('new_filename', newName);
     return api.put(`/files/${id}`, formData);
-  }
+  },
+  copyFile: (id, folderId) => api.post(`/files/${id}/copy${folderId ? `?folder_id=${folderId}` : ''}`),
+  moveFile: (id, folderId) => api.post(`/files/${id}/move${folderId ? `?folder_id=${folderId}` : ''}`),
+};
+
+export const folderService = {
+  listFolders: (parentId) => api.get(`/api/folders${parentId ? `?parent_id=${parentId}` : ''}`),
+  createFolder: (folderData) => api.post('/api/folders', folderData),
+  updateFolder: (id, folderData) => api.put(`/api/folders/${id}`, folderData),
+  deleteFolder: (id) => api.delete(`/api/folders/${id}`)
 };
 
 export const adminService = {
@@ -26,6 +35,7 @@ export const adminService = {
   getNodeHealth: (id) => api.get(`/admin/node-health/${id}`),
   toggleNode: (id, status) => api.post(`/admin/nodes/${id}/toggle?status=${status}`),
   getSystemMetrics: () => api.get('/admin/system-metrics'),
+  getNetworkIp: () => api.get('/admin/network-ip'),
 };
 
 export const dashboardService = {

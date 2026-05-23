@@ -69,8 +69,11 @@ const Login = () => {
         toast.success('Access granted via Biometrics.', { id: 'auth-toast' });
         navigate('/dashboard');
       } catch (error) {
-        const errorMsg = error.response?.data?.detail || error.message || 'Authentication failed';
-        toast.error(`${errorMsg}. Switching to Access Key.`, { id: 'auth-toast' });
+        let errorMsg = error.response?.data?.detail || error.message || 'Authentication failed';
+        if (errorMsg.includes("navigator.credentials") || errorMsg.includes("undefined is not an object (evaluating 'navigator.credentials.get')")) {
+          errorMsg = "Passkeys require HTTPS/Localhost. Local IP detected.";
+        }
+        toast.error(`${errorMsg} Switching to Access Key.`, { id: 'auth-toast' });
         setShowFallback(true);
       } finally {
         setIsLoading(false);

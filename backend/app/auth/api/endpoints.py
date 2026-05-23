@@ -73,6 +73,7 @@ async def register_start(
 
 @router.post("/register/verify", response_model=TokenResponse)
 async def register_verify(
+    req: Request,
     request: RegistrationVerifyRequest,
     response: Response,
     session: AsyncSession = Depends(get_async_session)
@@ -142,11 +143,13 @@ async def register_verify(
     session_repo = SessionRepository(session)
     refresh_token = await session_repo.create_session(user.id)
 
+    is_secure = req.url.scheme == "https"
+
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=True,
+        secure=is_secure,
         samesite="lax",
         max_age=7 * 24 * 60 * 60,
     )
@@ -203,6 +206,7 @@ async def login_start(
 
 @router.post("/login/verify", response_model=TokenResponse)
 async def login_verify(
+    req: Request,
     request: LoginVerifyRequest,
     response: Response,
     session: AsyncSession = Depends(get_async_session)
@@ -247,11 +251,13 @@ async def login_verify(
         user_repo = UserRepository(session)
         user = await user_repo.get_by_id(user_id)
         
+        is_secure = req.url.scheme == "https"
+        
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,
             httponly=True,
-            secure=True,
+            secure=is_secure,
             samesite="lax",
             max_age=7 * 24 * 60 * 60,
         )
@@ -306,11 +312,13 @@ async def login_fallback(
     session_repo = SessionRepository(session)
     refresh_token = await session_repo.create_session(user.id)
     
+    is_secure = request.url.scheme == "https"
+    
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=True,
+        secure=is_secure,
         samesite="lax",
         max_age=7 * 24 * 60 * 60,
     )
@@ -346,12 +354,14 @@ async def refresh_token(
         
     tokens = await AuthService(session).refresh_tokens(token)
     
+    is_secure = request.url.scheme == "https"
+    
     # Rotate the refresh cookie
     response.set_cookie(
         key="refresh_token",
         value=tokens.refresh_token,
         httponly=True,
-        secure=True,
+        secure=is_secure,
         samesite="lax",
         max_age=7 * 24 * 60 * 60, # 7 days
     )
@@ -371,11 +381,13 @@ async def logout(
         revoke_token(auth_header.split(" ", 1)[1])
     await SessionService(session).revoke_active_sessions(current_user.id)
     
+    is_secure = request.url.scheme == "https"
+    
     # Clear the refresh token cookie
     response.delete_cookie(
         key="refresh_token",
         httponly=True,
-        secure=True,
+        secure=is_secure,
         samesite="lax"
     )
 

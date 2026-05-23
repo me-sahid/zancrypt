@@ -41,8 +41,12 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const detail = error.response?.data?.detail;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Skip intercepting 401s that are explicitly about share passwords
+    const isPasswordError = typeof detail === 'string' && detail.toLowerCase().includes('password');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isPasswordError) {
       // If we are already refreshing, queue this request
       if (_isRefreshing) {
         return new Promise((resolve, reject) => {

@@ -14,11 +14,20 @@ const hexToBytes = (hex) => {
 const getFileCategory = (filename) => {
   if (!filename) return 'document';
   const ext = filename.split('.').pop().toLowerCase();
-  const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'heic', 'heif', 'avif', 'tiff', 'tif', 'bmp', 'ico'];
-  const videoExts = ['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'wmv', 'mts', 'm2ts', 'm4v', 'mpg', 'mpeg', '3gp'];
   
-  if (imageExts.includes(ext)) return 'image';
-  if (videoExts.includes(ext)) return 'video';
+  const videos = ['mp4', 'mov', 'webm', 'mkv', 'avi', 'wmv', 'flv', 'mts', 'm2ts', 'm4v', 'mpg', 'mpeg', '3gp'];
+  const images = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'svg', 'gif', 'heic', 'heif', 'tiff', 'tif', 'raw', 'cr3', 'arw', 'bmp', 'ico'];
+  const audios = ['mp3', 'wav', 'flac', 'aac', 'ogg', 'm4a', 'wma'];
+  const pdfs = ['pdf'];
+  const texts = ['txt', 'rtf', 'md', 'csv'];
+  const docs = ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt', 'key', 'odt', 'ods', 'odp'];
+  
+  if (videos.includes(ext)) return 'video';
+  if (images.includes(ext)) return 'image';
+  if (audios.includes(ext)) return 'audio';
+  if (pdfs.includes(ext)) return 'pdf';
+  if (texts.includes(ext)) return 'text';
+  if (docs.includes(ext)) return 'document';
   return 'document';
 };
 
@@ -81,7 +90,19 @@ const getPlaceholderThumbnail = (filename) => {
     colorStart = '#022c22'; // Deep Forest
     colorEnd = '#064e3b';   // Dark Emerald
     accentColor = '#10b981'; // Emerald Green
-  } else if (ext === 'pdf' || ext === 'doc' || ext === 'docx') {
+  } else if (category === 'audio') {
+    colorStart = '#2e1065'; // Purple
+    colorEnd = '#4c1d95';   // Indigo
+    accentColor = '#d946ef'; // Fuchsia
+  } else if (category === 'pdf') {
+    colorStart = '#450a0a'; // Dark Red
+    colorEnd = '#7f1d1d';   // Red
+    accentColor = '#ef4444'; // Bright Red
+  } else if (category === 'text') {
+    colorStart = '#172554'; // Dark Blue
+    colorEnd = '#1e3a8a';   // Blue
+    accentColor = '#3b82f6'; // Bright Blue
+  } else {
     colorStart = '#1c1917'; // Dark Stone
     colorEnd = '#451a03';   // Dark Rust
     accentColor = '#f59e0b'; // Amber Gold

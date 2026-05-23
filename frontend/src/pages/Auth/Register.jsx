@@ -105,7 +105,10 @@ const Register = () => {
       toast.success('Identity established.', { id: 'auth-toast' });
       navigate('/dashboard');
     } catch (error) {
-      const errorMsg = error.response?.data?.detail || error.message || 'Identity protocol failed';
+      let errorMsg = error.response?.data?.detail || error.message || 'Identity protocol failed';
+      if (errorMsg.includes("navigator.credentials") || errorMsg.includes("undefined is not an object (evaluating 'navigator.credentials.create')")) {
+        errorMsg = "Passkeys require HTTPS/Localhost. Local IP detected.";
+      }
       toast.error(`${errorMsg}`, { id: 'auth-toast' });
     } finally {
       setIsLoading(false);

@@ -144,7 +144,7 @@ const generatePlaceholderThumbnail = (filename, ext) => {
   return canvas.toDataURL('image/jpeg', 0.85);
 };
 
-const extractThumbnail = (file) => {
+const extractMetadataAndThumbnail = (file) => {
   return new Promise((resolve) => {
     const filename = file?.name || '';
     const ext = filename.split('.').pop().toLowerCase();
@@ -157,10 +157,10 @@ const extractThumbnail = (file) => {
     const triggerFallback = () => {
       try {
         const fallbackBase64 = generatePlaceholderThumbnail(filename, ext);
-        resolve(fallbackBase64);
+        resolve({ thumbnailDataUrl: fallbackBase64, resolution: null, format: ext });
       } catch (err) {
         console.error('Fallback thumbnail generation failed:', err);
-        resolve(null);
+        resolve({ thumbnailDataUrl: null, resolution: null, format: ext });
       }
     };
 
@@ -176,7 +176,7 @@ const extractThumbnail = (file) => {
 
     try {
       if (!file) {
-        safeResolve(null);
+        safeResolve({ thumbnailDataUrl: null, resolution: null, format: ext });
         return;
       }
 
@@ -192,8 +192,9 @@ const extractThumbnail = (file) => {
             canvas.height = img.height * scale;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const resolution = `${img.width}x${img.height}`;
             URL.revokeObjectURL(url);
-            safeResolve(canvas.toDataURL('image/jpeg', 0.7));
+            safeResolve({ thumbnailDataUrl: canvas.toDataURL('image/jpeg', 0.7), resolution, format: ext });
           } catch (e) {
             URL.revokeObjectURL(url);
             triggerFallback();
@@ -221,8 +222,9 @@ const extractThumbnail = (file) => {
             canvas.height = video.videoHeight * scale;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const resolution = `${video.videoWidth}x${video.videoHeight}`;
             URL.revokeObjectURL(url);
-            safeResolve(canvas.toDataURL('image/jpeg', 0.7));
+            safeResolve({ thumbnailDataUrl: canvas.toDataURL('image/jpeg', 0.7), resolution, format: ext });
           } catch (e) {
             URL.revokeObjectURL(url);
             triggerFallback();
@@ -269,17 +271,30 @@ const Upload = () => {
           
           let thumbnail = fileObj.thumbnailDataUrl;
           if (!thumbnail) {
-            thumbnail = await extractThumbnail(fileObj.rawFile);
+            const meta = await extractMetadataAndThumbnail(fileObj.rawFile);
+            thumbnail = meta.thumbnailDataUrl;
           }
+
+          const metadataObj = {
+            type: fileObj.rawFile.type || 'document',
+            resolution: fileObj.resolution || null,
+            format: fileObj.format || fileObj.name.split('.').pop().toLowerCase(),
+            original_creation_date: new Date(fileObj.rawFile.lastModified).toISOString(),
+            original_size: fileObj.rawFile.size
+          };
 
           const formData = new FormData();
           formData.append('encrypted_filename', fileObj.name);
-          formData.append('encrypted_metadata', JSON.stringify({ type: 'document' }));
+          formData.append('encrypted_metadata', JSON.stringify(metadataObj));
           formData.append('file_size', String(fileObj.rawFile.size));
           formData.append('integrity_hash', 'sha256-placeholder');
           formData.append('manifest', JSON.stringify({ shards: [] }));
           if (thumbnail) {
             formData.append('thumbnail', thumbnail);
+          }
+          const { currentFolderId } = useDashboardStore.getState();
+          if (currentFolderId) {
+            formData.append('folder_id', currentFolderId);
           }
           
           // Slice file into 10MB shards to bypass 50MB cloud limits and distribute load
@@ -372,17 +387,19 @@ const Upload = () => {
       status: 'pending',
       progress: 0,
       rawFile: file,
-      thumbnailDataUrl: null
+      thumbnailDataUrl: null,
+      resolution: null,
+      format: null
     }));
     
     setFiles(prev => [...prev, ...newFiles]);
 
     // Asynchronously generate thumbnails after UI updates
     newFiles.forEach(async (fileObj) => {
-      const thumbnailDataUrl = await extractThumbnail(fileObj.rawFile);
-      if (thumbnailDataUrl) {
+      const meta = await extractMetadataAndThumbnail(fileObj.rawFile);
+      if (meta) {
         setFiles(prev => prev.map(f => 
-          f.id === fileObj.id ? { ...f, thumbnailDataUrl } : f
+          f.id === fileObj.id ? { ...f, thumbnailDataUrl: meta.thumbnailDataUrl, resolution: meta.resolution, format: meta.format } : f
         ));
       }
     });

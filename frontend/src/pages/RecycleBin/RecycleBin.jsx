@@ -32,9 +32,17 @@ const getFileCategory = (filename) => {
   
   const videos = ['mp4', 'mov', 'webm', 'mkv', 'avi', 'wmv', 'flv', 'mts', 'm2ts', 'm4v', 'mpg', 'mpeg', '3gp'];
   const images = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'svg', 'gif', 'heic', 'heif', 'tiff', 'tif', 'raw', 'cr3', 'arw', 'bmp', 'ico'];
+  const audios = ['mp3', 'wav', 'flac', 'aac', 'ogg', 'm4a', 'wma'];
+  const pdfs = ['pdf'];
+  const texts = ['txt', 'rtf', 'md', 'csv'];
+  const docs = ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt', 'key', 'odt', 'ods', 'odp'];
   
   if (videos.includes(ext)) return 'video';
   if (images.includes(ext)) return 'image';
+  if (audios.includes(ext)) return 'audio';
+  if (pdfs.includes(ext)) return 'pdf';
+  if (texts.includes(ext)) return 'text';
+  if (docs.includes(ext)) return 'document';
   return 'other';
 };
 

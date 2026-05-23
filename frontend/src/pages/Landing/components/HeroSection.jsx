@@ -38,42 +38,43 @@ const HeroSection = () => {
       <div className="max-w-[1200px] mx-auto w-full px-6 grid lg:grid-cols-[55%_45%] gap-12 items-center flex-1">
         
         {/* LEFT COLUMN: Copy & CTA */}
-        <div className="max-w-xl">
-          <h1 className="text-[72px] leading-[1.05] mb-8 text-text-primary tracking-tight font-display">
+        <div className="max-w-xl text-center lg:text-left mx-auto lg:mx-0">
+          <h1 className="text-5xl sm:text-6xl lg:text-[72px] leading-[1.05] mb-8 text-text-primary tracking-tight font-display">
             <div className="overflow-hidden"><div className="hero-text-line">{t('hero', 'files')}</div></div>
             <div className="overflow-hidden"><div className="hero-text-line">{t('hero', 'encrypted')}</div></div>
             <div className="overflow-hidden"><div className="hero-text-line italic">{t('hero', 'untouchable')}</div></div>
           </h1>
           
-          <div className="overflow-hidden mb-10">
-            <p className="hero-text-line text-[18px] text-text-secondary leading-relaxed max-w-lg font-sans">
+          <div className="overflow-hidden mb-8 lg:mb-10">
+            <p className="hero-text-line text-base lg:text-[18px] text-text-secondary leading-relaxed max-w-lg font-sans mx-auto lg:mx-0">
               {t('hero', 'desc')}
             </p>
           </div>
           
-          <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6 overflow-hidden">
-            <div className="hero-text-line">
+          <div className="flex flex-col sm:flex-row justify-center lg:justify-start space-y-4 sm:space-y-0 sm:space-x-6 overflow-hidden">
+            <div className="hero-text-line w-full sm:w-auto">
               <Link to="/register" className="inline-flex items-center justify-center px-6 py-3 bg-accent border border-transparent text-void font-mono tracking-widest uppercase text-sm rounded-md hover:brightness-110 transition-all">
                 {t('hero', 'start')}
               </Link>
             </div>
-            <div className="hero-text-line">
+            <div className="hero-text-line w-full sm:w-auto">
               <a href="#architecture" className="inline-flex items-center justify-center px-6 py-3 bg-transparent border border-border text-text-secondary font-mono tracking-widest uppercase text-sm rounded-md hover:text-text-primary hover:border-border-active transition-all">
                 {t('hero', 'readArch')}
               </a>
             </div>
           </div>
           
-          <div className="overflow-hidden mt-6">
-            <p className="hero-text-line text-xs font-sans text-text-secondary opacity-80 tracking-wider">
+          <div className="overflow-hidden mt-8 lg:mt-6">
+            <p className="hero-text-line text-[10px] sm:text-xs font-sans text-text-secondary opacity-80 tracking-wider">
               No passwords &middot; No keys on servers &middot; No trust required
             </p>
           </div>
         </div>
 
         {/* RIGHT COLUMN: macOS Product Mockup Scene */}
-        <div className="relative w-full h-[620px] flex items-center justify-center select-none" ref={vizRef}>
-          {/* Subtle Glow Background */}
+        <div className="relative w-full h-[400px] sm:h-[500px] lg:h-[620px] flex items-center justify-center select-none overflow-hidden sm:overflow-visible">
+          <div className="relative transform scale-[0.55] sm:scale-75 lg:scale-100 flex items-center justify-center mt-8 lg:mt-0">
+            {/* Subtle Glow Background */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[500px] bg-[#d97757]/4 rounded-full blur-[120px] pointer-events-none" />
 
           {/* Style Tag for Animations */}
@@ -273,8 +274,9 @@ const HeroSection = () => {
               </div>
             </div>
           </div>
+            </div>
+          </div>
         </div>
-      </div>
 
       {/* Marquee Ticker */}
       <div className="w-full border-t border-border py-4 overflow-hidden mt-12 bg-void z-10">

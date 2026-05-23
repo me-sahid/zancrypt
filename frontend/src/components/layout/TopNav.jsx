@@ -56,13 +56,13 @@ const TopNav = () => {
       {/* Mobile Drawer Hamburger Menu Button */}
       <button 
         onClick={() => setSidebarOpenMobile(!isSidebarOpenMobile)}
-        className="lg:hidden p-2 text-text-secondary hover:text-text-primary transition-colors hover:bg-surface-elevated rounded-xl mr-3 shrink-0"
+        className="lg:hidden p-2 -ml-2 sm:ml-0 text-text-secondary hover:text-text-primary transition-colors hover:bg-surface-elevated rounded-xl mr-2 sm:mr-3 shrink-0"
       >
         <Menu className="w-5 h-5" />
       </button>
 
       {/* Search Bar */}
-      <div className="flex-1 max-w-xl">
+      <div className="flex-1 max-w-[130px] sm:max-w-xs md:max-w-xl">
         <div className="relative group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary group-focus-within:text-primary-accent transition-colors" />
           <input
@@ -76,8 +76,8 @@ const TopNav = () => {
       </div>
 
       {/* Right Side Actions */}
-      <div className="flex items-center space-x-6">
-        <div className="hidden md:flex items-center px-3 py-1.5 rounded-full bg-status-success/5 border border-status-success/20">
+      <div className="flex items-center space-x-2 sm:space-x-4 md:space-x-6">
+        <div className="hidden lg:flex items-center px-3 py-1.5 rounded-full bg-status-success/5 border border-status-success/20">
           <Globe className="w-4 h-4 text-status-success mr-2" />
           <span className="text-xs font-medium text-status-success">System Healthy</span>
           <div className="ml-2 w-1.5 h-1.5 rounded-full bg-status-success animate-pulse" />
