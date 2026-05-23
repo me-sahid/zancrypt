@@ -1,4 +1,6 @@
 .counter {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 400;
   font-size: 16px;
   padding: 5px 10px;
   border-radius: 5px;

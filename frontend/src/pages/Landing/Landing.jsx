@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState, Suspense, lazy } from 'react';
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import HowItWorksSection from './components/HowItWorksSection';
-import PricingSection from './components/PricingSection';
 import FeaturesGrid from './components/FeaturesGrid';
 import EnterpriseSecurity from './components/EnterpriseSecurity';
 import CTASection from './components/CTASection';
@@ -64,9 +63,8 @@ const Landing = () => {
         <EnterpriseSecurity />
       </section>
 
-      {/* PRICING section */}
-      <PricingSection />
-
+      {/* PRICING section removed to separate page */}
+      
       {/* CTA section */}
       <CTASection />
 

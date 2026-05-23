@@ -20,9 +20,9 @@
   --color-primary-accent: var(--color-accent);
   --color-primary-bg: var(--color-void);
 
-  --font-display: 'Instrument Serif', 'Newsreader', Georgia, serif;
+  --font-display: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
 }
 
 /* Light Theme Overrides */
@@ -49,6 +49,52 @@ html.light {
 @layer base {
   body {
     @apply bg-void text-text-primary font-sans antialiased overflow-x-hidden;
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 400 !important;
+    font-size: 12px;
+  }
+
+  * {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 400 !important;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 600 !important;
+  }
+
+  h1 { font-size: 32px; font-weight: 700 !important; }
+  h2 { font-size: 28px; font-weight: 700 !important; }
+  h3 { font-size: 24px; font-weight: 600 !important; }
+  h4 { font-size: 20px; font-weight: 600 !important; }
+  h5 { font-size: 16px; font-weight: 600 !important; }
+  h6 { font-size: 14px; font-weight: 600 !important; }
+
+  p, span, a, button, input, textarea, select, label, div {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 400 !important;
+  }
+
+  button, [role="button"] {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 500 !important;
+  }
+
+  strong, b, .font-bold, .font-semibold, .font-extrabold {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 700 !important;
+  }
+
+  em, i, .italic {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-style: italic;
+    font-weight: 400 !important;
+  }
+
+  code, pre, .font-mono, .monospace {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
+    font-weight: 400 !important;
   }
 
   body::after {
@@ -96,6 +142,72 @@ html.light {
   .safari-hardware-accel {
     transform: translateZ(0);
     backface-visibility: hidden;
+  }
+
+  /* Inter font utilities */
+  .font-sans {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 400 !important;
+  }
+
+  .font-display {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 600 !important;
+  }
+
+  .font-serif {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 400 !important;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
+    font-weight: 400 !important;
+  }
+
+  .font-black {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 900 !important;
+  }
+
+  .font-bold {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 700 !important;
+  }
+
+  .font-extrabold {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 800 !important;
+  }
+
+  .font-semibold {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 600 !important;
+  }
+
+  .font-medium {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 500 !important;
+  }
+
+  .font-normal {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 400 !important;
+  }
+
+  .font-light {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 300 !important;
+  }
+
+  .font-extralight {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 200 !important;
+  }
+
+  .font-thin {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-weight: 100 !important;
   }
 }
 

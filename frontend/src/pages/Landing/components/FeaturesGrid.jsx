@@ -89,7 +89,7 @@ const FeaturesGrid = () => {
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Section Header */}
         <div className="text-center mb-24 animate-on-scroll">
-          <h2 className="text-4xl md:text-6xl font-display italic text-text-primary mb-6 tracking-tight">
+          <h2 className="text-4xl md:text-6xl font-semibold text-text-primary mb-6 tracking-tight">
             Uncompromising Infrastructure
           </h2>
           <p className="text-lg text-text-secondary max-w-2xl mx-auto font-sans leading-relaxed">
