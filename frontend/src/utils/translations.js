@@ -26,7 +26,20 @@ export const translations = {
       audit: "Immutable Audit Trail",
       settings: "Account Settings",
       support: "Support & Docs",
-      signOut: "Sign Out"
+      signOut: "Sign Out",
+      products: "Products",
+      solutions: "Solutions",
+      pricing: "Pricing",
+      resources: "Resources",
+      vaultProduct: "Private Vault",
+      vaultProductDesc: "End-to-end client-side encrypted secure file storage.",
+      multiCloudBackup: "Multi-Cloud Backup",
+      multiCloudBackupDesc: "Distribute shards across cloud backends.",
+      developerApi: "Developer API",
+      developerApiDesc: "Zero-knowledge encryption for your apps.",
+      documentation: "Documentation",
+      documentationDesc: "Developer guides and API references.",
+      architectureDesc: "Deep dive into Zancrypt's technology."
     }
   },
   ES: {

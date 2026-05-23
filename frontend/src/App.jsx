@@ -30,6 +30,7 @@ const SharedFile = lazy(() => import('./pages/Download/SharedFile'));
 const SharesPage = lazy(() => import('./pages/Shares/Shares'));
 const RecycleBin = lazy(() => import('./pages/RecycleBin/RecycleBin'));
 const PublicInfoPage = lazy(() => import('./pages/Static/PublicInfoPage'));
+const Pricing = lazy(() => import('./pages/Pricing/Pricing'));
 
 // Loading Placeholder
 const PageLoader = () => (
@@ -58,6 +59,7 @@ function App() {
           <Route path="/share/:token" element={<SharedFile />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/pricing" element={<Pricing />} />
 
           {/* Static Info Pages */}
           {Object.entries(pageContent).map(([key, content]) => (
