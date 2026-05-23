@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Share2, Copy, Check, Clock, Download, 
-  Tag, AlertTriangle, QrCode
+  Tag, AlertTriangle, QrCode, Lock
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import api from '../services/api';
@@ -42,6 +42,39 @@ const ShareModal = ({ file, onClose }) => {
   const [customSharingIp, setCustomSharingIp] = useState(() => localStorage.getItem('zancrypt_sharing_ip') || '192.168.30.73');
   const [isEditingIp, setIsEditingIp] = useState(false);
   const [ipInput, setIpInput] = useState(customSharingIp);
+
+  useEffect(() => {
+    // Automatically fetch server's local network IP to make sharing seamless on localhost
+    api.get('/admin/network-ip').then(res => {
+      if (res.data && res.data.ip && res.data.ip !== '127.0.0.1') {
+        const storedIp = localStorage.getItem('zancrypt_sharing_ip');
+        // Only update if stored IP is empty or if it matches default fallback to avoid overwriting user's manually set IP
+        if (!storedIp || storedIp === '192.168.30.73' || storedIp.startsWith('172.')) {
+          setCustomSharingIp(res.data.ip);
+          setIpInput(res.data.ip);
+          localStorage.setItem('zancrypt_sharing_ip', res.data.ip);
+        }
+      }
+    }).catch(() => {});
+  }, []);
+
+  const handleSaveIp = () => {
+    setCustomSharingIp(ipInput);
+    localStorage.setItem('zancrypt_sharing_ip', ipInput);
+    setIsEditingIp(false);
+  };
+
+  const [enablePassword, setEnablePassword] = useState(false);
+  const [password, setPassword] = useState('');
+
+  const generateRandomPassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setPassword(result);
+  };
 
   const [shareToken, setShareToken] = useState('');
   const [multiTokens, setMultiTokens] = useState([]);
@@ -100,7 +133,8 @@ const ShareModal = ({ file, onClose }) => {
             ttl_hours: finalTtl,
             max_downloads: finalMaxDownloads,
             label: label.trim() ? `${label.trim()} (${item.encrypted_filename || 'asset'})` : undefined,
-            allow_downloads: allowDownloads
+            allow_downloads: allowDownloads,
+            password: enablePassword ? password : undefined
           });
           tokens.push(res.data.share_token);
           keys.push(derivedKey);
@@ -113,7 +147,8 @@ const ShareModal = ({ file, onClose }) => {
           ttl_hours: finalTtl,
           max_downloads: finalMaxDownloads,
           label: label.trim() || undefined,
-          allow_downloads: allowDownloads
+          allow_downloads: allowDownloads,
+          password: enablePassword ? password : undefined
         });
         setShareToken(res.data.share_token);
         toast.success('Zero-Knowledge share link created!');
@@ -238,10 +273,39 @@ const ShareModal = ({ file, onClose }) => {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between py-3 border-y border-border">
+                <div className="flex items-center justify-between py-3 border-t border-border">
                   <div className="text-xs font-mono text-text-muted uppercase tracking-widest">Allow Downloads</div>
                   <input type="checkbox" checked={allowDownloads} onChange={(e) => setAllowDownloads(e.target.checked)} className="accent-accent" />
                 </div>
+
+                <div className="flex items-center justify-between py-3 border-y border-border">
+                  <div className="text-xs font-mono text-text-muted uppercase tracking-widest flex items-center">
+                    <Lock className="w-3 h-3 mr-2 text-accent" /> Password Protection
+                  </div>
+                  <input type="checkbox" checked={enablePassword} onChange={(e) => setEnablePassword(e.target.checked)} className="accent-accent" />
+                </div>
+
+                {enablePassword && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-mono text-text-muted uppercase tracking-widest">Share Password</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter password..."
+                        className="flex-1 bg-void border border-border focus:border-accent text-text-primary font-mono text-xs py-2 px-3 outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={generateRandomPassword}
+                        className="bg-surface-raised border border-border hover:border-accent px-3 py-2 text-xs font-mono text-text-secondary transition-colors"
+                      >
+                        Generate Random
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <Button type="submit" variant="primary" isLoading={isSubmitting} className="w-full">
                   Generate Secure Link
@@ -278,6 +342,28 @@ const ShareModal = ({ file, onClose }) => {
                       <QrCode className="w-4 h-4 mr-2 text-accent" /> Scan to Retrieve
                     </p>
                     <p>Use mobile device for secure retrieval.</p>
+                    {window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? (
+                      <div className="pt-2 mt-2 border-t border-border">
+                        <div className="flex items-center space-x-2 text-[10px]">
+                          <span>Network IP:</span>
+                          {isEditingIp ? (
+                            <div className="flex items-center space-x-2">
+                              <input 
+                                value={ipInput} 
+                                onChange={e => setIpInput(e.target.value)} 
+                                className="bg-surface border border-border px-1 py-0.5 text-text-primary outline-none w-28"
+                              />
+                              <button onClick={handleSaveIp} className="text-accent hover:underline">Save</button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center space-x-2">
+                              <span className="text-text-primary">{customSharingIp}</span>
+                              <button onClick={() => setIsEditingIp(true)} className="text-accent hover:underline">[Edit]</button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 

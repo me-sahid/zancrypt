@@ -5,6 +5,8 @@ import TopNav from './TopNav';
 import { motion, AnimatePresence } from 'framer-motion';
 import ContentSkeleton from './Skeletons';
 import { useDashboardStore } from '../../store/useDashboardStore';
+import { createPortal } from 'react-dom';
+import StorageManager from '../StorageManager';
 
 const DashboardLayout = ({ children }) => {
   const location = useLocation();
@@ -36,8 +38,7 @@ const DashboardLayout = ({ children }) => {
               key={location.pathname}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.15 }}
-              className="p-6 lg:p-10 max-w-[1600px] mx-auto w-full"
+              className="p-4 sm:p-6 lg:p-10 max-w-[1600px] mx-auto w-full"
             >
               <Suspense fallback={<ContentSkeleton />}>
                 {children || <Outlet />}
@@ -49,6 +50,9 @@ const DashboardLayout = ({ children }) => {
           <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-primary-accent/[0.03] rounded-full pointer-events-none" style={{ filter: 'blur(80px)', transform: 'translate(20%, -20%)', willChange: 'auto' }} />
         </main>
       </div>
+
+      {/* Render Storage Manager at the portal root to overlay everything */}
+      {createPortal(<StorageManager />, document.body)}
     </div>
   );
 };

@@ -46,6 +46,7 @@ const SharedFile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [errorStatus, setErrorStatus] = useState(200);
+  const [sharePassword, setSharePassword] = useState('');
   
   // File Details & Decrypted Binary State
   const [fileDetails, setFileDetails] = useState(null);
@@ -95,7 +96,9 @@ const SharedFile = () => {
           const detailsList = [];
           
           for (const t of tokenArray) {
-            const res = await api.get(`/api/share/${t}`);
+            const res = await api.get(`/api/share/${t}`, {
+              headers: sharePassword ? { 'x-share-password': sharePassword } : {}
+            });
             detailsList.push(res.data);
           }
           
@@ -103,9 +106,15 @@ const SharedFile = () => {
             throw new Error('No valid shared tokens provided in multi-link.');
           }
           setFileDetails(detailsList);
+          setErrorStatus(200);
+          setErrorMsg('');
         } else {
-          const res = await api.get(`/api/share/${token}`);
+          const res = await api.get(`/api/share/${token}`, {
+            headers: sharePassword ? { 'x-share-password': sharePassword } : {}
+          });
           setFileDetails(res.data);
+          setErrorStatus(200);
+          setErrorMsg('');
         }
       } catch (error) {
         console.error('Validation error:', error);
@@ -119,7 +128,7 @@ const SharedFile = () => {
     };
     
     validateToken();
-  }, [token, tokensParam, isMultiShare]);
+  }, [token, tokensParam, isMultiShare, sharePassword]);
 
   // Extra security protections when downloads are disabled
   useEffect(() => {
@@ -173,15 +182,17 @@ const SharedFile = () => {
     
     const videos = ['mp4', 'mov', 'webm', 'mkv', 'avi', 'wmv', 'flv', 'mts', 'm2ts', 'm4v', 'mpg', 'mpeg', '3gp'];
     const images = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'svg', 'gif', 'heic', 'heif', 'tiff', 'tif', 'raw', 'cr3', 'arw', 'bmp', 'ico'];
+    const audios = ['mp3', 'wav', 'flac', 'aac', 'ogg', 'm4a', 'wma'];
     const pdfs = ['pdf'];
     const texts = ['txt', 'rtf', 'md', 'csv'];
-    const offices = ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt', 'key', 'odt', 'ods', 'odp'];
+    const docs = ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt', 'key', 'odt', 'ods', 'odp'];
     
     if (videos.includes(ext)) return 'video';
     if (images.includes(ext)) return 'image';
+    if (audios.includes(ext)) return 'audio';
     if (pdfs.includes(ext)) return 'pdf';
     if (texts.includes(ext)) return 'text';
-    if (offices.includes(ext)) return 'office';
+    if (docs.includes(ext)) return 'document';
     return 'other';
   };
 
@@ -717,6 +728,18 @@ const SharedFile = () => {
                     className="max-h-[60vh] rounded-xl object-contain relative z-10 transition-transform duration-500 hover:scale-102"
                   />
                 </div>
+              ) : activeFile.fileType === 'audio' ? (
+                // Audio player component
+                <div className="max-w-md w-full bg-[#0f1425] border border-white/5 p-8 rounded-3xl text-center space-y-6 shadow-2xl">
+                  <div className="w-16 h-16 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center mx-auto shadow-lg">
+                    <FileText className="w-8 h-8 text-fuchsia-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-slate-200 truncate">{activeFile.fileName}</h3>
+                    <p className="text-xs text-slate-500 font-mono mt-1 uppercase tracking-widest">Secure Audio Playback</p>
+                  </div>
+                  <audio src={activeFile.blobUrl} controls controlsList="nodownload" className="w-full" autoPlay />
+                </div>
               ) : activeFile.fileType === 'pdf' ? (
                 // PDF viewer component
                 <div className="w-full max-w-4xl h-[65vh] rounded-2xl overflow-hidden border border-white/5 bg-[#0a0c16] shadow-xl">
@@ -835,7 +858,7 @@ const SharedFile = () => {
       </header>
 
       {/* Main Validation Stage */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 relative z-10">
         
         <AnimatePresence mode="wait">
           {isLoading ? (
@@ -853,11 +876,42 @@ const SharedFile = () => {
                 <p className="text-xs text-slate-500 font-medium mt-1">Connecting to distributed secure node registries</p>
               </div>
             </motion.div>
+          ) : errorStatus === 401 ? (
+            <motion.div 
+              key="password-prompt"
+              className="max-w-md w-full bg-[#0c0f1d]/75 border border-white/[0.04] p-6 sm:p-8 rounded-3xl text-center space-y-6 shadow-2xl backdrop-blur-md relative overflow-hidden"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+            >
+              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
+              <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center mx-auto shadow-xl">
+                <Key className="w-8 h-8 text-blue-400" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg text-slate-100">Password Protected</h3>
+                <p className="text-xs text-slate-400 mt-2">
+                  This secure share link requires a password to decrypt its contents.
+                </p>
+                {errorMsg && <p className="text-xs text-rose-500 mt-2">{errorMsg}</p>}
+              </div>
+              <form onSubmit={(e) => { e.preventDefault(); setIsLoading(true); setSharePassword(e.target.password.value); }} className="space-y-4">
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Enter password..."
+                  className="w-full bg-[#070913] border border-white/10 focus:border-blue-500 text-slate-200 font-mono text-sm py-3 px-4 rounded-xl outline-none transition-colors"
+                />
+                <Button type="submit" variant="primary" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 py-3 rounded-xl font-bold text-sm">
+                  Unlock Access
+                </Button>
+              </form>
+            </motion.div>
           ) : errorMsg ? (
             // Validation Error Panel (e.g. Expired, Active limit reached, 404 mismatch)
             <motion.div 
               key="error"
-              className="max-w-md w-full bg-[#0f1425]/70 border border-rose-500/25 p-8 rounded-3xl text-center space-y-6 shadow-2xl backdrop-blur-md"
+              className="max-w-md w-full bg-[#0f1425]/70 border border-rose-500/25 p-6 sm:p-8 rounded-3xl text-center space-y-6 shadow-2xl backdrop-blur-md"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
@@ -885,7 +939,7 @@ const SharedFile = () => {
             // Metadata verified. Ready for AES decryption
             <motion.div 
               key="verified"
-              className="max-w-lg w-full bg-[#0c0f1d]/75 border border-white/[0.04] p-6 sm:p-8 rounded-3xl shadow-2xl text-center space-y-7 relative overflow-hidden backdrop-blur-md"
+              className="max-w-lg w-full bg-[#0c0f1d]/75 border border-white/[0.04] p-5 sm:p-8 rounded-3xl shadow-2xl text-center space-y-7 relative overflow-hidden backdrop-blur-md"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}

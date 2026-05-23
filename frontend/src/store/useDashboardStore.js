@@ -28,12 +28,21 @@ export const useDashboardStore = create((set) => ({
   ],
   
   files: [],
+  folders: [],
   searchQuery: "",
   isSidebarOpenMobile: false,
+  isStorageManagerOpen: false,
+  clipboard: { action: null, files: [] },
+  currentFolderId: null,
 
   // Actions
+  setClipboard: (action, files) => set({ clipboard: { action, files } }),
+  clearClipboard: () => set({ clipboard: { action: null, files: [] } }),
+  setCurrentFolderId: (id) => set({ currentFolderId: id }),
+  setFolders: (folders) => set({ folders }),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setSidebarOpenMobile: (open) => set({ isSidebarOpenMobile: open }),
+  setStorageManagerOpen: (open) => set({ isStorageManagerOpen: open }),
   setFiles: (files) => set({ files }),
   setNodes: (nodes) => set({ nodes }),
   updateMetrics: (newMetrics) => set((state) => ({ 

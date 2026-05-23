@@ -18,6 +18,7 @@ from app.api.deps import get_async_session, get_current_user
 from app.models.file import File
 from app.models.manifest import Manifest
 from app.models.share import Share
+from app.core.crypto import encrypt_symmetric, decrypt_symmetric
 
 logger = logging.getLogger(__name__)
 limiter = Limiter(key_func=get_remote_address)
@@ -31,6 +32,7 @@ class ShareCreateRequest(BaseModel):
     max_downloads: Optional[int] = None  # None or 0 = Unlimited
     label: Optional[str] = None
     allow_downloads: Optional[bool] = True
+    password: Optional[str] = None
 
 
 class ShareCreateResponse(BaseModel):
@@ -48,6 +50,7 @@ class ShareListItem(BaseModel):
     is_active: bool
     label: Optional[str] = None
     allow_downloads: bool
+    share_password: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -105,6 +108,7 @@ async def create_share(
         is_active=True,
         label=payload.label,
         allow_downloads=payload.allow_downloads if payload.allow_downloads is not None else True,
+        share_password=encrypt_symmetric(payload.password) if payload.password else None,
     )
     
     session.add(db_share)
@@ -142,9 +146,34 @@ async def list_shares(
             download_count=share.download_count,
             is_active=share.is_active,
             label=share.label,
-            allow_downloads=share.allow_downloads if getattr(share, "allow_downloads", None) is not None else True
+            allow_downloads=share.allow_downloads if getattr(share, "allow_downloads", None) is not None else True,
+            share_password=decrypt_symmetric(share.share_password) if getattr(share, "share_password", None) else None
         ))
     return response_items
+
+
+@router.delete("/history/clear", status_code=status.HTTP_200_OK)
+async def clear_share_history(
+    current_user=Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session)
+):
+    """
+    Hard-deletes all revoked or expired shares for the current user to clear their history.
+    """
+    from sqlalchemy import or_, and_, delete
+    now = datetime.now(timezone.utc)
+    
+    stmt = delete(Share).where(
+        Share.owner_user_id == current_user.id,
+        or_(
+            Share.is_active == False,
+            and_(Share.expires_at != None, Share.expires_at < now)
+        )
+    )
+    
+    await session.execute(stmt)
+    await session.commit()
+    return {"status": "history cleared"}
 
 
 @router.delete("/{token}", status_code=status.HTTP_200_OK)
@@ -173,9 +202,12 @@ async def revoke_share(
 
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 
+from fastapi import Request
+
 @router.get("/{token}", response_model=SharedFileResponse)
 async def get_shared_file(
     token: str,
+    request: Request,
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_async_session)
 ):
@@ -198,6 +230,20 @@ async def get_shared_file(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Share link not found"
         )
+
+    # Password Check
+    if getattr(db_share, "share_password", None):
+        provided_password = request.headers.get("x-share-password")
+        if not provided_password:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Password required"
+            )
+        if provided_password != decrypt_symmetric(db_share.share_password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect password"
+            )
 
     # Check active status
     if not db_share.is_active:
@@ -482,6 +528,7 @@ def get_python_mime_type(filename: str) -> str:
 @router.get("/w/{token}")
 async def download_public_wrapper(
     token: str,
+    request: Request,
     t: int = 3600,  # countdown timer in seconds, default 1 hour
     session: AsyncSession = Depends(get_async_session)
 ):
@@ -504,6 +551,20 @@ async def download_public_wrapper(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Share link not found"
         )
+
+    # Password Check
+    if getattr(db_share, "share_password", None):
+        provided_password = request.query_params.get("pwd") or request.headers.get("x-share-password")
+        if not provided_password:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Password required"
+            )
+        if provided_password != decrypt_symmetric(db_share.share_password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect password"
+            )
 
     if not db_share.is_active:
         raise HTTPException(

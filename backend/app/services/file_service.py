@@ -29,7 +29,7 @@ class FileService:
         self.router = StorageRouter()
 
     async def store_encrypted_upload(
-        self, user_id: int, encrypted_filename: str, encrypted_metadata: str, file_size: int, integrity_hash: str, manifest_payload: dict, shards: List[Tuple[str, bytes]], thumbnail: str = None
+        self, user_id: int, encrypted_filename: str, encrypted_metadata: str, file_size: int, integrity_hash: str, manifest_payload: dict, shards: List[Tuple[str, bytes]], thumbnail: str = None, folder_id: int = None
     ) -> int:
         
         # Verify node availability before accepting file
@@ -65,7 +65,8 @@ class FileService:
             encrypted_metadata=encrypted_metadata,
             file_size=file_size,
             integrity_hash=integrity_hash,
-            thumbnail=thumbnail
+            thumbnail=thumbnail,
+            folder_id=folder_id
         )
 
         shard_assignments = []
@@ -291,8 +292,14 @@ class FileService:
         await self.session.commit()
         return file
 
-    async def list_user_files(self, user_id: int) -> List[File]:
-        return await self.repo.list_files_for_user(user_id)
+    async def list_user_files(self, user_id: int, folder_id: int = None) -> List[File]:
+        query = select(File).where(File.owner_id == user_id, File.is_deleted == False)
+        if folder_id is not None:
+            query = query.where(File.folder_id == folder_id)
+        else:
+            query = query.where(File.folder_id.is_(None))
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
 
     async def get_manifest(self, file_id: int, user_id: int) -> dict:
         manifest = await self.manifest_repo.get_manifest_by_file(file_id)
@@ -311,3 +318,57 @@ class FileService:
             "replication_mapping": manifest.replication_mapping,
             "version_reference": manifest.version_reference,
         }
+
+    async def move_file(self, file_id: int, user_id: int, folder_id: int = None) -> File:
+        file = await self.repo.update_file_record(file_id, user_id, folder_id=folder_id)
+        if not file:
+            raise HTTPException(status_code=404, detail="File not found")
+        await self.session.commit()
+        return file
+
+    async def copy_file(self, file_id: int, user_id: int, folder_id: int = None) -> File:
+        # Copying duplicates the database records but points to the same underlying encrypted shards
+        file = await self.repo.get_owned_file(file_id, user_id)
+        if not file:
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        # 1. Duplicate File record
+        new_file = await self.repo.create_file_record(
+            owner_id=user_id,
+            encrypted_filename=file.encrypted_filename,
+            encrypted_metadata=file.encrypted_metadata,
+            file_size=file.file_size,
+            integrity_hash=file.integrity_hash,
+            thumbnail=file.thumbnail,
+            folder_id=folder_id
+        )
+
+        # 2. Duplicate Manifest
+        manifest = await self.manifest_repo.get_manifest_by_file(file_id)
+        if manifest:
+            await self.manifest_repo.create_manifest(
+                file_id=new_file.id,
+                manifest_payload=manifest.manifest_payload,
+                version_reference=manifest.version_reference,
+                replication_mapping=manifest.replication_mapping,
+                node_assignments=manifest.node_assignments
+            )
+
+        # 3. Duplicate ShardRegistry entries
+        shards_res = await self.session.execute(select(ShardRegistry).where(ShardRegistry.file_id == file_id))
+        shard_regs = shards_res.scalars().all()
+        for sr in shard_regs:
+            new_sr = ShardRegistry(
+                shard_id=sr.shard_id,
+                file_id=new_file.id,
+                node_id=sr.node_id,
+                shard_hash=sr.shard_hash,
+                provider=sr.provider,
+                replica_index=sr.replica_index,
+                status=sr.status,
+                shard_size=sr.shard_size
+            )
+            self.session.add(new_sr)
+            
+        await self.session.commit()
+        return new_file

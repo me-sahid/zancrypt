@@ -117,9 +117,9 @@ const Dashboard = () => {
   const liveNodesCount = nodes ? nodes.filter(n => n.health === 'Healthy').length : 0;
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-6 md:space-y-8 pb-10">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-4 md:pb-6">
         <div>
           <h1 className="font-mono text-2xl text-text-primary tracking-widest uppercase">
             Dashboard
@@ -129,7 +129,7 @@ const Dashboard = () => {
           </p>
         </div>
         
-        <Link to="/uploads" className="px-6 py-3 border border-accent text-accent font-mono text-xs uppercase tracking-widest hover:bg-accent/10 transition-colors">
+        <Link to="/uploads" className="px-6 py-3 w-full md:w-auto text-center border border-accent text-accent font-mono text-xs uppercase tracking-widest hover:bg-accent/10 transition-colors">
           [ Init Upload ]
         </Link>
       </div>

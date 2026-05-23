@@ -18,8 +18,10 @@ class File(Base, TimestampMixin):
     integrity_hash = Column(String(128), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
     thumbnail = Column(String, nullable=True)
+    folder_id = Column(Integer, ForeignKey("folders.id"), nullable=True, index=True)
 
     owner = relationship("User", back_populates="files")
     versions = relationship("FileVersion", back_populates="file", cascade="all, delete-orphan")
     manifest = relationship("Manifest", back_populates="file", uselist=False, cascade="all, delete-orphan")
     shards = relationship("ShardRegistry", back_populates="file", cascade="all, delete-orphan")
+    folder = relationship("Folder", back_populates="files")

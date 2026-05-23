@@ -20,6 +20,7 @@ async def upload_file(
     integrity_hash: str = Form(...),
     manifest: str = Form(...),  # JSON string
     thumbnail: str = Form(None),
+    folder_id: int = Form(None),
     shards: List[UploadFile] = File(...),
     current_user=Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
@@ -42,7 +43,8 @@ async def upload_file(
         integrity_hash=integrity_hash,
         manifest_payload=manifest_payload,
         shards=shard_data,
-        thumbnail=thumbnail
+        thumbnail=thumbnail,
+        folder_id=folder_id
     )
     return {"file_id": str(file_id)}
 
@@ -78,8 +80,8 @@ async def purge_file(file_id: int, current_user=Depends(get_current_user), sessi
     await FileService(session).purge_file(file_id, current_user.id)
 
 @router.get("/list", response_model=List[FileMetadataResponse])
-async def list_files(current_user=Depends(get_current_user), session: AsyncSession = Depends(get_async_session)) -> List[FileMetadataResponse]:
-    return await FileService(session).list_user_files(current_user.id)
+async def list_files(folder_id: int = None, current_user=Depends(get_current_user), session: AsyncSession = Depends(get_async_session)) -> List[FileMetadataResponse]:
+    return await FileService(session).list_user_files(current_user.id, folder_id)
 
 @router.get("/{file_id}/manifest", response_model=FileManifestResponse)
 async def get_manifest(file_id: int, current_user=Depends(get_current_user), session: AsyncSession = Depends(get_async_session)) -> FileManifestResponse:
@@ -94,3 +96,25 @@ async def update_file(
 ):
     file = await FileService(session).rename_file(file_id, current_user.id, new_filename)
     return {"id": file.id, "encrypted_filename": file.encrypted_filename}
+
+@router.post("/{file_id}/copy")
+async def copy_file(
+    file_id: int,
+    folder_id: int = None,
+    current_user=Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session)
+):
+    service = FileService(session)
+    new_file = await service.copy_file(file_id, current_user.id, folder_id)
+    return {"status": "copied", "new_file_id": new_file.id}
+
+@router.post("/{file_id}/move")
+async def move_file(
+    file_id: int,
+    folder_id: int = None,
+    current_user=Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session)
+):
+    service = FileService(session)
+    file = await service.move_file(file_id, current_user.id, folder_id)
+    return {"status": "moved", "file_id": file.id}

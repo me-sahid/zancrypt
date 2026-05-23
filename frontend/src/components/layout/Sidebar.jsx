@@ -28,7 +28,7 @@ const menuItems = [
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { isSidebarOpenMobile, setSidebarOpenMobile, metrics, files } = useDashboardStore();
+  const { isSidebarOpenMobile, setSidebarOpenMobile, metrics, files, setStorageManagerOpen } = useDashboardStore();
   const [isMobileView, setIsMobileView] = useState(false);
 
   useEffect(() => {
@@ -120,9 +120,13 @@ const Sidebar = () => {
 
       {/* Storage Quota Block */}
       {(!isCollapsed || isMobileView) && (
-        <div className="px-6 py-6 border-t border-border">
-          <div className="flex items-center justify-between text-[11px] font-mono mb-2 uppercase tracking-widest text-text-muted">
+        <div 
+          onClick={() => setStorageManagerOpen(true)}
+          className="px-6 py-6 border-t border-border hover:bg-surface-raised cursor-pointer transition-colors group relative"
+        >
+          <div className="flex items-center justify-between text-[11px] font-mono mb-2 uppercase tracking-widest text-text-muted group-hover:text-text-primary transition-colors">
             <span>Storage Usage</span>
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity text-accent">Manage</span>
           </div>
           <div className="flex items-center justify-between font-mono text-xs mb-3">
             <span className="text-text-primary">
@@ -138,9 +142,9 @@ const Sidebar = () => {
               })()} / 5 GB
             </span>
           </div>
-          <div className="w-full h-1 bg-surface-raised rounded-none overflow-hidden">
+          <div className="w-full h-1 bg-surface-raised rounded-none overflow-hidden border border-white/5">
             <div 
-              className="h-full bg-accent transition-all duration-500"
+              className="h-full bg-accent transition-all duration-500 shadow-[0_0_10px_rgba(var(--color-accent),0.5)]"
               style={{ width: `${Math.min(100, Math.max(0.5, ((Math.max(metrics?.totalStorage || 0, (files || []).reduce((acc, f) => acc + (f.file_size || 0), 0))) / (5 * 1024 * 1024 * 1024)) * 100))}%` }}
             />
           </div>
