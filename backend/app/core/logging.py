@@ -3,7 +3,7 @@ import sys
 from datetime import datetime
 from typing import Any, Dict
 
-from pythonjsonlogger.jsonlogger import JsonFormatter
+from pythonjsonlogger import jsonlogger as jsonlogger
 from app.core.config import settings
 
 from fastapi import FastAPI
