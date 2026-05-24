@@ -109,17 +109,6 @@ const ShareHistory = () => {
 
   useEffect(() => {
     fetchShares();
-    // Fetch network IP automatically
-    api.get('/admin/network-ip').then(res => {
-      if (res.data && res.data.ip && res.data.ip !== '127.0.0.1') {
-        const storedIp = localStorage.getItem('zancrypt_sharing_ip');
-        if (!storedIp || storedIp === '192.168.30.73' || storedIp.startsWith('172.')) {
-          localStorage.setItem('zancrypt_sharing_ip', res.data.ip);
-          setCustomSharingIp(res.data.ip);
-          setIpInput(res.data.ip);
-        }
-      }
-    }).catch(() => {});
   }, []);
 
   const confirmRevoke = async () => {
@@ -140,25 +129,8 @@ const ShareHistory = () => {
   const [selectedShare, setSelectedShare] = useState(null);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
   
-  const [customSharingIp, setCustomSharingIp] = useState(() => localStorage.getItem('zancrypt_sharing_ip') || '192.168.30.73');
-  const [isEditingIp, setIsEditingIp] = useState(false);
-  const [ipInput, setIpInput] = useState(customSharingIp);
-
-  const handleSaveIp = () => {
-    setCustomSharingIp(ipInput);
-    localStorage.setItem('zancrypt_sharing_ip', ipInput);
-    setIsEditingIp(false);
-    // Force QR code to re-render by updating selectedShare reference slightly (hacky but works)
-    if (selectedShare) {
-      setSelectedShare({ ...selectedShare });
-    }
-  };
-
   const getBaseUrl = () => {
-    const origin = window.location.origin;
-    const hostname = window.location.hostname;
-    if (hostname !== 'localhost' && hostname !== '127.0.0.1') return origin;
-    return origin.replace('localhost', customSharingIp);
+    return "https://zancrypt.in";
   };
 
   useEffect(() => {
@@ -484,28 +456,7 @@ const ShareHistory = () => {
                     <QrCode className="w-3 h-3 mr-2" /> Scan to Retrieve
                   </div>
                   <p className="text-xs font-mono text-text-muted">Use mobile device for secure retrieval.</p>
-                  {window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? (
-                      <div className="pt-2 mt-2 border-t border-border">
-                        <div className="flex items-center space-x-2 text-[10px]">
-                          <span>Network IP:</span>
-                          {isEditingIp ? (
-                            <div className="flex items-center space-x-2">
-                              <input 
-                                value={ipInput} 
-                                onChange={e => setIpInput(e.target.value)} 
-                                className="bg-surface border border-border px-1 py-0.5 text-text-primary outline-none w-28"
-                              />
-                              <button onClick={handleSaveIp} className="text-accent hover:underline">Save</button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center space-x-2">
-                              <span className="text-text-primary">{customSharingIp}</span>
-                              <button onClick={() => setIsEditingIp(true)} className="text-accent hover:underline">[Edit]</button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ) : null}
+
                 </div>
               </div>
             </div>

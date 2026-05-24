@@ -29,7 +29,7 @@ app.add_middleware(
         "https://zancrypt-front.pages.dev",
         "http://localhost:5173",
         "http://localhost:80",
-    ],
+    ] + settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

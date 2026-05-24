@@ -39,30 +39,6 @@ const ShareModal = ({ file, onClose }) => {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
   const [isCopied, setIsCopied] = useState(false);
 
-  const [customSharingIp, setCustomSharingIp] = useState(() => localStorage.getItem('zancrypt_sharing_ip') || '192.168.30.73');
-  const [isEditingIp, setIsEditingIp] = useState(false);
-  const [ipInput, setIpInput] = useState(customSharingIp);
-
-  useEffect(() => {
-    // Automatically fetch server's local network IP to make sharing seamless on localhost
-    api.get('/admin/network-ip').then(res => {
-      if (res.data && res.data.ip && res.data.ip !== '127.0.0.1') {
-        const storedIp = localStorage.getItem('zancrypt_sharing_ip');
-        // Only update if stored IP is empty or if it matches default fallback to avoid overwriting user's manually set IP
-        if (!storedIp || storedIp === '192.168.30.73' || storedIp.startsWith('172.')) {
-          setCustomSharingIp(res.data.ip);
-          setIpInput(res.data.ip);
-          localStorage.setItem('zancrypt_sharing_ip', res.data.ip);
-        }
-      }
-    }).catch(() => {});
-  }, []);
-
-  const handleSaveIp = () => {
-    setCustomSharingIp(ipInput);
-    localStorage.setItem('zancrypt_sharing_ip', ipInput);
-    setIsEditingIp(false);
-  };
 
   const [enablePassword, setEnablePassword] = useState(false);
   const [password, setPassword] = useState('');
@@ -85,10 +61,7 @@ const ShareModal = ({ file, onClose }) => {
   const fileName = isMulti ? `${file.length} Secure Assets` : (file?.file_name || file?.encrypted_filename || file?.filename || 'decrypted_file');
 
   const getBaseUrl = () => {
-    const origin = window.location.origin;
-    const hostname = window.location.hostname;
-    if (hostname !== 'localhost' && hostname !== '127.0.0.1') return origin;
-    return origin.replace('localhost', customSharingIp);
+    return "https://zancrypt.in";
   };
 
   const [encryptionKey] = useState(() => {
@@ -342,28 +315,7 @@ const ShareModal = ({ file, onClose }) => {
                       <QrCode className="w-4 h-4 mr-2 text-accent" /> Scan to Retrieve
                     </p>
                     <p>Use mobile device for secure retrieval.</p>
-                    {window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? (
-                      <div className="pt-2 mt-2 border-t border-border">
-                        <div className="flex items-center space-x-2 text-[10px]">
-                          <span>Network IP:</span>
-                          {isEditingIp ? (
-                            <div className="flex items-center space-x-2">
-                              <input 
-                                value={ipInput} 
-                                onChange={e => setIpInput(e.target.value)} 
-                                className="bg-surface border border-border px-1 py-0.5 text-text-primary outline-none w-28"
-                              />
-                              <button onClick={handleSaveIp} className="text-accent hover:underline">Save</button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center space-x-2">
-                              <span className="text-text-primary">{customSharingIp}</span>
-                              <button onClick={() => setIsEditingIp(true)} className="text-accent hover:underline">[Edit]</button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ) : null}
+
                   </div>
                 </div>
 

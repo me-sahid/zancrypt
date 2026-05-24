@@ -7,7 +7,14 @@ export const authService = {
 };
 
 export const fileService = {
-  listFiles: (folderId) => api.get(`/files/list${folderId ? `?folder_id=${folderId}` : ''}`),
+  listFiles: (folderId, allFiles = false) => {
+    let url = '/files/list';
+    const params = new URLSearchParams();
+    if (folderId) params.append('folder_id', folderId);
+    if (allFiles) params.append('all_files', 'true');
+    if (params.toString()) url += `?${params.toString()}`;
+    return api.get(url);
+  },
   uploadFile: (formData, config = {}) => api.post('/files/upload', formData, config),
   downloadFile: (id) => api.get(`/files/download/${id}`), // Changed to default as we reassemble hex
   deleteFile: (id) => api.delete(`/files/${id}`),
@@ -27,7 +34,8 @@ export const folderService = {
   listFolders: (parentId) => api.get(`/api/folders${parentId ? `?parent_id=${parentId}` : ''}`),
   createFolder: (folderData) => api.post('/api/folders', folderData),
   updateFolder: (id, folderData) => api.put(`/api/folders/${id}`, folderData),
-  deleteFolder: (id) => api.delete(`/api/folders/${id}`)
+  deleteFolder: (id) => api.delete(`/api/folders/${id}`),
+  getFolderStats: (id) => api.get(`/api/folders/${id}/stats`),
 };
 
 export const adminService = {

@@ -12,11 +12,11 @@ const Footer = () => {
           
           {/* Column 1: Brand & Status */}
           <div className="col-span-2 md:col-span-2">
-            <Link to="/" className="flex items-center space-x-2 mb-6">
-              <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shadow-[0_0_15px_rgba(217,119,87,0.3)]">
-                <Lock className="w-5 h-5 text-white" />
+            <Link to="/" className="flex items-center space-x-2 mb-6 group">
+              <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shadow-[0_0_15px_rgba(79,255,176,0.3)] group-hover:scale-105 transition-all duration-300">
+                <Lock className="w-5 h-5 text-void" strokeWidth={2.5} />
               </div>
-              <span className="text-xl font-bold text-text-primary tracking-tight">
+              <span className="text-2xl font-bold text-text-primary tracking-tight">
                 Zan<span className="text-accent">crypt</span>
               </span>
             </Link>
@@ -29,10 +29,10 @@ const Footer = () => {
           <div>
             <h4 className="text-text-primary font-bold mb-4">Platform</h4>
             <ul className="space-y-3">
-              <li><Link to="/features" className="text-sm text-text-secondary hover:text-accent transition-colors">Features</Link></li>
+              <li><Link to="/features" className="text-sm text-text-secondary hover:text-accent transition-colors">Platform Features</Link></li>
               <li><Link to="/security-architecture" className="text-sm text-text-secondary hover:text-accent transition-colors">Security Architecture</Link></li>
               <li><Link to="/global-network" className="text-sm text-text-secondary hover:text-accent transition-colors">Global Network</Link></li>
-              <li><a href="#" className="text-sm text-text-secondary hover:text-accent transition-colors">Monitoring</a></li>
+              <li><Link to="/system-architecture" className="text-sm text-text-secondary hover:text-accent transition-colors">System Architecture</Link></li>
             </ul>
           </div>
 
@@ -40,10 +40,10 @@ const Footer = () => {
           <div>
             <h4 className="text-text-primary font-bold mb-4">Developers</h4>
             <ul className="space-y-3">
-              <li><Link to="/api" className="text-sm text-text-secondary hover:text-accent transition-colors">API Documentation</Link></li>
+              <li><Link to="/api" className="text-sm text-text-secondary hover:text-accent transition-colors">REST API Reference</Link></li>
               <li><Link to="/client-sdks" className="text-sm text-text-secondary hover:text-accent transition-colors">Client SDKs</Link></li>
-              <li><a href="https://www.instagram.com/zancrypt.inc?igsh=amZhOXJrbnM5bTdm" target="_blank" rel="noopener noreferrer" className="text-sm text-text-secondary hover:text-accent transition-colors">Instagram</a></li>
-              <li><Link to="/system-architecture" className="text-sm text-text-secondary hover:text-accent transition-colors">System Architecture</Link></li>
+              <li><a href="https://github.com/zancrypt" target="_blank" rel="noopener noreferrer" className="text-sm text-text-secondary hover:text-accent transition-colors">Open Source (GitHub)</a></li>
+              <li><Link to="/support-center" className="text-sm text-text-secondary hover:text-accent transition-colors">Support Center</Link></li>
             </ul>
           </div>
 
@@ -51,7 +51,7 @@ const Footer = () => {
           <div>
             <h4 className="text-text-primary font-bold mb-4">Company</h4>
             <ul className="space-y-3">
-              <li><Link to="/about-us" className="text-sm text-text-secondary hover:text-accent transition-colors">About Us</Link></li>
+              <li><Link to="/about-us" className="text-sm text-text-secondary hover:text-accent transition-colors">Mission & Vision</Link></li>
               <li><Link to="/careers" className="text-sm text-text-secondary hover:text-accent transition-colors">Careers</Link></li>
               <li><Link to="/privacy-policy" className="text-sm text-text-secondary hover:text-accent transition-colors">Privacy Policy</Link></li>
               <li><Link to="/terms-of-service" className="text-sm text-text-secondary hover:text-accent transition-colors">Terms of Service</Link></li>
@@ -62,10 +62,10 @@ const Footer = () => {
           <div>
             <h4 className="text-text-primary font-bold mb-4">Resources</h4>
             <ul className="space-y-3">
-              <li><Link to="/whitepaper" className="text-sm text-text-secondary hover:text-accent transition-colors">Whitepaper</Link></li>
+              <li><Link to="/whitepaper" className="text-sm text-text-secondary hover:text-accent transition-colors">Cryptographic Whitepaper</Link></li>
               <li><Link to="/changelog" className="text-sm text-text-secondary hover:text-accent transition-colors">Changelog</Link></li>
-              <li><Link to="/blog" className="text-sm text-text-secondary hover:text-accent transition-colors">Blog</Link></li>
-              <li><Link to="/support-center" className="text-sm text-text-secondary hover:text-accent transition-colors">Support Center</Link></li>
+              <li><Link to="/blog" className="text-sm text-text-secondary hover:text-accent transition-colors">Engineering Blog</Link></li>
+              <li><a href="https://discord.gg/zancrypt" target="_blank" rel="noopener noreferrer" className="text-sm text-text-secondary hover:text-accent transition-colors">Community Forum</a></li>
             </ul>
           </div>
         </div>
