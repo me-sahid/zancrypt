@@ -48,7 +48,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",        # local dev
         "http://localhost:3000",        # local dev alt
-        "https://acbb6f68.zancrypt-front.pages.dev/",   # cloudflare pages
+        "zancrypt-front.pages.dev"
     ],
     allow_credentials=True,
     allow_methods=["*"],
