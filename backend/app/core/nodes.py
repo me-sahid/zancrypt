@@ -15,7 +15,7 @@ DEFAULT_NODES = [
     {"node_name": "Singapore-Zeta", "region": "ap-southeast-1", "provider": "Oracle"},
 ]
 
-STORAGE_BASE_DIR = "/app/storage"
+STORAGE_BASE_DIR = os.environ.get("STORAGE_BASE_DIR", "/tmp/storage")
 
 async def initialize_nodes():
     """Seed the database with default nodes and create local storage directories."""

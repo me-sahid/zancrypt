@@ -1,10 +1,5 @@
-
-# pyrefly: ignore [missing-import]
 from fastapi import FastAPI
-
-# pyrefly: ignore [missing-import]
 from fastapi.middleware.cors import CORSMiddleware
-# pyrefly: ignore [missing-import]
 from slowapi.middleware import SlowAPIMiddleware
 
 from app.api.routers import auth, files, admin, health, share, notifications, dashboard, folders
@@ -27,7 +22,21 @@ app = FastAPI(
     description="Zero-knowledge distributed encrypted cloud storage platform.",
 )
 
+# CORS first — before everything
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://zancrypt-front.pages.dev",
+        "http://localhost:5173",
+        "http://localhost:80",
+    ] + settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 configure_structured_logging(app)
+
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -40,33 +49,27 @@ app.add_middleware(AuthMiddleware)
 from app.auth.middleware.audit import AuthAuditMiddleware
 app.add_middleware(AuthAuditMiddleware)
 app.add_middleware(StructuredLoggingMiddleware)
-
-# Apply security response headers to all responses
 app.middleware("http")(security_headers_middleware)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",        # local dev
-        "http://localhost:3000",        # local dev alt
-        "https://zancrypt.pages.dev",   # cloudflare pages
-        "https://zancrypt-front.pages.dev", # new cloudflare pages frontend url
-    ] + settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
 from app.auth.api.endpoints import router as enterprise_auth_router
 app.include_router(enterprise_auth_router, prefix="/auth", tags=["auth"])
 app.include_router(files.router, prefix="/files", tags=["files"])
 app.include_router(folders.router, prefix="/api/folders", tags=["folders"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"])
-app.include_router(health.router, prefix="/health", tags=["health"])
 app.include_router(share.router, prefix="/api/share", tags=["share"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
 app.include_router(prometheus_router)
 
 register_exception_handlers(app)
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
+@app.get("/", summary="Service root")
+async def root() -> dict[str, str]:
+    return {"status": "ok", "service": "Secure Distributed File Vault"}
 
 @app.on_event("startup")
 async def on_startup() -> None:
@@ -85,10 +88,5 @@ async def on_startup() -> None:
         await conn.execute(text("ALTER TABLE files ADD COLUMN IF NOT EXISTS thumbnail TEXT;"))
         await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS allow_downloads BOOLEAN DEFAULT TRUE;"))
         await conn.execute(text("ALTER TABLE files ADD COLUMN IF NOT EXISTS folder_id INTEGER REFERENCES folders(id);"))
-
     await initialize_nodes()
     instrument_app(app)
-
-@app.get("/", summary="Service root")
-async def root() -> dict[str, str]:
-    return {"status": "ok", "service": "Secure Distributed File Vault"}
