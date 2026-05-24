@@ -60,21 +60,22 @@ const formatSize = (bytes) => {
 };
 
 const StorageManager = () => {
-  const { files, isStorageManagerOpen, setStorageManagerOpen, setFiles } = useDashboardStore();
+  const { files: currentViewFiles, isStorageManagerOpen, setStorageManagerOpen, setFiles: setCurrentViewFiles } = useDashboardStore();
   const [expandedCategory, setExpandedCategory] = useState(null);
   const [isDeleting, setIsDeleting] = useState(null);
   const [isFetching, setIsFetching] = useState(false);
+  const [allFiles, setAllFiles] = useState([]);
 
   React.useEffect(() => {
-    if (isStorageManagerOpen && (!files || files.length === 0)) {
+    if (isStorageManagerOpen) {
       setIsFetching(true);
-      fileService.listFiles()
+      fileService.listFiles(null, true)
         .then(res => {
-          if (res?.data) setFiles(res.data);
+          if (res?.data) setAllFiles(res.data);
         })
         .finally(() => setIsFetching(false));
     }
-  }, [isStorageManagerOpen, files, setFiles]);
+  }, [isStorageManagerOpen]);
 
   const TOTAL_QUOTA = 5 * 1024 * 1024 * 1024; // 5 GB
 
@@ -90,7 +91,7 @@ const StorageManager = () => {
       unknown: { id: 'unknown', label: 'Other', size: 0, files: [] },
     };
 
-    (files || []).forEach(f => {
+    (allFiles || []).forEach(f => {
       const size = f.file_size || 0;
       used += size;
       const cat = getFileCategory(f.encrypted_filename || f.filename);
@@ -105,7 +106,7 @@ const StorageManager = () => {
       .sort((a, b) => b.size - a.size);
 
     return { totalUsed: used, categories: sortedCats };
-  }, [files]);
+  }, [allFiles]);
 
   if (!isStorageManagerOpen) return null;
 
@@ -114,8 +115,9 @@ const StorageManager = () => {
     setIsDeleting(fileId);
     try {
       await fileService.deleteFile(fileId);
-      // Optimistically update the store so UI feels instant
-      setFiles((files || []).filter(f => f.id !== fileId));
+      // Optimistically update the store and allFiles so UI feels instant
+      setAllFiles((prev) => prev.filter(f => f.id !== fileId));
+      setCurrentViewFiles((currentViewFiles || []).filter(f => f.id !== fileId));
       toast.success('File moved to Recycle Bin');
     } catch (err) {
       toast.error('Failed to delete file');

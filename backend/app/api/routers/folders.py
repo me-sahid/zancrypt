@@ -49,3 +49,13 @@ async def delete_folder(
     service = FolderService(session)
     await service.delete_folder(folder_id, current_user.id)
     await session.commit()
+
+@router.get("/{folder_id}/stats")
+async def get_folder_stats(
+    folder_id: int,
+    current_user=Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session)
+):
+    service = FolderService(session)
+    stats = await service.get_folder_stats(folder_id, current_user.id)
+    return stats

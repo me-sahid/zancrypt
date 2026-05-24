@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Info, Hash, Clock, HardDrive, FileType, Key, Shield, Activity } from 'lucide-react';
+import { Info, Hash, Clock, HardDrive, FileType, Key, Shield, Activity, Folder } from 'lucide-react';
 import Button from '../ui/Button';
+import { folderService } from '../../services/vaultServices';
 
 const formatBytes = (bytes) => {
   if (bytes === 0) return '0 Bytes';
@@ -14,13 +15,13 @@ const formatBytes = (bytes) => {
 const FileInfoModal = ({ file, decryptedName, onClose }) => {
   if (!file) return null;
 
-  const fileName = decryptedName || file.encrypted_filename || file.filename || file.name || 'Unknown File';
-  let extension = fileName.includes('.') ? fileName.split('.').pop().toUpperCase() : 'FILE';
+  const fileName = decryptedName || file.encrypted_filename || file.filename || file.name || file.encrypted_name || 'Unknown File';
+  let extension = file.isFolder ? 'FOLDER' : (fileName.includes('.') ? fileName.split('.').pop().toUpperCase() : 'FILE');
   let resolution = null;
   let originalCreationDate = null;
   let mimeType = null;
 
-  if (file.encrypted_metadata) {
+  if (!file.isFolder && file.encrypted_metadata) {
     try {
       const meta = JSON.parse(file.encrypted_metadata);
       if (meta.format) extension = meta.format.toUpperCase();
@@ -31,6 +32,22 @@ const FileInfoModal = ({ file, decryptedName, onClose }) => {
       // Ignore parse error
     }
   }
+
+  const [folderStats, setFolderStats] = useState(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
+
+  useEffect(() => {
+    if (file.isFolder) {
+      setIsLoadingStats(true);
+      folderService.getFolderStats(file.id)
+        .then(res => {
+          if (res?.data) {
+            setFolderStats(res.data);
+          }
+        })
+        .finally(() => setIsLoadingStats(false));
+    }
+  }, [file]);
   
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -62,20 +79,25 @@ const FileInfoModal = ({ file, decryptedName, onClose }) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* File Size */}
+            {/* Size */}
             <div className="bg-void border border-border p-3 space-y-1">
               <span className="flex items-center text-xs font-mono text-text-muted uppercase tracking-widest">
                 <HardDrive className="w-3 h-3 mr-2 text-accent" /> Size
               </span>
-              <p className="font-mono text-sm text-text-primary">{formatBytes(file.file_size)}</p>
+              <p className="font-mono text-sm text-text-primary">
+                {file.isFolder ? (isLoadingStats ? 'Calculating...' : formatBytes(folderStats?.size || 0)) : formatBytes(file.file_size)}
+              </p>
             </div>
 
-            {/* Type */}
+            {/* Type or Item Count */}
             <div className="bg-void border border-border p-3 space-y-1">
               <span className="flex items-center text-xs font-mono text-text-muted uppercase tracking-widest">
-                <FileType className="w-3 h-3 mr-2 text-accent" /> Format
+                {file.isFolder ? <Folder className="w-3 h-3 mr-2 text-accent" /> : <FileType className="w-3 h-3 mr-2 text-accent" />}
+                {file.isFolder ? 'Items' : 'Format'}
               </span>
-              <p className="font-mono text-sm text-text-primary">{extension} {mimeType && <span className="text-xs text-text-muted ml-2">({mimeType})</span>}</p>
+              <p className="font-mono text-sm text-text-primary">
+                {file.isFolder ? (isLoadingStats ? 'Counting...' : `${folderStats?.count || 0} Assets`) : `${extension} ${mimeType ? `(${mimeType})` : ''}`}
+              </p>
             </div>
 
             {/* Resolution */}
@@ -88,13 +110,16 @@ const FileInfoModal = ({ file, decryptedName, onClose }) => {
               </div>
             )}
 
-            {/* Upload Time */}
+            {/* Upload/Creation Time */}
             <div className="bg-void border border-border p-3 space-y-1 col-span-1 md:col-span-2">
               <span className="flex items-center text-xs font-mono text-text-muted uppercase tracking-widest">
-                <Clock className="w-3 h-3 mr-2 text-accent" /> Uploaded Time
+                <Clock className="w-3 h-3 mr-2 text-accent" /> {file.isFolder ? 'Created Time' : 'Uploaded Time'}
               </span>
               <p className="font-mono text-sm text-text-primary">
-                {file.upload_time ? new Date(file.upload_time).toLocaleString() : 'Unknown'}
+                {file.isFolder ? 
+                  (file.created_at ? new Date(file.created_at).toLocaleString() : 'Unknown') :
+                  (file.upload_time ? new Date(file.upload_time).toLocaleString() : 'Unknown')
+                }
               </p>
             </div>
 
@@ -111,14 +136,16 @@ const FileInfoModal = ({ file, decryptedName, onClose }) => {
             )}
 
             {/* Hash */}
-            <div className="bg-void border border-border p-3 space-y-1 col-span-1 md:col-span-2">
-              <span className="flex items-center text-xs font-mono text-text-muted uppercase tracking-widest">
-                <Hash className="w-3 h-3 mr-2 text-accent" /> Integrity Hash (SHA-256)
-              </span>
-              <p className="font-mono text-xs text-text-secondary break-all bg-surface-raised p-2 rounded mt-1 select-all">
-                {file.integrity_hash || 'N/A'}
-              </p>
-            </div>
+            {!file.isFolder && (
+              <div className="bg-void border border-border p-3 space-y-1 col-span-1 md:col-span-2">
+                <span className="flex items-center text-xs font-mono text-text-muted uppercase tracking-widest">
+                  <Hash className="w-3 h-3 mr-2 text-accent" /> Integrity Hash (SHA-256)
+                </span>
+                <p className="font-mono text-xs text-text-secondary break-all bg-surface-raised p-2 rounded mt-1 select-all">
+                  {file.integrity_hash || 'N/A'}
+                </p>
+              </div>
+            )}
 
             {/* Internal ID */}
             <div className="bg-void border border-border p-3 space-y-1 col-span-1 md:col-span-2">

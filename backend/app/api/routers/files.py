@@ -80,8 +80,13 @@ async def purge_file(file_id: int, current_user=Depends(get_current_user), sessi
     await FileService(session).purge_file(file_id, current_user.id)
 
 @router.get("/list", response_model=List[FileMetadataResponse])
-async def list_files(folder_id: int = None, current_user=Depends(get_current_user), session: AsyncSession = Depends(get_async_session)) -> List[FileMetadataResponse]:
-    return await FileService(session).list_user_files(current_user.id, folder_id)
+async def list_files(
+    folder_id: int = None, 
+    all_files: bool = False,
+    current_user=Depends(get_current_user), 
+    session: AsyncSession = Depends(get_async_session)
+) -> List[FileMetadataResponse]:
+    return await FileService(session).list_user_files(current_user.id, folder_id, all_files)
 
 @router.get("/{file_id}/manifest", response_model=FileManifestResponse)
 async def get_manifest(file_id: int, current_user=Depends(get_current_user), session: AsyncSession = Depends(get_async_session)) -> FileManifestResponse:

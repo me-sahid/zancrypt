@@ -75,3 +75,33 @@ class FolderService:
 
         await self.session.delete(folder)
         await self.session.flush()
+
+    async def get_folder_stats(self, folder_id: int, user_id: int) -> dict:
+        folder = await self.get_folder(folder_id, user_id)
+        if not folder:
+            raise HTTPException(status_code=404, detail="Folder not found")
+        
+        from app.models.file import File
+        from sqlalchemy import func
+        from sqlalchemy.orm import aliased
+
+        base_folder = select(Folder.id).where(Folder.id == folder_id, Folder.owner_id == user_id).cte(name="folder_tree", recursive=True)
+        alias_folder = aliased(Folder)
+        base_folder = base_folder.union_all(
+            select(alias_folder.id).where(alias_folder.parent_id == base_folder.c.id)
+        )
+
+        stats_query = select(
+            func.sum(File.file_size).label("total_size"),
+            func.count(File.id).label("total_count")
+        ).where(
+            File.folder_id.in_(select(base_folder.c.id)),
+            File.is_deleted == False
+        )
+
+        res = await self.session.execute(stats_query)
+        row = res.first()
+        return {
+            "size": row.total_size or 0,
+            "count": row.total_count or 0
+        }

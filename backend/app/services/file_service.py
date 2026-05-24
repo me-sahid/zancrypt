@@ -292,12 +292,13 @@ class FileService:
         await self.session.commit()
         return file
 
-    async def list_user_files(self, user_id: int, folder_id: int = None) -> List[File]:
+    async def list_user_files(self, user_id: int, folder_id: int = None, all_files: bool = False) -> List[File]:
         query = select(File).where(File.owner_id == user_id, File.is_deleted == False)
-        if folder_id is not None:
-            query = query.where(File.folder_id == folder_id)
-        else:
-            query = query.where(File.folder_id.is_(None))
+        if not all_files:
+            if folder_id is not None:
+                query = query.where(File.folder_id == folder_id)
+            else:
+                query = query.where(File.folder_id.is_(None))
         result = await self.session.execute(query)
         return list(result.scalars().all())
 

@@ -32,8 +32,8 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = Field("HS256", env="JWT_ALGORITHM")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
     REFRESH_TOKEN_EXPIRE_DAYS: int = Field(7, env="REFRESH_TOKEN_EXPIRE_DAYS")
-    DOMAIN: str = Field("localhost", env="DOMAIN")
-    RP_ID: str = Field("localhost", env="RP_ID")
+    DOMAIN: str = Field("zancrypt-front.pages.dev", env="DOMAIN")
+    RP_ID: str = Field("zancrypt-front.pages.dev", env="RP_ID")
     RP_NAME: str = Field("Zancrypt", env="RP_NAME")
 
     # Security

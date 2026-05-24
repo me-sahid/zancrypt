@@ -49,7 +49,8 @@ app.add_middleware(
         "http://localhost:5173",        # local dev
         "http://localhost:3000",        # local dev alt
         "https://zancrypt.pages.dev",   # cloudflare pages
-    ],
+        "https://zancrypt-front.pages.dev", # new cloudflare pages frontend url
+    ] + settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

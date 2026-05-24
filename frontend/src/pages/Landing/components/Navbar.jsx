@@ -127,16 +127,11 @@ const Navbar = () => {
 
         {/* ── Logo Section ── */}
         <Link to="/" className="flex items-center gap-2 group shrink-0" onClick={() => handleNavClick('#')}>
-          <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center shadow-[0_0_15px_rgba(79,255,176,0.3)] group-hover:scale-105 transition-all duration-300">
-            <svg className="w-6 h-6 text-void" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 16.5C13.5 16.5 16 15 16.5 13C17 11 16 8.5 13.5 8C11 7.5 9 9.5 8.5 11.5C8 13.5 9.5 16.5 12 16.5Z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M12 16.5C10.5 16.5 8 15 7.5 13C7 11 8 8.5 10.5 8C13 7.5 15 9.5 15.5 11.5C16 13.5 14.5 16.5 12 16.5Z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" fillOpacity="0.2"/>
-              <path d="M4 12C4 8.5 6.5 6.5 9 6.5C11.5 6.5 12 8 12 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M20 12C20 8.5 17.5 6.5 15 6.5C12.5 6.5 12 8 12 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
+          <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center shadow-[0_0_15px_rgba(79,255,176,0.3)] group-hover:scale-105 transition-all duration-300">
+            <Lock className="w-5 h-5 text-void" strokeWidth={2.5} />
           </div>
-          <span className="text-xl font-sans font-extrabold tracking-[0.1em] text-text-primary uppercase leading-none group-hover:text-accent transition-colors">
-            Zancrypt
+          <span className="text-2xl font-bold text-text-primary tracking-tight">
+            Zan<span className="text-accent">crypt</span>
           </span>
         </Link>
 
