@@ -40,9 +40,6 @@ class Settings(BaseSettings):
     RP_NAME: str = Field("Zancrypt", env="RP_NAME")
 
     RATE_LIMIT: str = Field("100/minute", env="RATE_LIMIT")
-    # plain string — we parse it ourselves below
-    model_config = {"extra": "ignore"}
-
     CORS_ORIGINS_STR: str = Field("", env="CORS_ORIGINS")
     TRUSTED_PROXIES: str = Field("127.0.0.1", env="TRUSTED_PROXIES")
     BCRYPT_ROUNDS: int = Field(12, env="BCRYPT_ROUNDS")
@@ -87,5 +84,6 @@ class Settings(BaseSettings):
         env_file = Path(__file__).resolve().parent.parent.parent / ".env"
         env_file_encoding = "utf-8"
         case_sensitive = True
+        extra = "ignore"  # ← only change
 
 settings = Settings()
