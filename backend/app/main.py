@@ -47,8 +47,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",        # local dev
-        "http://localhost:3000",        # local dev alt
-        "zancrypt-front.pages.dev"
+        "http://localhost:80",        # local dev alt
+        "https://zancrypt-front.pages.dev"
     ],
     allow_credentials=True,
     allow_methods=["*"],
