@@ -47,7 +47,11 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # allow all for now during testing
+    allow_origins=[
+        "https://zancrypt-front.pages.dev",   # ← add this
+        "http://localhost:5173",
+        "http://localhost:80",
+        ],  # allow all for now during testing
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
