@@ -43,17 +43,20 @@ app.add_middleware(StructuredLoggingMiddleware)
 
 # Apply security response headers to all responses
 app.middleware("http")(security_headers_middleware)
+app = FastAPI()
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",        # local dev
-        "http://localhost:80",        # local dev alt
-        "https://zancrypt-front.pages.dev"
-    ],
+    allow_origins=["*"],  # allow all for now during testing
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 from app.auth.api.endpoints import router as enterprise_auth_router
 app.include_router(enterprise_auth_router, prefix="/auth", tags=["auth"])
 app.include_router(files.router, prefix="/files", tags=["files"])
