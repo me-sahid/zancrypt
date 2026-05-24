@@ -41,6 +41,8 @@ class Settings(BaseSettings):
 
     RATE_LIMIT: str = Field("100/minute", env="RATE_LIMIT")
     # plain string — we parse it ourselves below
+    model_config = {"extra": "ignore"}
+
     CORS_ORIGINS_STR: str = Field("", env="CORS_ORIGINS")
     TRUSTED_PROXIES: str = Field("127.0.0.1", env="TRUSTED_PROXIES")
     BCRYPT_ROUNDS: int = Field(12, env="BCRYPT_ROUNDS")
