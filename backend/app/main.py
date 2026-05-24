@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.middleware import SlowAPIMiddleware
@@ -20,16 +21,13 @@ app = FastAPI(
     title="Secure Distributed File Vault",
     version="1.0.0",
     description="Zero-knowledge distributed encrypted cloud storage platform.",
+    redirect_slashes=False,
 )
 
-# CORS first — before everything
+# CORS — must be first middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://zancrypt-front.pages.dev",
-        "http://localhost:5173",
-        "http://localhost:80",
-    ] + settings.CORS_ORIGINS,
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
