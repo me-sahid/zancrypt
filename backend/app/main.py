@@ -53,16 +53,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+
 
 from app.auth.api.endpoints import router as enterprise_auth_router
 app.include_router(enterprise_auth_router, prefix="/auth", tags=["auth"])
 app.include_router(files.router, prefix="/files", tags=["files"])
 app.include_router(folders.router, prefix="/api/folders", tags=["folders"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"])
-app.include_router(health.router, prefix="/health", tags=["health"])
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 app.include_router(share.router, prefix="/api/share", tags=["share"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
