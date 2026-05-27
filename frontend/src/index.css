@@ -232,6 +232,18 @@ html.light {
   animation: shimmer-anim 1.5s infinite linear;
 }
 
+/* Light theme — use darker sweep so skeletons are visible on light bg */
+html.light .shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.04) 25%,
+    rgba(0, 0, 0, 0.09) 50%,
+    rgba(0, 0, 0, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-anim 1.5s infinite linear;
+}
+
 @keyframes shimmer-anim {
   0% {
     background-position: -200% 0;

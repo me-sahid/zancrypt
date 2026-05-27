@@ -127,16 +127,17 @@ const queryClient = new QueryClient({
   },
 });
 
-// Initialize authentication state from httpOnly cookie before rendering
-silentRefresh().finally(() => {
-  ReactDOM.createRoot(document.getElementById('root')).render(
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </QueryClientProvider>
-    </ErrorBoundary>
-  );
-});
+// Initialize authentication state from httpOnly cookie without blocking render
+// ProtectedRoute will handle the isInitializing spinner state natively
+silentRefresh();
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </QueryClientProvider>
+  </ErrorBoundary>
+);
 
