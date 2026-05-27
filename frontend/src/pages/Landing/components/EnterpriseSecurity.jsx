@@ -49,7 +49,7 @@ const EnterpriseSecurity = () => {
       className="py-32 px-8 bg-void border-y border-border/40 relative overflow-hidden"
     >
       {/* Subtle noise texture */}
-      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
+      <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none" />
 
       <div className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-16 items-center">
 

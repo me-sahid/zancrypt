@@ -90,7 +90,7 @@ const Security = () => {
                  <div className="pt-4 mt-4 border-t border-border">
                     <div className="aspect-video bg-void border border-border flex items-center justify-center relative overflow-hidden">
                        <Zap className="w-8 h-8 text-accent opacity-20" />
-                       <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay"></div>
+                       <div className="absolute inset-0 opacity-10 mix-blend-overlay"></div>
                        <div className="absolute inset-0 border border-accent/10 animate-pulse"></div>
                     </div>
                  </div>
