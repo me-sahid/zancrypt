@@ -33,7 +33,7 @@ async def login(
         key="refresh_token",
         value=tokens.refresh_token,
         httponly=True,
-        secure=True,
+        secure=False, # Must be False for local HTTP
         samesite="lax",  # cross-site cookies needed if frontend and backend domains differ slightly, but strict is safer if same domain. Using lax.
         max_age=7 * 24 * 60 * 60, # 7 days
     )
@@ -57,7 +57,7 @@ async def refresh_token(
         key="refresh_token",
         value=tokens.refresh_token,
         httponly=True,
-        secure=True,
+        secure=False, # Must be False for local HTTP
         samesite="lax",
         max_age=7 * 24 * 60 * 60, # 7 days
     )
@@ -81,7 +81,7 @@ async def logout(
     response.delete_cookie(
         key="refresh_token",
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="lax"
     )
 
