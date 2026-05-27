@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db import get_async_session
 from app.models.user import User
-from app.schemas.api_key import ApiKeyCreate, ApiKeyResponse
+from app.schemas.api_key import ApiKeyCreate, ApiKeyResponse, ApiKeyRules
 from app.repositories.api_key_repo import ApiKeyRepository
 from app.services.api_key_service import ApiKeyService
 from app.api.deps import get_current_user
@@ -67,3 +67,25 @@ async def revoke_api_key(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API Key not found")
         
     await repo.delete(key_id)
+
+@router.put("/{key_id}/rules", response_model=ApiKeyResponse)
+async def update_api_key_rules(
+    key_id: int,
+    rules: ApiKeyRules,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session)
+):
+    """Update dynamic rules for an API Key."""
+    repo = ApiKeyRepository(session)
+    key = await repo.get_by_id_and_user(key_id, current_user.id)
+    if not key:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API Key not found")
+        
+    # Serialize rules. Since datetime is not JSON serializable by default in asyncpg dict passing,
+    # we use model_dump(mode='json') to ensure datetimes are strings.
+    await repo.update_rules(key_id, rules.model_dump(mode='json'))
+    
+    updated_key = await repo.get_by_id_and_user(key_id, current_user.id)
+    resp = ApiKeyResponse.model_validate(updated_key)
+    resp.secret_key = ApiKeyService.decrypt_key(updated_key.encrypted_key)
+    return resp

@@ -128,6 +128,45 @@ async def get_current_user_from_api_key(
         if not is_valid:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="API Key application restriction failed. Missing or invalid origin headers.")
 
+    # Rules Enforcement (Expiration & Rate Limiting)
+    rules = api_key.rules or {}
+    
+    expires_at = rules.get("expires_at")
+    if expires_at:
+        from datetime import datetime
+        if isinstance(expires_at, str):
+            try:
+                # Handle basic iso format
+                expires_dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+                # If naive, make it UTC
+                if expires_dt.tzinfo is None:
+                    from datetime import timezone
+                    expires_dt = expires_dt.replace(tzinfo=timezone.utc)
+                
+                now = datetime.utcnow().replace(tzinfo=timezone.utc)
+                if now > expires_dt:
+                    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="API Key has expired")
+            except ValueError:
+                pass
+                
+    rate_limit_rpm = rules.get("rate_limit_rpm")
+    if rate_limit_rpm:
+        import redis.asyncio as redis
+        from app.core.config import settings
+        redis_client = redis.from_url(settings.REDIS_URL)
+        rl_key = f"ratelimit:apikey:{api_key.id}"
+        try:
+            current = await redis_client.incr(rl_key)
+            if current == 1:
+                await redis_client.expire(rl_key, 60)
+            if current > rate_limit_rpm:
+                raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="API Key rate limit exceeded")
+        finally:
+            await redis_client.aclose()
+            
+    # Inject api_key for downstream endpoint usage
+    request.state.api_key = api_key
+
     user_repo = UserRepository(session)
     user = await user_repo.get_by_id(api_key.user_id)
     

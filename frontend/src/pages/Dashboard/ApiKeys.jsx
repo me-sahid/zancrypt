@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Key, Eye, EyeOff, Copy, Trash2, ShieldAlert, CheckCircle2, Zap } from 'lucide-react';
+import { Plus, Key, Eye, EyeOff, Copy, Trash2, ShieldAlert, CheckCircle2, Zap, Sliders } from 'lucide-react';
 import { useAuthStore } from '../../store/useStore';
 import { apiKeysService } from '../../services/apiKeysService';
 import toast from 'react-hot-toast';
@@ -18,6 +18,12 @@ const ApiKeys = () => {
   const [androidSha, setAndroidSha] = useState('');
   const [revealedKeys, setRevealedKeys] = useState({});
   const [isCreating, setIsCreating] = useState(false);
+  const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
+  const [selectedKeyForRules, setSelectedKeyForRules] = useState(null);
+  const [ruleRateLimit, setRuleRateLimit] = useState('');
+  const [ruleMaxFileSize, setRuleMaxFileSize] = useState('');
+  const [ruleExpiresAt, setRuleExpiresAt] = useState('');
+  const [isUpdatingRules, setIsUpdatingRules] = useState(false);
 
   const fetchKeys = async () => {
     try {
@@ -61,6 +67,35 @@ const ApiKeys = () => {
       toast.error(error.response?.data?.detail || 'Failed to create API key');
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const openRulesModal = (key) => {
+    setSelectedKeyForRules(key);
+    const rules = key.rules || {};
+    setRuleRateLimit(rules.rate_limit_rpm || '');
+    setRuleMaxFileSize(rules.max_file_size_mb || '');
+    setRuleExpiresAt(rules.expires_at ? rules.expires_at.split('T')[0] : '');
+    setIsRulesModalOpen(true);
+  };
+
+  const handleUpdateRules = async (e) => {
+    e.preventDefault();
+    setIsUpdatingRules(true);
+    try {
+      const payload = {
+        rate_limit_rpm: ruleRateLimit ? parseInt(ruleRateLimit) : null,
+        max_file_size_mb: ruleMaxFileSize ? parseInt(ruleMaxFileSize) : null,
+        expires_at: ruleExpiresAt ? new Date(ruleExpiresAt).toISOString() : null,
+      };
+      const updated = await apiKeysService.updateRules(selectedKeyForRules.id, payload);
+      setKeys(keys.map(k => k.id === updated.id ? { ...k, rules: updated.rules } : k));
+      setIsRulesModalOpen(false);
+      toast.success('Rules updated successfully');
+    } catch (error) {
+      toast.error('Failed to update rules');
+    } finally {
+      setIsUpdatingRules(false);
     }
   };
 
@@ -213,6 +248,13 @@ const ApiKeys = () => {
                         </div>
                       </td>
                       <td className="p-4 text-right">
+                        <button 
+                          onClick={() => openRulesModal(key)}
+                          className="p-2 text-text-secondary hover:text-accent hover:bg-accent/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100 mr-2"
+                          title="Manage Rules"
+                        >
+                          <Sliders className="w-4 h-4" />
+                        </button>
                         <button 
                           onClick={() => handleRevokeKey(key.id)}
                           className="p-2 text-text-secondary hover:text-danger hover:bg-danger/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
@@ -370,6 +412,77 @@ const ApiKeys = () => {
                     className="px-5 py-2 bg-accent hover:opacity-90 disabled:opacity-50 text-void rounded-xl font-bold transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(79,255,176,0.3)]"
                   >
                     {isCreating ? 'Creating...' : 'Create Key'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Manage Rules Modal */}
+      <AnimatePresence>
+        {isRulesModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-void/80 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-surface border border-border p-6 rounded-2xl w-full max-w-md shadow-2xl"
+            >
+              <h3 className="text-xl font-bold text-text-primary mb-2">API Key Rules</h3>
+              <p className="text-text-secondary text-sm mb-6">Configure custom limits and expiration for <span className="text-accent font-medium">{selectedKeyForRules?.name}</span>. Leave blank for unlimited.</p>
+              
+              <form onSubmit={handleUpdateRules}>
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-text-primary mb-2">Rate Limit (Requests per Minute)</label>
+                  <input 
+                    type="number" 
+                    min="1"
+                    value={ruleRateLimit}
+                    onChange={(e) => setRuleRateLimit(e.target.value)}
+                    placeholder="e.g. 60"
+                    className="w-full bg-surface-raised border border-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-accent transition-colors placeholder:text-text-muted"
+                  />
+                </div>
+                
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-text-primary mb-2">Max Upload Size (MB)</label>
+                  <input 
+                    type="number" 
+                    min="1"
+                    value={ruleMaxFileSize}
+                    onChange={(e) => setRuleMaxFileSize(e.target.value)}
+                    placeholder="e.g. 50"
+                    className="w-full bg-surface-raised border border-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-accent transition-colors placeholder:text-text-muted"
+                  />
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-text-primary mb-2">Expiration Date (Optional)</label>
+                  <input 
+                    type="date" 
+                    value={ruleExpiresAt}
+                    onChange={(e) => setRuleExpiresAt(e.target.value)}
+                    className="w-full bg-surface-raised border border-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-accent transition-colors"
+                    style={{ colorScheme: 'dark' }}
+                  />
+                </div>
+                
+                <div className="flex justify-end gap-3">
+                  <button 
+                    type="button" 
+                    onClick={() => setIsRulesModalOpen(false)}
+                    className="px-4 py-2 text-text-secondary hover:text-text-primary transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    disabled={isUpdatingRules}
+                    className="px-5 py-2 bg-accent hover:opacity-90 disabled:opacity-50 text-void rounded-xl font-bold transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(79,255,176,0.3)]"
+                  >
+                    {isUpdatingRules ? 'Saving...' : 'Save Rules'}
                   </button>
                 </div>
               </form>

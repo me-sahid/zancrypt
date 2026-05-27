@@ -14,6 +14,7 @@ class ApiKey(Base):
     encrypted_key = Column(String(512), nullable=False)
     scopes = Column(JSON, default=list, nullable=False)
     app_restrictions = Column(JSON, default=dict, nullable=False)
+    rules = Column(JSON, default=dict, nullable=False)
     calls_made = Column(Integer, default=0, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     last_used_at = Column(DateTime, nullable=True)

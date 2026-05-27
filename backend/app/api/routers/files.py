@@ -1,7 +1,7 @@
 from typing import List
 import json
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status, Form, Security
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status, Form, Security, Request
 from fastapi.responses import StreamingResponse, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,6 +14,7 @@ router = APIRouter()
 
 @router.post("/upload", status_code=status.HTTP_201_CREATED)
 async def upload_file(
+    request: Request,
     encrypted_filename: str = Form(...),
     encrypted_metadata: str = Form(...),
     file_size: int = Form(...),
@@ -25,6 +26,16 @@ async def upload_file(
     current_user=Security(get_current_user_or_api_key, scopes=["storage"]),
     session: AsyncSession = Depends(get_async_session),
 ) -> dict[str, str]:
+    # Enforce API Key max_file_size_mb if present
+    api_key = getattr(request.state, 'api_key', None)
+    if api_key and api_key.rules:
+        max_size_mb = api_key.rules.get("max_file_size_mb")
+        if max_size_mb and file_size > (max_size_mb * 1024 * 1024):
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, 
+                detail=f"File size exceeds API Key limit of {max_size_mb}MB"
+            )
+
     try:
         manifest_payload = json.loads(manifest)
     except json.JSONDecodeError:
