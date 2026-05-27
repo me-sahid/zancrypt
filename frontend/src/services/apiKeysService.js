@@ -12,7 +12,11 @@ export const apiKeysService = {
   },
 
   revokeKey: async (id) => {
-    const response = await api.delete(`/api/keys/${id}`);
+    await api.delete(`/api/keys/${id}`);
+  },
+
+  updateRules: async (id, rules) => {
+    const response = await api.put(`/api/keys/${id}/rules`, rules);
     return response.data;
   }
 };

@@ -55,3 +55,13 @@ class ApiKeyRepository:
         )
         await self.session.execute(stmt)
         await self.session.commit()
+
+    async def update_rules(self, key_id: int, rules: dict) -> bool:
+        stmt = (
+            update(ApiKey)
+            .where(ApiKey.id == key_id)
+            .values(rules=rules)
+        )
+        result = await self.session.execute(stmt)
+        await self.session.commit()
+        return result.rowcount > 0
