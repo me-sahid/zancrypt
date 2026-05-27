@@ -100,30 +100,30 @@ api.interceptors.response.use(
  * are ignored so the user is NOT logged out on transient failures.
  */
 export async function silentRefresh() {
-  const { isAuthenticated, restoreToken, logout, setInitialized } = useAuthStore.getState();
+  const { isAuthenticated, restoreToken, setInitialized } = useAuthStore.getState();
+
+  // Not logged in — nothing to restore
   if (!isAuthenticated) {
-    // Not logged in — mark init done immediately
     setInitialized();
     return;
   }
+
   try {
     const { data } = await axios.post(
       `${import.meta.env.VITE_API_URL || ''}/auth/refresh`,
       {},
       { withCredentials: true }
     );
+    // Refresh succeeded — update token in localStorage and memory
     restoreToken(data.access_token);
-  } catch (err) {
-    // Only logout if the server explicitly rejected the refresh token (401/403).
-    // Network errors, timeouts, or 5xx failures should NOT log the user out —
-    // their persisted session may still be valid on the next attempt.
-    const status = err?.response?.status;
-    if (status === 401 || status === 403) {
-      logout(); // logout() sets isInitializing: false internally
-    }
+  } catch {
+    // Refresh failed (expired cookie, sleeping backend, network error, etc.)
+    // DO NOT logout here. The access token in localStorage may still be valid.
+    // If it is expired, the 401 interceptor will catch it on the next real API
+    // call and attempt another refresh — only logging out if that also fails.
+    // Calling logout() here was causing unnecessary redirect-to-login on page refresh.
   } finally {
-    // Always clear the initializing gate so ProtectedRoute can proceed.
-    // Safe to call multiple times — it's idempotent.
+    // Always unblock ProtectedRoute regardless of outcome
     setInitialized();
   }
 }
