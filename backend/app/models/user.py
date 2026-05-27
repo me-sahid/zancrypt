@@ -29,6 +29,11 @@ class User(Base, TimestampMixin):
     trust_score = Column(Integer, default=100, nullable=False)
     last_login = Column(DateTime, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
+    
+    # API Usage & Billing
+    api_credits = Column(BigInteger, default=0, nullable=False)
+    total_api_calls = Column(BigInteger, default=0, nullable=False)
 
     sessions = relationship("Session", back_populates="user")
     files = relationship("File", back_populates="owner")
+    api_keys = relationship("ApiKey", back_populates="user", cascade="all, delete-orphan")

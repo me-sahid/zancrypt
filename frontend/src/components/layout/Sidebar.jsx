@@ -10,7 +10,8 @@ import {
   ShieldCheck, 
   Settings,
   ChevronLeft,
-  Lock
+  Lock,
+  Key
 } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 import { useDashboardStore } from '../../store/useDashboardStore';
@@ -21,6 +22,7 @@ const menuItems = [
   { icon: Database, label: 'My Vault', path: '/vault' },
   { icon: UploadCloud, label: 'Add Files', path: '/uploads' },
   { icon: Share2, label: 'Shared Links', path: '/shares' },
+  { icon: Key, label: 'API Keys', path: '/dashboard/api-keys' },
   { icon: Trash2, label: 'Recycle Bin', path: '/bin' },
   { icon: ShieldCheck, label: 'Security', path: '/security' },
   { icon: Settings, label: 'Settings', path: '/settings' },
@@ -80,6 +82,7 @@ const Sidebar = () => {
           <NavLink
             key={item.path}
             to={item.path}
+            end={item.path === '/dashboard'}
             onClick={() => {
               if (isMobileView) setSidebarOpenMobile(false);
             }}

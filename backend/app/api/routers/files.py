@@ -1,11 +1,11 @@
 from typing import List
 import json
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status, Form
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status, Form, Security
 from fastapi.responses import StreamingResponse, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_async_session, get_current_user
+from app.api.deps import get_async_session, get_current_user, get_current_user_or_api_key
 from app.schemas.file import FileMetadataResponse, FileManifestResponse
 from app.services.file_service import FileService
 from app.storage.routing import StorageRouter
@@ -22,7 +22,7 @@ async def upload_file(
     thumbnail: str = Form(None),
     folder_id: int = Form(None),
     shards: List[UploadFile] = File(...),
-    current_user=Depends(get_current_user),
+    current_user=Security(get_current_user_or_api_key, scopes=["storage"]),
     session: AsyncSession = Depends(get_async_session),
 ) -> dict[str, str]:
     try:
@@ -51,7 +51,7 @@ async def upload_file(
 @router.get("/download/{file_id}")
 async def download_file(
     file_id: int, 
-    current_user=Depends(get_current_user), 
+    current_user=Security(get_current_user_or_api_key, scopes=["storage"]), 
     session: AsyncSession = Depends(get_async_session)
 ):
     shards = await FileService(session).download_file_shards(file_id, current_user.id)
@@ -63,40 +63,40 @@ async def download_file(
     ])
 
 @router.delete("/{file_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_file(file_id: int, current_user=Depends(get_current_user), session: AsyncSession = Depends(get_async_session)) -> None:
+async def delete_file(file_id: int, current_user=Security(get_current_user_or_api_key, scopes=["storage"]), session: AsyncSession = Depends(get_async_session)) -> None:
     await FileService(session).delete_file(file_id, current_user.id)
 
 @router.get("/bin", response_model=List[FileMetadataResponse])
-async def list_bin_files(current_user=Depends(get_current_user), session: AsyncSession = Depends(get_async_session)) -> List[FileMetadataResponse]:
+async def list_bin_files(current_user=Security(get_current_user_or_api_key, scopes=["storage"]), session: AsyncSession = Depends(get_async_session)) -> List[FileMetadataResponse]:
     return await FileService(session).list_deleted_files(current_user.id)
 
 @router.post("/{file_id}/restore", status_code=status.HTTP_200_OK)
-async def restore_file(file_id: int, current_user=Depends(get_current_user), session: AsyncSession = Depends(get_async_session)) -> dict[str, str]:
+async def restore_file(file_id: int, current_user=Security(get_current_user_or_api_key, scopes=["storage"]), session: AsyncSession = Depends(get_async_session)) -> dict[str, str]:
     await FileService(session).restore_file(file_id, current_user.id)
     return {"status": "restored"}
 
 @router.delete("/{file_id}/purge", status_code=status.HTTP_204_NO_CONTENT)
-async def purge_file(file_id: int, current_user=Depends(get_current_user), session: AsyncSession = Depends(get_async_session)) -> None:
+async def purge_file(file_id: int, current_user=Security(get_current_user_or_api_key, scopes=["storage"]), session: AsyncSession = Depends(get_async_session)) -> None:
     await FileService(session).purge_file(file_id, current_user.id)
 
 @router.get("/list", response_model=List[FileMetadataResponse])
 async def list_files(
     folder_id: int = None, 
     all_files: bool = False,
-    current_user=Depends(get_current_user), 
+    current_user=Security(get_current_user_or_api_key, scopes=["storage"]), 
     session: AsyncSession = Depends(get_async_session)
 ) -> List[FileMetadataResponse]:
     return await FileService(session).list_user_files(current_user.id, folder_id, all_files)
 
 @router.get("/{file_id}/manifest", response_model=FileManifestResponse)
-async def get_manifest(file_id: int, current_user=Depends(get_current_user), session: AsyncSession = Depends(get_async_session)) -> FileManifestResponse:
+async def get_manifest(file_id: int, current_user=Security(get_current_user_or_api_key, scopes=["storage"]), session: AsyncSession = Depends(get_async_session)) -> FileManifestResponse:
     return await FileService(session).get_manifest(file_id, current_user.id)
 
 @router.put("/{file_id}")
 async def update_file(
     file_id: int, 
     new_filename: str = Form(...),
-    current_user=Depends(get_current_user), 
+    current_user=Security(get_current_user_or_api_key, scopes=["storage"]), 
     session: AsyncSession = Depends(get_async_session)
 ):
     file = await FileService(session).rename_file(file_id, current_user.id, new_filename)
@@ -106,7 +106,7 @@ async def update_file(
 async def copy_file(
     file_id: int,
     folder_id: int = None,
-    current_user=Depends(get_current_user),
+    current_user=Security(get_current_user_or_api_key, scopes=["storage"]),
     session: AsyncSession = Depends(get_async_session)
 ):
     service = FileService(session)
@@ -117,7 +117,7 @@ async def copy_file(
 async def move_file(
     file_id: int,
     folder_id: int = None,
-    current_user=Depends(get_current_user),
+    current_user=Security(get_current_user_or_api_key, scopes=["storage"]),
     session: AsyncSession = Depends(get_async_session)
 ):
     service = FileService(session)

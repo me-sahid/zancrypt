@@ -1,8 +1,8 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_async_session, get_current_user
+from app.api.deps import get_async_session, get_current_user, get_current_user_or_api_key
 from app.schemas.folder import FolderCreate, FolderUpdate, FolderResponse
 from app.services.folder_service import FolderService
 
@@ -11,7 +11,7 @@ router = APIRouter()
 @router.post("/", response_model=FolderResponse, status_code=status.HTTP_201_CREATED)
 async def create_folder(
     folder_in: FolderCreate,
-    current_user=Depends(get_current_user),
+    current_user=Security(get_current_user_or_api_key, scopes=["storage"]),
     session: AsyncSession = Depends(get_async_session)
 ):
     service = FolderService(session)
@@ -22,7 +22,7 @@ async def create_folder(
 @router.get("/", response_model=List[FolderResponse])
 async def list_folders(
     parent_id: Optional[int] = None,
-    current_user=Depends(get_current_user),
+    current_user=Security(get_current_user_or_api_key, scopes=["storage"]),
     session: AsyncSession = Depends(get_async_session)
 ):
     service = FolderService(session)
@@ -32,7 +32,7 @@ async def list_folders(
 async def update_folder(
     folder_id: int,
     folder_in: FolderUpdate,
-    current_user=Depends(get_current_user),
+    current_user=Security(get_current_user_or_api_key, scopes=["storage"]),
     session: AsyncSession = Depends(get_async_session)
 ):
     service = FolderService(session)
@@ -43,7 +43,7 @@ async def update_folder(
 @router.delete("/{folder_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_folder(
     folder_id: int,
-    current_user=Depends(get_current_user),
+    current_user=Security(get_current_user_or_api_key, scopes=["storage"]),
     session: AsyncSession = Depends(get_async_session)
 ):
     service = FolderService(session)
@@ -53,7 +53,7 @@ async def delete_folder(
 @router.get("/{folder_id}/stats")
 async def get_folder_stats(
     folder_id: int,
-    current_user=Depends(get_current_user),
+    current_user=Security(get_current_user_or_api_key, scopes=["storage"]),
     session: AsyncSession = Depends(get_async_session)
 ):
     service = FolderService(session)
