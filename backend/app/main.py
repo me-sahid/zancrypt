@@ -1,8 +1,10 @@
+import os
+import json
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.middleware import SlowAPIMiddleware
 
-from app.api.routers import auth, files, admin, health, share, notifications, dashboard, folders, api_keys
+
 from app.core.config import settings
 from app.core.logging import configure_structured_logging
 from app.core.tracing import setup_tracing
@@ -20,16 +22,13 @@ app = FastAPI(
     title="Secure Distributed File Vault",
     version="1.0.0",
     description="Zero-knowledge distributed encrypted cloud storage platform.",
+    redirect_slashes=False,
 )
 
-# CORS first — before everything
+# CORS — must be first
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://zancrypt-front.pages.dev",
-        "http://localhost:5173",
-        "http://localhost:80",
-    ] + settings.CORS_ORIGINS,
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -51,7 +50,10 @@ app.add_middleware(AuthAuditMiddleware)
 app.add_middleware(StructuredLoggingMiddleware)
 app.middleware("http")(security_headers_middleware)
 
+# routers
 from app.auth.api.endpoints import router as enterprise_auth_router
+from app.api.routers import files, admin, share, notifications, dashboard, folders, api_keys
+
 app.include_router(enterprise_auth_router, prefix="/auth", tags=["auth"])
 app.include_router(files.router, prefix="/files", tags=["files"])
 app.include_router(folders.router, prefix="/api/folders", tags=["folders"])
@@ -65,11 +67,12 @@ app.include_router(prometheus_router)
 register_exception_handlers(app)
 
 @app.get("/health")
+@app.get("/health/")
 def health_check():
     return {"status": "ok"}
 
-@app.get("/", summary="Service root")
-async def root() -> dict[str, str]:
+@app.get("/")
+async def root():
     return {"status": "ok", "service": "Secure Distributed File Vault"}
 
 @app.on_event("startup")
