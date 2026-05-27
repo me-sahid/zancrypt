@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import DashboardLayout from './components/layout/DashboardLayout';
 import Landing from './pages/Landing/Landing';
 import Dashboard from './pages/Dashboard/Dashboard';
+const ApiKeys = lazy(() => import('./pages/Dashboard/ApiKeys'));
 import { NetworkProvider } from './providers/NetworkProvider';
 import OfflineScreen from './components/network/OfflineScreen';
 import DegradedBanner from './components/network/DegradedBanner';
@@ -73,6 +74,7 @@ function App() {
           {/* Protected Dashboard Routes - Single Shared Layout instance for instant page loads */}
           <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/api-keys" element={<ApiKeys />} />
             <Route path="/vault" element={<Files />} />
             <Route path="/bin" element={<RecycleBin />} />
             <Route path="/shares" element={<SharesPage />} />

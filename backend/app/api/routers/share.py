@@ -6,7 +6,7 @@ from uuid import UUID
 from urllib.parse import quote
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Security
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -14,7 +14,7 @@ from sqlalchemy.orm import selectinload
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from app.api.deps import get_async_session, get_current_user
+from app.api.deps import get_async_session, get_current_user, get_current_user_or_api_key
 from app.models.file import File
 from app.models.manifest import Manifest
 from app.models.share import Share
@@ -71,7 +71,7 @@ class SharedFileResponse(BaseModel):
 @router.post("/create", response_model=ShareCreateResponse, status_code=status.HTTP_201_CREATED)
 async def create_share(
     payload: ShareCreateRequest,
-    current_user=Depends(get_current_user),
+    current_user=Security(get_current_user_or_api_key, scopes=["share"]),
     session: AsyncSession = Depends(get_async_session)
 ):
     """
@@ -118,7 +118,7 @@ async def create_share(
 
 @router.get("/list", response_model=List[ShareListItem])
 async def list_shares(
-    current_user=Depends(get_current_user),
+    current_user=Security(get_current_user_or_api_key, scopes=["share"]),
     session: AsyncSession = Depends(get_async_session)
 ):
     """
@@ -154,7 +154,7 @@ async def list_shares(
 
 @router.delete("/history/clear", status_code=status.HTTP_200_OK)
 async def clear_share_history(
-    current_user=Depends(get_current_user),
+    current_user=Security(get_current_user_or_api_key, scopes=["share"]),
     session: AsyncSession = Depends(get_async_session)
 ):
     """
@@ -179,7 +179,7 @@ async def clear_share_history(
 @router.delete("/{token}", status_code=status.HTTP_200_OK)
 async def revoke_share(
     token: str,
-    current_user=Depends(get_current_user),
+    current_user=Security(get_current_user_or_api_key, scopes=["share"]),
     session: AsyncSession = Depends(get_async_session)
 ):
     """
@@ -360,7 +360,7 @@ class WrapperDestroyedRequest(BaseModel):
 async def generate_wrapper(
     payload: WrapperGenerateRequest,
     request: Request,
-    current_user = Depends(get_current_user),
+    current_user = Security(get_current_user_or_api_key, scopes=["share"]),
     session: AsyncSession = Depends(get_async_session)
 ):
     """

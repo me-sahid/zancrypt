@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_async_session, get_current_user
+from app.api.deps import get_async_session, get_current_user_or_api_key
 from app.models.file import File
 from app.models.node_registry import NodeRegistry
 from app.models.shard_registry import ShardRegistry
@@ -23,7 +23,7 @@ def _get_redis():
 
 @router.get("/stats")
 async def get_dashboard_stats(
-    current_user = Depends(get_current_user),
+    current_user = Depends(get_current_user_or_api_key),
     session: AsyncSession = Depends(get_async_session)
 ) -> dict:
     cache_key = f"dashboard_stats:{current_user.id}"
