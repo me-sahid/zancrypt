@@ -32,8 +32,10 @@ class WebAuthnService:
                 "pubKeyCredParams": [{"type": p.type, "alg": p.alg} for p in options.public_key.pub_key_cred_params],
                 "timeout": options.public_key.timeout,
                 "authenticatorSelection": {
-                    "userVerification": options.public_key.authenticator_selection.user_verification.value
-                } if options.public_key.authenticator_selection and options.public_key.authenticator_selection.user_verification else None,
+                    "authenticatorAttachment": "platform",
+                    "residentKey": "preferred",
+                    "userVerification": "preferred"
+                },
                 "attestation": options.public_key.attestation.value if hasattr(options.public_key.attestation, 'value') else options.public_key.attestation,
                 "excludeCredentials": []
             }
