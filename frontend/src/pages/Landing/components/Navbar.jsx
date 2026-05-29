@@ -16,7 +16,16 @@ import {
   LogOut,
   LayoutDashboard,
   Sun,
-  Moon
+  Moon,
+  Layers,
+  Users,
+  BarChart,
+  Plug,
+  Code,
+  Shield,
+  Briefcase,
+  Share2,
+  Newspaper
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../../store/useStore';
@@ -125,28 +134,27 @@ const Navbar = () => {
     }`}>
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between gap-6">
 
-        {/* ── Logo Section ── */}
-        <Link to="/" className="flex items-center gap-2 group shrink-0" onClick={() => handleNavClick('#')}>
-          <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center shadow-[0_0_15px_rgba(79,255,176,0.3)] group-hover:scale-105 transition-all duration-300">
-            <Lock className="w-5 h-5 text-void" strokeWidth={2.5} />
-          </div>
-          <span className="text-2xl font-bold text-text-primary tracking-tight">
-            Zan<span className="text-accent">crypt</span>
-          </span>
-        </Link>
+        {/* ── Left Unit: Logo + Menus ── */}
+        <div className="flex items-center gap-12">
+          {/* ── Logo Section ── */}
+          <Link to="/" className="flex items-center gap-2 group shrink-0" onClick={() => handleNavClick('#')}>
+            <span className="text-3xl font-bold text-text-primary tracking-tight">
+              Zancrypt
+            </span>
+          </Link>
 
-        {/* ── Desktop Centre Links (Premium Storj-style dropdown system) ── */}
-        <div className="hidden lg:flex items-center gap-7 flex-1 justify-center">
+          {/* ── Desktop Centre Links (Premium Storj-style dropdown system) ── */}
+          <div className="hidden lg:flex items-center gap-7">
 
-          {/* PRODUCTS DROPDOWN */}
+          {/* PRODUCT DROPDOWN */}
           <div 
             className="relative"
             onMouseEnter={() => handleMouseEnter('products')}
             onMouseLeave={handleMouseLeave}
           >
-            <button className="flex items-center gap-1 font-sans text-sm font-medium text-text-secondary hover:text-text-primary transition-colors py-2 cursor-pointer">
-              {t('nav', 'products')}
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === 'products' ? 'rotate-180 text-text-primary' : 'text-text-muted'}`} />
+            <button className="flex items-center gap-1 font-sans text-base font-medium text-text-secondary hover:text-text-primary transition-colors py-2 cursor-pointer">
+              Product
+              <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === 'products' ? 'rotate-180 text-text-primary' : 'text-text-muted'}`} />
             </button>
 
             <AnimatePresence>
@@ -156,88 +164,178 @@ const Navbar = () => {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 12, scale: 0.97 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-80 bg-surface border border-border shadow-2xl rounded-xl p-3 z-50 overflow-hidden backdrop-blur-xl"
+                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[600px] bg-surface border border-border shadow-2xl rounded-xl z-50 overflow-hidden backdrop-blur-xl"
                 >
-                  <div className="space-y-1.5">
-                    <Link 
-                      to="/vault" 
-                      onClick={() => { setActiveDropdown(null); }}
-                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group"
-                    >
-                      <div className="shrink-0 p-2 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <Lock className="w-5 h-5 text-accent" />
+                  <div className="p-3 grid grid-cols-2 gap-2">
+                    <Link to="/vault" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
+                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
+                        <Lock className="w-6 h-6 text-text-primary" />
                       </div>
-                      <div className="space-y-0.5">
-                        <p className="font-sans font-semibold text-sm text-text-primary group-hover:text-accent transition-colors">
-                          {t('nav', 'vaultProduct')}
+                      <div className="space-y-1">
+                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">
+                          Secure Vault
                         </p>
-                        <p className="font-sans text-xs text-text-secondary leading-normal">
-                          {t('nav', 'vaultProductDesc')}
+                        <p className="font-sans text-sm text-text-secondary leading-relaxed">
+                          Zero-knowledge encrypted personal storage
                         </p>
                       </div>
                     </Link>
+                    <Link to="/shares" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
+                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
+                        <Share2 className="w-6 h-6 text-text-primary" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">
+                          File Sharing
+                        </p>
+                        <p className="font-sans text-sm text-text-secondary leading-relaxed">
+                          Share files securely with expiring links
+                        </p>
+                      </div>
+                    </Link>
+                    <Link to="/nodes" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
+                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
+                        <Cloud className="w-6 h-6 text-text-primary" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">
+                          Multi-Cloud Nodes
+                        </p>
+                        <p className="font-sans text-sm text-text-secondary leading-relaxed">
+                          Distributed architecture across providers
+                        </p>
+                      </div>
+                    </Link>
+                    <Link to="/audit" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
+                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
+                        <FileText className="w-6 h-6 text-text-primary" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">
+                          Audit & Logs
+                        </p>
+                        <p className="font-sans text-sm text-text-secondary leading-relaxed">
+                          Comprehensive tracking of all access
+                        </p>
+                      </div>
+                    </Link>
+                    <Link to="/security" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
+                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
+                        <Key className="w-6 h-6 text-text-primary" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">
+                          Security & Encryption
+                        </p>
+                        <p className="font-sans text-sm text-text-secondary leading-relaxed">
+                          AES-256-GCM client-side encryption
+                        </p>
+                      </div>
+                    </Link>
+                    <Link to="/api" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
+                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
+                        <Code className="w-6 h-6 text-text-primary" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">
+                          Developer API
+                        </p>
+                        <p className="font-sans text-sm text-text-secondary leading-relaxed">
+                          Integrate with our secure network
+                        </p>
+                      </div>
+                    </Link>
+                  </div>
+                  <div className="bg-surface-raised/40 p-4 border-t border-border">
+                    <p className="text-base text-text-secondary font-sans ml-2">
+                      Interested? <a href="#" className="text-text-primary font-semibold hover:underline">Schedule a demo</a>
+                    </p>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* SOLUTIONS DROPDOWN */}
+          {/* COMPANY DROPDOWN */}
           <div 
             className="relative"
-            onMouseEnter={() => handleMouseEnter('solutions')}
+            onMouseEnter={() => handleMouseEnter('company')}
             onMouseLeave={handleMouseLeave}
           >
-            <button className="flex items-center gap-1 font-sans text-sm font-medium text-text-secondary hover:text-text-primary transition-colors py-2 cursor-pointer">
-              {t('nav', 'solutions')}
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === 'solutions' ? 'rotate-180 text-text-primary' : 'text-text-muted'}`} />
+            <button className="flex items-center gap-1 font-sans text-base font-medium text-text-secondary hover:text-text-primary transition-colors py-2 cursor-pointer">
+              Company
+              <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === 'company' ? 'rotate-180 text-text-primary' : 'text-text-muted'}`} />
             </button>
 
             <AnimatePresence>
-              {activeDropdown === 'solutions' && (
+              {activeDropdown === 'company' && (
                 <motion.div
                   initial={{ opacity: 0, y: 12, scale: 0.97 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 12, scale: 0.97 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-80 bg-surface border border-border shadow-2xl rounded-xl p-3 z-50 overflow-hidden backdrop-blur-xl"
+                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[600px] bg-surface border border-border shadow-2xl rounded-xl z-50 overflow-hidden backdrop-blur-xl"
                 >
-                  <div className="space-y-1.5">
-                    <a 
-                      href="#architecture" 
-                      onClick={(e) => { e.preventDefault(); handleNavClick('#architecture'); setActiveDropdown(null); }}
-                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group"
-                    >
-                      <div className="shrink-0 p-2 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <Cloud className="w-5 h-5 text-cyan-400" />
+                  <div className="p-3 grid grid-cols-2 gap-2">
+                    <a href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
+                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
+                        <Users className="w-6 h-6 text-text-primary" />
                       </div>
-                      <div className="space-y-0.5">
-                        <p className="font-sans font-semibold text-sm text-text-primary group-hover:text-accent transition-colors">
-                          {t('nav', 'multiCloudBackup')}
-                        </p>
-                        <p className="font-sans text-xs text-text-secondary leading-normal">
-                          {t('nav', 'multiCloudBackupDesc')}
-                        </p>
+                      <div className="space-y-1">
+                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">About Us</p>
+                        <p className="font-sans text-sm text-text-secondary leading-relaxed">Our mission and open-source team</p>
                       </div>
                     </a>
-
-                    <a 
-                      href="#security" 
-                      onClick={(e) => { e.preventDefault(); handleNavClick('#security'); setActiveDropdown(null); }}
-                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group"
-                    >
-                      <div className="shrink-0 p-2 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <Key className="w-5 h-5 text-orange-400" />
+                    <a href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
+                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
+                        <Briefcase className="w-6 h-6 text-text-primary" />
                       </div>
-                      <div className="space-y-0.5">
-                        <p className="font-sans font-semibold text-sm text-text-primary group-hover:text-accent transition-colors">
-                          {t('nav', 'developerApi')}
-                        </p>
-                        <p className="font-sans text-xs text-text-secondary leading-normal">
-                          {t('nav', 'developerApiDesc')}
-                        </p>
+                      <div className="space-y-1">
+                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">Careers</p>
+                        <p className="font-sans text-sm text-text-secondary leading-relaxed">Join our fully remote global team</p>
                       </div>
                     </a>
+                    <a href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
+                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
+                        <HelpCircle className="w-6 h-6 text-text-primary" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">Contact Support</p>
+                        <p className="font-sans text-sm text-text-secondary leading-relaxed">Get 24/7 help with your secure vault</p>
+                      </div>
+                    </a>
+                    <a href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
+                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
+                        <BarChart className="w-6 h-6 text-text-primary" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">System Status</p>
+                        <p className="font-sans text-sm text-text-secondary leading-relaxed">Real-time network and node uptime</p>
+                      </div>
+                    </a>
+                    <a href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
+                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
+                        <Newspaper className="w-6 h-6 text-text-primary" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">Blog & News</p>
+                        <p className="font-sans text-sm text-text-secondary leading-relaxed">Latest product updates and security news</p>
+                      </div>
+                    </a>
+                    <a href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
+                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
+                        <Shield className="w-6 h-6 text-text-primary" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">Trust Center</p>
+                        <p className="font-sans text-sm text-text-secondary leading-relaxed">Security policies and compliance docs</p>
+                      </div>
+                    </a>
+                  </div>
+                  <div className="bg-surface-raised/40 p-4 border-t border-border">
+                    <p className="text-base text-text-secondary font-sans ml-2">
+                      Partner with us? <a href="#" className="text-text-primary font-semibold hover:underline">Get in touch</a>
+                    </p>
                   </div>
                 </motion.div>
               )}
@@ -247,73 +345,12 @@ const Navbar = () => {
           {/* PRICING LINK */}
           <Link
             to="/pricing"
-            className="font-sans text-sm font-medium text-text-secondary hover:text-text-primary transition-colors py-2 cursor-pointer"
+            className="font-sans text-base font-medium text-text-secondary hover:text-text-primary transition-colors py-2 cursor-pointer"
           >
-            {t('nav', 'pricing')}
+            Pricing
           </Link>
 
-          {/* RESOURCES DROPDOWN */}
-          <div 
-            className="relative"
-            onMouseEnter={() => handleMouseEnter('resources')}
-            onMouseLeave={handleMouseLeave}
-          >
-            <button className="flex items-center gap-1 font-sans text-sm font-medium text-text-secondary hover:text-text-primary transition-colors py-2 cursor-pointer">
-              {t('nav', 'resources')}
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === 'resources' ? 'rotate-180 text-text-primary' : 'text-text-muted'}`} />
-            </button>
-
-            <AnimatePresence>
-              {activeDropdown === 'resources' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 12, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 12, scale: 0.97 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-80 bg-surface border border-border shadow-2xl rounded-xl p-3 z-50 overflow-hidden backdrop-blur-xl"
-                >
-                  <div className="space-y-1.5">
-                    <a 
-                      href="#architecture" 
-                      onClick={(e) => { e.preventDefault(); handleNavClick('#architecture'); setActiveDropdown(null); }}
-                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group"
-                    >
-                      <div className="shrink-0 p-2 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <FileText className="w-5 h-5 text-emerald-400" />
-                      </div>
-                      <div className="space-y-0.5">
-                        <p className="font-sans font-semibold text-sm text-text-primary group-hover:text-accent transition-colors">
-                          {t('nav', 'documentation')}
-                        </p>
-                        <p className="font-sans text-xs text-text-secondary leading-normal">
-                          {t('nav', 'documentationDesc')}
-                        </p>
-                      </div>
-                    </a>
-
-                    <a 
-                      href="#architecture" 
-                      onClick={(e) => { e.preventDefault(); handleNavClick('#architecture'); setActiveDropdown(null); }}
-                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group"
-                    >
-                      <div className="shrink-0 p-2 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <Cloud className="w-5 h-5 text-rose-400" />
-                      </div>
-                      <div className="space-y-0.5">
-                        <p className="font-sans font-semibold text-sm text-text-primary group-hover:text-accent transition-colors">
-                          {t('nav', 'architecture')}
-                        </p>
-                        <p className="font-sans text-xs text-text-secondary leading-normal">
-                          {t('nav', 'architectureDesc')}
-                        </p>
-                      </div>
-                    </a>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
-
         </div>
 
         {/* ── Desktop Right Controls ── */}
@@ -323,11 +360,11 @@ const Navbar = () => {
           <div className="relative" ref={langDropdownRef}>
             <button
               onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-              className="flex items-center gap-1.5 h-9 px-2.5 rounded-lg border border-border hover:border-border-active bg-surface-raised/40 hover:bg-surface-raised transition-all text-text-secondary hover:text-text-primary cursor-pointer"
+              className="flex items-center gap-1.5 h-10 px-3 rounded-lg border border-border hover:border-border-active bg-surface-raised/40 hover:bg-surface-raised transition-all text-text-secondary hover:text-text-primary cursor-pointer"
             >
-              <Globe className="w-3.5 h-3.5 shrink-0 text-text-secondary/80" />
-              <span className="font-sans text-xs font-semibold tracking-wider">{currentLanguage}</span>
-              <ChevronDown className={`w-3 h-3 text-text-muted transition-transform duration-150 ${isLangDropdownOpen ? 'rotate-180' : ''}`} />
+              <Globe className="w-4 h-4 shrink-0 text-text-secondary/80" />
+              <span className="font-sans text-sm font-semibold tracking-wider">{currentLanguage}</span>
+              <ChevronDown className={`w-3.5 h-3.5 text-text-muted transition-transform duration-150 ${isLangDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             <AnimatePresence>
@@ -343,7 +380,7 @@ const Navbar = () => {
                     <button
                       key={lang.code}
                       onClick={() => { setLanguage(lang.code); setIsLangDropdownOpen(false); }}
-                      className={`w-full text-left px-4 py-2 text-xs font-sans transition-colors cursor-pointer ${
+                      className={`w-full text-left px-4 py-2 text-sm font-sans transition-colors cursor-pointer ${
                         currentLanguage === lang.code
                           ? 'text-accent bg-accent/5 font-semibold'
                           : 'text-text-secondary hover:text-text-primary hover:bg-surface-raised'
@@ -362,7 +399,7 @@ const Navbar = () => {
           <button
             onClick={toggleTheme}
             title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="h-9 w-9 flex items-center justify-center rounded-lg border border-border hover:border-border-active bg-surface-raised/40 hover:bg-surface-raised text-text-secondary hover:text-accent transition-all cursor-pointer"
+            className="h-10 w-10 flex items-center justify-center rounded-lg border border-border hover:border-border-active bg-surface-raised/40 hover:bg-surface-raised text-text-secondary hover:text-accent transition-all cursor-pointer"
           >
             <motion.div
               key={theme}
@@ -370,7 +407,7 @@ const Navbar = () => {
               animate={{ rotate: 0,   opacity: 1, scale: 1 }}
               transition={{ duration: 0.2 }}
             >
-              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </motion.div>
           </button>
 
@@ -460,16 +497,16 @@ const Navbar = () => {
             <div className="flex items-center gap-3">
               <Link
                 to="/login"
-                className="font-sans text-xs font-semibold text-text-secondary hover:text-text-primary transition-colors py-1"
+                className="h-10 px-5 flex items-center border border-border hover:border-border-active bg-surface-raised/40 hover:bg-surface-raised text-text-primary font-sans text-sm font-semibold rounded-lg transition-all"
               >
-                {t('nav', 'signIn')}
+                Sign In
               </Link>
 
               <Link
                 to="/register"
-                className="h-9 px-4 flex items-center bg-accent hover:bg-accent/90 text-void font-sans text-xs font-semibold rounded-lg transition-all shadow-lg shadow-accent/20"
+                className="h-10 px-5 flex items-center bg-text-primary hover:bg-text-primary/90 text-surface font-sans text-sm font-semibold rounded-lg transition-all shadow-lg shadow-text-primary/20"
               >
-                {t('nav', 'startNow')}
+                Get Started
               </Link>
             </div>
           )}
@@ -496,13 +533,13 @@ const Navbar = () => {
           >
             <div className="flex flex-col gap-4">
 
-              {/* PRODUCTS ACCORDION */}
+              {/* PRODUCT ACCORDION */}
               <div className="border-b border-border/30 pb-3">
                 <button 
                   onClick={() => setMobileProductsOpen(!mobileProductsOpen)}
                   className="flex items-center justify-between w-full font-sans text-sm font-semibold text-text-primary py-1"
                 >
-                  <span>{t('nav', 'products')}</span>
+                  <span>Product</span>
                   <ChevronDown className={`w-4 h-4 text-text-secondary transition-transform duration-200 ${mobileProductsOpen ? 'rotate-180' : ''}`} />
                 </button>
                 <AnimatePresence>
@@ -514,21 +551,41 @@ const Navbar = () => {
                       className="overflow-hidden pl-3 mt-2 space-y-2"
                     >
                       <Link to="/vault" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <Lock className="w-4 h-4 text-accent" />
-                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">{t('nav', 'vaultProduct')}</span>
+                        <Lock className="w-4 h-4 text-text-secondary" />
+                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Secure Vault</span>
+                      </Link>
+                      <Link to="/shares" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
+                        <Share2 className="w-4 h-4 text-text-secondary" />
+                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">File Sharing</span>
+                      </Link>
+                      <Link to="/nodes" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
+                        <Cloud className="w-4 h-4 text-text-secondary" />
+                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Multi-Cloud Nodes</span>
+                      </Link>
+                      <Link to="/audit" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
+                        <FileText className="w-4 h-4 text-text-secondary" />
+                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Audit & Logs</span>
+                      </Link>
+                      <Link to="/security" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
+                        <Key className="w-4 h-4 text-text-secondary" />
+                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Security & Encryption</span>
+                      </Link>
+                      <Link to="/api" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
+                        <Code className="w-4 h-4 text-text-secondary" />
+                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Developer API</span>
                       </Link>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
 
-              {/* SOLUTIONS ACCORDION */}
+              {/* COMPANY ACCORDION */}
               <div className="border-b border-border/30 pb-3">
                 <button 
                   onClick={() => setMobileSolutionsOpen(!mobileSolutionsOpen)}
                   className="flex items-center justify-between w-full font-sans text-sm font-semibold text-text-primary py-1"
                 >
-                  <span>{t('nav', 'solutions')}</span>
+                  <span>Company</span>
                   <ChevronDown className={`w-4 h-4 text-text-secondary transition-transform duration-200 ${mobileSolutionsOpen ? 'rotate-180' : ''}`} />
                 </button>
                 <AnimatePresence>
@@ -539,13 +596,29 @@ const Navbar = () => {
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden pl-3 mt-2 space-y-2"
                     >
-                      <a href="#architecture" onClick={(e) => { e.preventDefault(); handleNavClick('#architecture'); setIsMobileMenuOpen(false); }} className="flex items-center gap-2 py-1 group">
-                        <Cloud className="w-4 h-4 text-cyan-400" />
-                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">{t('nav', 'multiCloudBackup')}</span>
+                      <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
+                        <Users className="w-4 h-4 text-text-secondary" />
+                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">About Us</span>
                       </a>
-                      <a href="#security" onClick={(e) => { e.preventDefault(); handleNavClick('#security'); setIsMobileMenuOpen(false); }} className="flex items-center gap-2 py-1 group">
-                        <Key className="w-4 h-4 text-orange-400" />
-                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">{t('nav', 'developerApi')}</span>
+                      <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
+                        <Briefcase className="w-4 h-4 text-text-secondary" />
+                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Careers</span>
+                      </a>
+                      <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
+                        <HelpCircle className="w-4 h-4 text-text-secondary" />
+                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Contact Support</span>
+                      </a>
+                      <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
+                        <BarChart className="w-4 h-4 text-text-secondary" />
+                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">System Status</span>
+                      </a>
+                      <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
+                        <Newspaper className="w-4 h-4 text-text-secondary" />
+                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Blog & News</span>
+                      </a>
+                      <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
+                        <Shield className="w-4 h-4 text-text-secondary" />
+                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Trust Center</span>
                       </a>
                     </motion.div>
                   )}
@@ -558,38 +631,8 @@ const Navbar = () => {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="font-sans text-sm font-semibold text-text-primary border-b border-border/30 pb-3 block py-1"
               >
-                {t('nav', 'pricing')}
+                Pricing
               </Link>
-
-              {/* RESOURCES ACCORDION */}
-              <div className="border-b border-border/30 pb-3">
-                <button 
-                  onClick={() => setMobileResourcesOpen(!mobileResourcesOpen)}
-                  className="flex items-center justify-between w-full font-sans text-sm font-semibold text-text-primary py-1"
-                >
-                  <span>{t('nav', 'resources')}</span>
-                  <ChevronDown className={`w-4 h-4 text-text-secondary transition-transform duration-200 ${mobileResourcesOpen ? 'rotate-180' : ''}`} />
-                </button>
-                <AnimatePresence>
-                  {mobileResourcesOpen && (
-                    <motion.div 
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden pl-3 mt-2 space-y-2"
-                    >
-                      <a href="#architecture" onClick={(e) => { e.preventDefault(); handleNavClick('#architecture'); setIsMobileMenuOpen(false); }} className="flex items-center gap-2 py-1 group">
-                        <FileText className="w-4 h-4 text-emerald-400" />
-                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">{t('nav', 'documentation')}</span>
-                      </a>
-                      <a href="#architecture" onClick={(e) => { e.preventDefault(); handleNavClick('#architecture'); setIsMobileMenuOpen(false); }} className="flex items-center gap-2 py-1 group">
-                        <Cloud className="w-4 h-4 text-rose-400" />
-                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">{t('nav', 'architecture')}</span>
-                      </a>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
 
               <div className="border-t border-border/30 pt-4" />
 
@@ -623,14 +666,14 @@ const Navbar = () => {
                     className="w-full py-2.5 border border-border text-text-primary font-sans text-xs font-semibold rounded-lg text-center hover:bg-surface-raised transition-all"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    {t('nav', 'signIn')}
+                    Sign In
                   </Link>
                   <Link
                     to="/register"
-                    className="w-full py-2.5 bg-accent text-void font-sans text-xs font-semibold rounded-lg text-center hover:bg-accent/90 transition-all"
+                    className="w-full py-2.5 bg-text-primary text-surface font-sans text-xs font-semibold rounded-lg text-center hover:bg-text-primary/90 transition-all"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    {t('nav', 'startNow')}
+                    Get Started
                   </Link>
                 </div>
               )}
