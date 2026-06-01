@@ -124,6 +124,11 @@ html.light body::after, html.light body::before {
   ::selection {
     @apply bg-accent/20 text-accent;
   }
+
+  /* Force RemixIcon font family against aggressive resets */
+  [class^="ri-"], [class*=" ri-"], .remixicon {
+    font-family: 'remixicon' !important;
+  }
 }
 
 @layer utilities {
