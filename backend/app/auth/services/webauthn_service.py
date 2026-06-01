@@ -12,7 +12,7 @@ ORIGIN = os.environ.get("WEBAUTHN_ORIGIN", "https://zancrypt.in")
 class WebAuthnService:
     def __init__(self):
         rp = PublicKeyCredentialRpEntity(id=RP_ID, name=RP_NAME)
-        self.server = Fido2Server(rp, expected_origins=[ORIGIN])
+        self.server = Fido2Server(rp, allowed_origins=[ORIGIN])
 
     def generate_registration_options(self, user_id: bytes, username: str, display_name: str):
         options, state = self.server.register_begin(

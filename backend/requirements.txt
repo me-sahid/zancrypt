@@ -54,4 +54,4 @@ celery
 apscheduler
 
 # Security
-fido2
+fido2==1.1.3
