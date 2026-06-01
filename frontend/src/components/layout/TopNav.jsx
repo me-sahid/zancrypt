@@ -52,7 +52,7 @@ const TopNav = () => {
   };
 
   return (
-    <header className="h-20 border-b border-border bg-surface-secondary/50 backdrop-blur-md sticky top-0 z-40 flex items-center justify-between px-4 sm:px-8">
+    <header className="h-20 border-b border-border bg-surface/80 backdrop-blur-md sticky top-0 z-40 flex items-center justify-between px-4 sm:px-8">
       {/* Mobile Drawer Hamburger Menu Button */}
       <button 
         onClick={() => setSidebarOpenMobile(!isSidebarOpenMobile)}
