@@ -3,11 +3,16 @@ from fido2.webauthn import PublicKeyCredentialRpEntity, AuthenticatorSelectionCr
 from fido2.utils import websafe_decode, websafe_encode
 from app.core.config import settings
 import json
+import os
+
+RP_ID = os.environ.get("WEBAUTHN_RP_ID", "zancrypt.in")
+RP_NAME = os.environ.get("WEBAUTHN_RP_NAME", "Zancrypt")
+ORIGIN = os.environ.get("WEBAUTHN_ORIGIN", "https://zancrypt.in")
 
 class WebAuthnService:
     def __init__(self):
-        rp = PublicKeyCredentialRpEntity(id=settings.RP_ID, name=settings.RP_NAME)
-        self.server = Fido2Server(rp)
+        rp = PublicKeyCredentialRpEntity(id=RP_ID, name=RP_NAME)
+        self.server = Fido2Server(rp, expected_origins=[ORIGIN])
 
     def generate_registration_options(self, user_id: bytes, username: str, display_name: str):
         options, state = self.server.register_begin(
@@ -19,7 +24,6 @@ class WebAuthnService:
             user_verification=UserVerificationRequirement.PREFERRED
         )
         
-        # Manual serialization for JSON compatibility
         serializable_options = {
             "publicKey": {
                 "rp": {"name": options.public_key.rp.name, "id": options.public_key.rp.id},
@@ -50,11 +54,9 @@ class WebAuthnService:
             AttestationObject
         )
         
-        # Parse components from decoded bytes
         client_data = CollectedClientData(websafe_decode(response_data["response"]["clientDataJSON"]))
         attestation_object = AttestationObject(websafe_decode(response_data["response"]["attestationObject"]))
         
-        # Wrap into response object
         response = AuthenticatorAttestationResponse(
             client_data=client_data,
             attestation_object=attestation_object
@@ -95,11 +97,9 @@ class WebAuthnService:
             AuthenticatorData
         )
         
-        # Parse components from decoded bytes
         client_data = CollectedClientData(websafe_decode(response_data["response"]["clientDataJSON"]))
         auth_data_parsed = AuthenticatorData(websafe_decode(response_data["response"]["authenticatorData"]))
         
-        # Wrap into response object
         response = AuthenticatorAssertionResponse(
             client_data=client_data,
             authenticator_data=auth_data_parsed,

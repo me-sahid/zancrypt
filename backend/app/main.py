@@ -79,6 +79,20 @@ def health_check():
 async def root():
     return {"status": "ok", "service": "Secure Distributed File Vault"}
 
+from fastapi.responses import JSONResponse
+
+@app.get("/.well-known/webauthn")
+async def webauthn_well_known():
+    return JSONResponse(
+        content={
+            "origins": [
+                "https://zancrypt.in",
+                "https://www.zancrypt.in"
+            ]
+        },
+        media_type="application/json"
+    )
+
 @app.on_event("startup")
 async def on_startup() -> None:
     from app.models.base import Base
