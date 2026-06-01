@@ -13,7 +13,7 @@ const DashboardLayout = ({ children }) => {
   const { isSidebarOpenMobile, setSidebarOpenMobile } = useDashboardStore();
 
   return (
-    <div className="flex h-screen bg-surface-primary text-text-primary overflow-hidden font-sans antialiased selection:bg-primary-accent/30 selection:text-primary-accent">
+    <div className="flex h-screen bg-void text-text-primary overflow-hidden font-sans antialiased selection:bg-primary-accent/30 selection:text-primary-accent">
       <Sidebar />
       
       {/* Mobile Sidebar Backdrop Overlay */}
@@ -46,8 +46,6 @@ const DashboardLayout = ({ children }) => {
             </motion.div>
           </AnimatePresence>
           
-          {/* Subtle static background accent — no costly blur animation */}
-          <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-primary-accent/[0.03] rounded-full pointer-events-none" style={{ filter: 'blur(80px)', transform: 'translate(20%, -20%)', willChange: 'auto' }} />
         </main>
       </div>
 

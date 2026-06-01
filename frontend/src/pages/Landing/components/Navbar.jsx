@@ -129,8 +129,8 @@ const Navbar = () => {
   return (
     <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
       isScrolled
-        ? 'py-3.5 bg-surface/90 backdrop-blur-xl border-b border-border shadow-lg'
-        : 'py-5 bg-surface/40 backdrop-blur-md border-b border-border/20'
+        ? `py-3.5 ${isDark ? 'bg-surface/90' : 'bg-surface'} backdrop-blur-xl border-b border-border shadow-lg`
+        : `py-5 ${isDark ? 'bg-surface/40' : 'bg-surface'} backdrop-blur-md border-b border-border/20`
     }`}>
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between gap-6">
 
