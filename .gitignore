@@ -126,3 +126,9 @@ Thumbs.db
 scratch_*.py
 seed_*.py
 
+.env
+.env.local
+.env.production
+.env.*
+backend/.env
+frontend/.env
