@@ -11,6 +11,9 @@ export const useAuthStore = create(
       // Only non-sensitive metadata is persisted to localStorage
       user: null,
       isAuthenticated: false,
+      // True while silentRefresh() is in-flight on page load.
+      // ProtectedRoute waits for this to be false before deciding to redirect.
+      isInitializing: true,
 
       // Getter — reads from localStorage
       get token() { return localStorage.getItem('zancrypt-auth'); },
@@ -21,12 +24,12 @@ export const useAuthStore = create(
         } else {
           localStorage.removeItem('zancrypt-auth');
         }
-        set({ user, isAuthenticated: true });
+        set({ user, isAuthenticated: true, isInitializing: false });
       },
 
       logout: () => {
         localStorage.removeItem('zancrypt-auth');
-        set({ user: null, isAuthenticated: false });
+        set({ user: null, isAuthenticated: false, isInitializing: false });
       },
 
       // Called on page-load after a successful /auth/refresh — restores the token
@@ -36,13 +39,17 @@ export const useAuthStore = create(
         } else {
           localStorage.removeItem('zancrypt-auth');
         }
-        set({ isAuthenticated: true });
+        set({ isAuthenticated: true, isInitializing: false });
       },
+
+      // Called when silentRefresh finishes (success or non-auth failure)
+      // so ProtectedRoute stops waiting.
+      setInitialized: () => set({ isInitializing: false }),
     }),
     {
       name: 'zancrypt-auth-state',
       storage: createJSONStorage(() => localStorage),
-      // Only persist non-sensitive fields — token is explicitly excluded
+      // Only persist non-sensitive fields — token and isInitializing are excluded
       partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
     }
   )

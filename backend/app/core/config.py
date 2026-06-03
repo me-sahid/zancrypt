@@ -41,6 +41,14 @@ class Settings(BaseSettings):
     RP_ID: str = Field("zancrypt.in", env="RP_ID")
     RP_NAME: str = Field("Zancrypt", env="RP_NAME")
 
+    from pydantic import model_validator
+    @model_validator(mode='after')
+    def set_dev_defaults(self):
+        if self.ENVIRONMENT != "production":
+            self.DOMAIN = "localhost"
+            self.RP_ID = "localhost"
+        return self
+
     RATE_LIMIT: str = Field("100/minute", env="RATE_LIMIT")
     CORS_ORIGINS_STR: str = Field("", env="CORS_ORIGINS")
     TRUSTED_PROXIES: str = Field("127.0.0.1", env="TRUSTED_PROXIES")

@@ -6,6 +6,7 @@ import App from './App';
 import { silentRefresh } from './services/api';
 import { useThemeStore } from './store/useThemeStore';
 import './index.css';
+import 'remixicon/fonts/remixicon.css';
 
 // Clear localStorage completely if both old/renamed auth keys exist simultaneously
 if (localStorage.getItem('zancrypt-auth') && localStorage.getItem('yuuvault-auth')) {
@@ -127,16 +128,17 @@ const queryClient = new QueryClient({
   },
 });
 
-// Initialize authentication state from httpOnly cookie before rendering
-silentRefresh().finally(() => {
-  ReactDOM.createRoot(document.getElementById('root')).render(
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </QueryClientProvider>
-    </ErrorBoundary>
-  );
-});
+// Initialize authentication state from httpOnly cookie without blocking render
+// ProtectedRoute will handle the isInitializing spinner state natively
+silentRefresh();
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </QueryClientProvider>
+  </ErrorBoundary>
+);
 

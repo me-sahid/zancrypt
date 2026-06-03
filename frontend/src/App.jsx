@@ -32,6 +32,7 @@ const SharesPage = lazy(() => import('./pages/Shares/Shares'));
 const RecycleBin = lazy(() => import('./pages/RecycleBin/RecycleBin'));
 const PublicInfoPage = lazy(() => import('./pages/Static/PublicInfoPage'));
 const Pricing = lazy(() => import('./pages/Pricing/Pricing'));
+const Architecture = lazy(() => import('./pages/Architecture/Architecture'));
 
 // Loading Placeholder
 const PageLoader = () => (
@@ -61,6 +62,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/architecture" element={<Architecture />} />
 
           {/* Static Info Pages */}
           {Object.entries(pageContent).map(([key, content]) => (

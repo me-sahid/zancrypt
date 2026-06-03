@@ -1,48 +1,56 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { AlertTriangle, Home, RotateCcw, ShieldAlert } from 'lucide-react';
-import Button from '../../components/ui/Button';
 
 const NotFound = () => {
   return (
-    <div className="min-h-screen bg-primary-bg flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-status-danger/5 blur-[120px] rounded-full" />
-      </div>
-
+    <div className="min-h-screen bg-void flex flex-col items-center justify-center p-6 relative overflow-hidden">
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="max-w-md w-full text-center relative z-10"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="max-w-4xl w-full text-center relative z-10 space-y-8 flex flex-col items-center"
       >
-        <div className="w-24 h-24 rounded-3xl bg-status-danger/10 border border-status-danger/20 flex items-center justify-center mx-auto mb-8 shadow-2xl">
-          <ShieldAlert className="w-12 h-12 text-status-danger" />
+        <div className="mb-2 text-text-primary">
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="1.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            className="w-40 h-40 mx-auto"
+          >
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+            <path d="M7 8l2 2m0 -2l-2 2"></path>
+            <path d="M15 8l2 2m0 -2l-2 2"></path>
+            <path d="M9 14c1.5 -1.5 4.5 -1.5 6 0"></path>
+          </svg>
+        </div>
+
+        <div className="space-y-2">
+          <h1 className="text-8xl md:text-[7rem] font-display font-bold text-text-primary tracking-tight leading-none">
+            404
+          </h1>
+          <p className="text-4xl md:text-5xl font-display font-semibold text-text-muted tracking-tight text-[#d97757]">
+            Page Not Found
+          </p>
         </div>
         
-        <h1 className="text-6xl font-bold text-text-primary mb-2">404</h1>
-        <h2 className="text-xl font-bold text-text-primary uppercase tracking-widest mb-4">Shard Not Found</h2>
-        
-        <p className="text-text-secondary mb-10 leading-relaxed">
-          The requested resource could not be located in the distributed vault. 
-          The shard may have been purged or the reference hash is invalid.
+        <p className="text-xl md:text-2xl font-sans text-text-secondary leading-relaxed max-w-2xl mx-auto pt-4">
+          The requested path could not be resolved. It may have been relocated or permanently destroyed.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-          <Link to="/dashboard">
-            <Button variant="primary" leftIcon={<Home className="w-4 h-4" />}>
-              Return to Command
-            </Button>
+        <div className="pt-12">
+          <Link 
+            to="/dashboard"
+            className="inline-block px-10 py-4 bg-white/5 border border-white/10 rounded-2xl text-text-primary font-sans text-lg font-medium hover:bg-white/10 hover:border-white/20 transition-all duration-300 shadow-lg"
+          >
+            Return to Dashboard
           </Link>
-          <Button variant="secondary" leftIcon={<RotateCcw className="w-4 h-4" />} onClick={() => window.location.reload()}>
-            Re-Sync Network
-          </Button>
-        </div>
-
-        <div className="mt-12 flex items-center justify-center space-x-2 text-xs text-text-secondary font-bold uppercase tracking-[0.2em] opacity-40">
-           <AlertTriangle className="w-3 h-3" />
-           <span>Error Ref: ERR_SHARD_NULL_0x404</span>
         </div>
       </motion.div>
     </div>

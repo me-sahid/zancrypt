@@ -28,7 +28,11 @@ app = FastAPI(
 # CORS — must be first
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=[
+        "https://zancrypt.in",
+        "https://www.zancrypt.in",
+        "https://zancrypt-front.pages.dev",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -76,6 +80,20 @@ def health_check():
 @app.get("/")
 async def root():
     return {"status": "ok", "service": "Secure Distributed File Vault"}
+
+from fastapi.responses import JSONResponse
+
+@app.get("/.well-known/webauthn")
+async def webauthn_well_known():
+    return JSONResponse(
+        content={
+            "origins": [
+                "https://zancrypt.in",
+                "https://www.zancrypt.in"
+            ]
+        },
+        media_type="application/json"
+    )
 
 @app.on_event("startup")
 async def on_startup() -> None:

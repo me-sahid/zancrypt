@@ -655,6 +655,7 @@ const Files = () => {
                       {sortField === 'uploaded_at' && (sortDirection === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />)}
                     </div>
                   </th>
+                  <th className="py-4 px-6 text-right"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border font-mono text-sm text-text-secondary">
@@ -672,6 +673,7 @@ const Files = () => {
                     </td>
                     <td className="py-4 px-6"></td>
                     <td className="py-4 px-6 hidden sm:table-cell"></td>
+                    <td className="py-4 px-6"></td>
                   </tr>
                 )}
 
@@ -680,7 +682,7 @@ const Files = () => {
                     key={`folder-${folder.id}`} 
                     onDoubleClick={() => setCurrentFolderId(folder.id)}
                     onContextMenu={(e) => handleContextMenu(e, { ...folder, isFolder: true })}
-                    className={`hover:bg-surface-raised transition-colors cursor-pointer ${selectedIds[`folder_${folder.id}`] ? 'bg-accent/5' : ''}`}
+                    className={`group hover:bg-surface-raised transition-colors cursor-pointer ${selectedIds[`folder_${folder.id}`] ? 'bg-accent/5' : ''}`}
                   >
                     <td className="py-4 px-6 w-12 text-center" onClick={(e) => e.stopPropagation()}>
                       <input
@@ -706,6 +708,11 @@ const Files = () => {
                     <td className="py-4 px-6 hidden sm:table-cell text-sm text-text-muted">
                       {new Date(folder.created_at).toLocaleDateString()}
                     </td>
+                    <td className="py-4 px-6 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end space-x-2">
+                        <button onClick={(e) => { e.stopPropagation(); folderService.deleteFolder(folder.id).then(() => { fetchFiles(); }); }} className="p-2 hover:bg-danger/10 hover:text-danger text-text-muted rounded transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
 
@@ -727,7 +734,7 @@ const Files = () => {
                           if (e.button === 0 && !e.ctrlKey) handlePreview(file);
                         }}
                         onContextMenu={(e) => handleContextMenu(e, file)}
-                        className={`hover:bg-surface-raised transition-colors cursor-pointer ${selectedIds[file.id] ? 'bg-accent/5' : ''}`}
+                        className={`group hover:bg-surface-raised transition-colors cursor-pointer ${selectedIds[file.id] ? 'bg-accent/5' : ''}`}
                       >
                         <td className="py-4 px-6 w-12 text-center" onClick={(e) => e.stopPropagation()}>
                           <input
@@ -758,12 +765,19 @@ const Files = () => {
                         <td className="py-4 px-6 hidden sm:table-cell text-sm text-text-muted">
                           {file.upload_time ? new Date(file.upload_time).toLocaleDateString() : 'Unknown'}
                         </td>
+                        <td className="py-4 px-6 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center justify-end space-x-2">
+                            <button onClick={(e) => { e.stopPropagation(); handlePreview(file); }} className="p-2 hover:bg-surface-raised hover:text-accent text-text-muted rounded transition-colors" title="Preview"><Eye className="w-4 h-4" /></button>
+                            <button onClick={(e) => { e.stopPropagation(); setShareFilesTarget(file); setIsShareModalOpen(true); }} className="p-2 hover:bg-surface-raised hover:text-accent text-text-muted rounded transition-colors" title="Share"><Share2 className="w-4 h-4" /></button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDelete(file.id); }} className="p-2 hover:bg-danger/10 hover:text-danger text-text-muted rounded transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                          </div>
+                        </td>
                       </tr>
                     );
                   })
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-16 text-center text-text-muted text-xs uppercase tracking-widest">
+                    <td colSpan={6} className="py-16 text-center text-text-muted text-xs uppercase tracking-widest">
                       No files found in Vault
                     </td>
                   </tr>

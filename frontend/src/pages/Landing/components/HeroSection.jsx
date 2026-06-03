@@ -58,9 +58,9 @@ const HeroSection = () => {
               </Link>
             </div>
             <div className="hero-text-line w-full sm:w-auto">
-              <a href="#architecture" className="inline-flex items-center justify-center px-6 py-3 bg-transparent border border-border text-text-secondary font-mono tracking-widest uppercase text-sm rounded-md hover:text-text-primary hover:border-border-active transition-all">
+              <Link to="/architecture" className="inline-flex items-center justify-center px-6 py-3 bg-transparent border border-border text-text-secondary font-mono tracking-widest uppercase text-sm rounded-md hover:text-text-primary hover:border-border-active transition-all">
                 {t('hero', 'readArch')}
-              </a>
+              </Link>
             </div>
           </div>
           

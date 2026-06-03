@@ -1,3 +1,4 @@
+from app.api.routers.share import limiter
 from typing import List
 import json
 
@@ -13,6 +14,7 @@ from app.storage.routing import StorageRouter
 router = APIRouter()
 
 @router.post("/upload", status_code=status.HTTP_201_CREATED)
+@limiter.limit("20/minute")
 async def upload_file(
     request: Request,
     encrypted_filename: str = Form(...),
@@ -59,8 +61,12 @@ async def upload_file(
     )
     return {"file_id": str(file_id)}
 
+import io
+import zipfile
 @router.get("/download/{file_id}")
+@limiter.limit("30/minute")
 async def download_file(
+    request: Request,
     file_id: int, 
     current_user=Security(get_current_user_or_api_key, scopes=["storage"]), 
     session: AsyncSession = Depends(get_async_session)
@@ -69,9 +75,18 @@ async def download_file(
     # In a real enterprise app, we might return a zip or a custom stream format.
     # For this simulation, we return the shard metadata and binary data in a JSON structure 
     # (though typically we'd use a better protocol for large files).
-    return JSONResponse(content=[
-        {"shard_id": s[0], "data": s[1].hex()} for s in shards
-    ])
+    
+    async def generate():
+        for shard_id, data in shards:
+            yield data
+
+    return StreamingResponse(
+        generate(),
+        media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": f"attachment; filename={file_id}"
+        }
+    )
 
 @router.delete("/{file_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_file(file_id: int, current_user=Security(get_current_user_or_api_key, scopes=["storage"]), session: AsyncSession = Depends(get_async_session)) -> None:

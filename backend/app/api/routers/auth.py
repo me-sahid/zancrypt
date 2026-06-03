@@ -1,3 +1,4 @@
+from app.main import limiter
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
@@ -16,12 +17,15 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.post("/register", response_model=UserResponse)
-async def register_user(payload: UserCreate, session: AsyncSession = Depends(get_async_session)) -> UserResponse:
+@limiter.limit("3/minute")
+async def register_user(request: Request,payload: UserCreate, session: AsyncSession = Depends(get_async_session)) -> UserResponse:
     user = await UserService(session).create_user(payload)
     return UserResponse.model_validate(user)
 
 @router.post("/login", response_model=TokenResponse)
+@limiter.limit("7/minute")
 async def login(
+    request: Request,
     response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(), 
     session: AsyncSession = Depends(get_async_session)
@@ -33,13 +37,14 @@ async def login(
         key="refresh_token",
         value=tokens.refresh_token,
         httponly=True,
-        secure=True,
-        samesite="lax",  # cross-site cookies needed if frontend and backend domains differ slightly, but strict is safer if same domain. Using lax.
+        secure=True, # Must be True for SameSite=None
+        samesite="none",  # Cross-site cookies mandatory for detached frontend deployments
         max_age=7 * 24 * 60 * 60, # 7 days
     )
     return tokens
 
 @router.post("/refresh", response_model=TokenResponse)
+@limiter.limit("10/hour")
 async def refresh_token(
     request: Request,
     response: Response,
@@ -58,7 +63,7 @@ async def refresh_token(
         value=tokens.refresh_token,
         httponly=True,
         secure=True,
-        samesite="lax",
+        samesite="none",
         max_age=7 * 24 * 60 * 60, # 7 days
     )
     return tokens
@@ -82,7 +87,7 @@ async def logout(
         key="refresh_token",
         httponly=True,
         secure=True,
-        samesite="lax"
+        samesite="none"
     )
 
 @router.get("/me", response_model=UserResponse)

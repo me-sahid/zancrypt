@@ -17,8 +17,7 @@ required_b2_vars = [
 ]
 missing_b2_vars = [name for name, val in required_b2_vars if not val or str(val).strip() == ""]
 if missing_b2_vars:
-    print(f"[CRITICAL] Missing Backblaze B2 env vars: {', '.join(missing_b2_vars)}", file=sys.stderr)
-    sys.exit(1)
+    print(f"[WARNING] Missing Backblaze B2 env vars: {', '.join(missing_b2_vars)}", file=sys.stderr)
 
 # ─── Startup validation: Supabase S3 (Node 2) ────────────────────────────────
 required_supabase_vars = [
@@ -95,7 +94,7 @@ def _is_cloud_provider(provider: str) -> bool:
 
 class NodeManager:
     def __init__(self) -> None:
-        self.base_path = "/app/storage"
+        self.base_path = "/tmp/storage"
 
     async def get_active_nodes(self) -> List[str]:
         """Fetch names of all healthy and active nodes from the registry."""

@@ -98,10 +98,20 @@ api.interceptors.response.use(
  * Call this once on app startup (e.g., in main.jsx) to silently restore
  * an in-memory token from the httpOnly refresh cookie if the user was
  * previously logged in. The access token itself is never stored on disk.
+ *
+ * IMPORTANT: Only clears auth state when the server explicitly rejects
+ * the refresh token (401/403). Network errors or backend unavailability
+ * are ignored so the user is NOT logged out on transient failures.
  */
 export async function silentRefresh() {
-  const { isAuthenticated, setAuth, logout } = useAuthStore.getState();
-  if (!isAuthenticated) return;
+  const { isAuthenticated, setAuth, setInitialized } = useAuthStore.getState();
+
+  // Not logged in — nothing to restore
+  if (!isAuthenticated) {
+    setInitialized();
+    return;
+  }
+
   try {
     const { data } = await axios.post(
       `${import.meta.env.VITE_API_URL || ''}/auth/refresh`,
@@ -117,8 +127,14 @@ export async function silentRefresh() {
     
     setAuth(meRes.data, newToken);
   } catch {
-    // Refresh token expired or missing — clear stale state
-    logout();
+    // Refresh failed (expired cookie, sleeping backend, network error, etc.)
+    // DO NOT logout here. The access token in localStorage may still be valid.
+    // If it is expired, the 401 interceptor will catch it on the next real API
+    // call and attempt another refresh — only logging out if that also fails.
+    // Calling logout() here was causing unnecessary redirect-to-login on page refresh.
+  } finally {
+    // Always unblock ProtectedRoute regardless of outcome
+    setInitialized();
   }
 }
 
