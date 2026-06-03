@@ -227,9 +227,14 @@ const Files = () => {
     return [...selectedFolders, ...selectedFiles];
   };
 
+  const selectedCount = Object.values(selectedIds).filter(Boolean).length;
+
   const getTargetItems = () => {
     const target = contextMenu.file; // This can be file or folder
-    if (!target) return [];
+    if (!target) {
+      if (selectedCount > 0) return getSelectedItemsArray();
+      return [];
+    }
     
     const targetId = target.isFolder ? `folder_${target.id}` : target.id;
     
@@ -291,6 +296,7 @@ const Files = () => {
     setClipboard('copy', targets);
     toast.success(`Copied ${targets.length} item(s)`);
     closeContextMenu();
+    setSelectedIds({});
   };
 
   const handleMove = () => {
@@ -299,6 +305,7 @@ const Files = () => {
     setClipboard('move', targets);
     toast.success(`Cut ${targets.length} item(s)`);
     closeContextMenu();
+    setSelectedIds({});
   };
 
   const handlePaste = async () => {
@@ -765,7 +772,7 @@ const Files = () => {
             </table>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 font-mono">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 font-mono p-4">
             {currentFolderId && (
               <div 
                 onClick={() => setCurrentFolderId(null)}
@@ -1067,6 +1074,61 @@ const Files = () => {
         </div>,
         document.body
       )}
+
+      {/* Multi-Select Action Bar */}
+      <AnimatePresence>
+        {selectedCount > 0 && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-surface/90 backdrop-blur-md border border-border p-2 rounded-full shadow-2xl"
+          >
+            <div className="px-4 py-2 bg-void rounded-full border border-border/50 flex items-center justify-center">
+              <span className="font-mono text-xs text-accent uppercase tracking-widest">{selectedCount} Selected</span>
+            </div>
+            
+            <button onClick={() => { 
+                const items = getSelectedItemsArray();
+                setClipboard('copy', items);
+                toast.success(`Copied ${items.length} item(s)`);
+                setSelectedIds({});
+              }} 
+              className="p-3 hover:bg-surface-raised hover:text-accent rounded-full transition-colors tooltip-trigger group"
+              title="Copy"
+            >
+              <Copy className="w-4 h-4" />
+            </button>
+            <button onClick={() => { 
+                const items = getSelectedItemsArray();
+                setClipboard('move', items);
+                toast.success(`Cut ${items.length} item(s)`);
+                setSelectedIds({});
+              }} 
+              className="p-3 hover:bg-surface-raised hover:text-accent rounded-full transition-colors tooltip-trigger group"
+              title="Cut"
+            >
+              <Scissors className="w-4 h-4" />
+            </button>
+            <button onClick={handleMultiDownload} className="p-3 hover:bg-surface-raised hover:text-accent rounded-full transition-colors" title="Download">
+              <Download className="w-4 h-4" />
+            </button>
+            <button onClick={openShareTarget} className="p-3 hover:bg-surface-raised hover:text-accent rounded-full transition-colors" title="Share">
+              <Share2 className="w-4 h-4" />
+            </button>
+            <button onClick={handleMultiDelete} className="p-3 hover:bg-danger/10 text-danger rounded-full transition-colors" title="Delete">
+              <Trash2 className="w-4 h-4" />
+            </button>
+            
+            <div className="w-px h-6 bg-border mx-2" />
+            
+            <button onClick={() => setSelectedIds({})} className="p-3 hover:bg-surface-raised rounded-full transition-colors text-text-muted hover:text-text-primary" title="Clear Selection">
+              <span className="sr-only">Clear</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

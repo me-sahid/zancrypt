@@ -10,29 +10,6 @@ import { toast } from 'react-hot-toast';
 import Button from './ui/Button';
 
 const ShareModal = ({ file, onClose }) => {
-  const ttlOptions = [
-    { label: '1 Hour', value: 1 },
-    { label: '24 Hours (1 Day)', value: 24 },
-    { label: '7 Days (1 Week)', value: 168 },
-    { label: '30 Days (1 Month)', value: 720 },
-    { label: 'Custom Expiry...', value: 'custom' }
-  ];
-  const [selectedTtlOption, setSelectedTtlOption] = useState(ttlOptions[1]);
-  const [customTtlHours, setCustomTtlHours] = useState('0');
-  const [customTtlMins, setCustomTtlMins] = useState('30');
-  const [isTtlDropdownOpen, setIsTtlDropdownOpen] = useState(false);
-
-  const dlOptions = [
-    { label: 'Unlimited Downloads', value: 0 },
-    { label: '1 Download only', value: 1 },
-    { label: '5 Downloads max', value: 5 },
-    { label: '10 Downloads max', value: 10 },
-    { label: 'Custom Limit...', value: 'custom' }
-  ];
-  const [selectedDlOption, setSelectedDlOption] = useState(dlOptions[0]);
-  const [customDownloads, setCustomDownloads] = useState('3');
-  const [isDlDropdownOpen, setIsDlDropdownOpen] = useState(false);
-
   const [label, setLabel] = useState('');
   const [allowDownloads, setAllowDownloads] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -79,21 +56,14 @@ const ShareModal = ({ file, onClose }) => {
     }
     if (!shareToken) return '';
     return `${getBaseUrl()}/share/${shareToken}#${encryptionKey}`;
-  }, [isMulti, shareToken, multiTokens, multiKeys, encryptionKey, customSharingIp]);
+  }, [isMulti, shareToken, multiTokens, multiKeys, encryptionKey]);
 
   const handleCreateShare = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      let finalTtl = selectedTtlOption.value === 'custom' 
-        ? (parseFloat(customTtlHours) || 0) + ((parseFloat(customTtlMins) || 0) / 60)
-        : parseFloat(selectedTtlOption.value);
-        
-      if (finalTtl <= 0) { toast.error('Expiration must be > 0'); return; }
-
-      let finalMaxDownloads = selectedDlOption.value === 'custom'
-        ? parseInt(customDownloads, 10) || 0
-        : parseInt(selectedDlOption.value, 10);
+      let finalTtl = 168; // 7 days default
+      let finalMaxDownloads = 0; // unlimited default
 
       if (isMulti) {
         const tokens = []; const keys = [];
@@ -189,62 +159,6 @@ const ShareModal = ({ file, onClose }) => {
                     className="w-full bg-void border border-border focus:border-accent text-text-primary font-mono text-xs py-2 px-3 outline-none"
                   />
                 </div>
-
-                <div className="space-y-2 relative">
-                  <label className="text-xs font-mono text-text-muted uppercase tracking-widest flex items-center">
-                    <Clock className="w-3 h-3 mr-2 text-accent" /> Time to Live (TTL)
-                  </label>
-                  <button type="button" onClick={() => setIsTtlDropdownOpen(!isTtlDropdownOpen)} className="w-full bg-void border border-border text-left px-3 py-2 text-xs font-mono text-text-primary flex justify-between items-center">
-                    {selectedTtlOption.label} <span className="text-xs">▼</span>
-                  </button>
-                  {isTtlDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-surface-raised border border-border z-20 shadow-xl">
-                      {ttlOptions.map(opt => (
-                        <div key={opt.value} onClick={() => { setSelectedTtlOption(opt); setIsTtlDropdownOpen(false); }} className="px-3 py-2 text-xs font-mono text-text-secondary hover:text-accent hover:bg-surface cursor-pointer">
-                          {opt.label}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {selectedTtlOption.value === 'custom' && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-mono text-text-muted uppercase tracking-widest">Hours</label>
-                      <input type="number" min="0" value={customTtlHours} onChange={(e) => setCustomTtlHours(e.target.value)} className="w-full bg-void border border-border focus:border-accent text-xs font-mono py-2 px-3 outline-none" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-mono text-text-muted uppercase tracking-widest">Minutes</label>
-                      <input type="number" min="0" max="59" value={customTtlMins} onChange={(e) => setCustomTtlMins(e.target.value)} className="w-full bg-void border border-border focus:border-accent text-xs font-mono py-2 px-3 outline-none" />
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-2 relative">
-                  <label className="text-xs font-mono text-text-muted uppercase tracking-widest flex items-center">
-                    <Download className="w-3 h-3 mr-2 text-accent" /> Download Limit
-                  </label>
-                  <button type="button" onClick={() => setIsDlDropdownOpen(!isDlDropdownOpen)} className="w-full bg-void border border-border text-left px-3 py-2 text-xs font-mono text-text-primary flex justify-between items-center">
-                    {selectedDlOption.label} <span className="text-xs">▼</span>
-                  </button>
-                  {isDlDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-surface-raised border border-border z-20 shadow-xl">
-                      {dlOptions.map(opt => (
-                        <div key={opt.value} onClick={() => { setSelectedDlOption(opt); setIsDlDropdownOpen(false); }} className="px-3 py-2 text-xs font-mono text-text-secondary hover:text-accent hover:bg-surface cursor-pointer">
-                          {opt.label}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {selectedDlOption.value === 'custom' && (
-                  <div className="space-y-2">
-                    <label className="text-xs font-mono text-text-muted uppercase tracking-widest">Custom Limit</label>
-                    <input type="number" min="1" value={customDownloads} onChange={(e) => setCustomDownloads(e.target.value)} className="w-full bg-void border border-border focus:border-accent text-xs font-mono py-2 px-3 outline-none" />
-                  </div>
-                )}
 
                 <div className="flex items-center justify-between py-3 border-t border-border">
                   <div className="text-xs font-mono text-text-muted uppercase tracking-widest">Allow Downloads</div>

@@ -68,7 +68,13 @@ api.interceptors.response.use(
           { withCredentials: true }
         );
         const newToken = data.access_token;
-        useAuthStore.getState().restoreToken(newToken);
+        
+        // Explicitly fetch the user profile since /refresh only returns tokens
+        const meRes = await axios.get(`${import.meta.env.VITE_API_URL || ''}/auth/me`, {
+          headers: { Authorization: `Bearer ${newToken}` }
+        });
+        
+        useAuthStore.getState().setAuth(meRes.data, newToken);
         processQueue(null, newToken);
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);
@@ -94,7 +100,7 @@ api.interceptors.response.use(
  * previously logged in. The access token itself is never stored on disk.
  */
 export async function silentRefresh() {
-  const { isAuthenticated, restoreToken, logout } = useAuthStore.getState();
+  const { isAuthenticated, setAuth, logout } = useAuthStore.getState();
   if (!isAuthenticated) return;
   try {
     const { data } = await axios.post(
@@ -102,7 +108,14 @@ export async function silentRefresh() {
       {},
       { withCredentials: true }
     );
-    restoreToken(data.access_token);
+    const newToken = data.access_token;
+    
+    // Explicitly fetch the user profile
+    const meRes = await axios.get(`${import.meta.env.VITE_API_URL || ''}/auth/me`, {
+      headers: { Authorization: `Bearer ${newToken}` }
+    });
+    
+    setAuth(meRes.data, newToken);
   } catch {
     // Refresh token expired or missing — clear stale state
     logout();

@@ -73,6 +73,9 @@ class Settings(BaseSettings):
     PROMETHEUS_METRICS_ENABLED: bool = Field(True, env="PROMETHEUS_METRICS_ENABLED")
     LOG_LEVEL: str = Field("INFO", env="LOG_LEVEL")
 
+    RAZORPAY_KEY_ID: str | None = Field(None, env="RAZORPAY_KEY_ID")
+    RAZORPAY_KEY_SECRET: str | None = Field(None, env="RAZORPAY_KEY_SECRET")
+
     @property
     def CORS_ORIGINS(self) -> List[str]:
         if not self.CORS_ORIGINS_STR:

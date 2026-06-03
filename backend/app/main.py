@@ -53,6 +53,7 @@ app.middleware("http")(security_headers_middleware)
 # routers
 from app.auth.api.endpoints import router as enterprise_auth_router
 from app.api.routers import files, admin, share, notifications, dashboard, folders, api_keys
+from app.billing.api import router as billing_router
 
 app.include_router(enterprise_auth_router, prefix="/auth", tags=["auth"])
 app.include_router(files.router, prefix="/files", tags=["files"])
@@ -62,6 +63,7 @@ app.include_router(share.router, prefix="/api/share", tags=["share"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
 app.include_router(api_keys.router, prefix="/api/keys", tags=["api_keys"])
+app.include_router(billing_router, prefix="/api/billing", tags=["billing"])
 app.include_router(prometheus_router)
 
 register_exception_handlers(app)

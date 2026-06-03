@@ -36,13 +36,13 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Column 3: Developers */}
+          {/* Column 3: Resources */}
           <div>
-            <h4 className="text-text-primary font-bold mb-4">Developers</h4>
+            <h4 className="text-text-primary font-bold mb-4">Resources</h4>
             <ul className="space-y-3">
               <li><Link to="/api" className="text-sm text-text-secondary hover:text-accent transition-colors">REST API Reference</Link></li>
               <li><Link to="/client-sdks" className="text-sm text-text-secondary hover:text-accent transition-colors">Client SDKs</Link></li>
-              <li><a href="https://github.com/zancrypt" target="_blank" rel="noopener noreferrer" className="text-sm text-text-secondary hover:text-accent transition-colors">Open Source (GitHub)</a></li>
+              <li><a href="https://github.com/zancrypt" target="_blank" rel="noopener noreferrer" className="text-sm text-text-secondary hover:text-accent transition-colors">Open Source</a></li>
               <li><Link to="/support-center" className="text-sm text-text-secondary hover:text-accent transition-colors">Support Center</Link></li>
             </ul>
           </div>
@@ -51,21 +51,21 @@ const Footer = () => {
           <div>
             <h4 className="text-text-primary font-bold mb-4">Company</h4>
             <ul className="space-y-3">
-              <li><Link to="/about-us" className="text-sm text-text-secondary hover:text-accent transition-colors">Mission & Vision</Link></li>
+              <li><Link to="/about-us" className="text-sm text-text-secondary hover:text-accent transition-colors">About Us</Link></li>
+              <li><Link to="/blog" className="text-sm text-text-secondary hover:text-accent transition-colors">Blog</Link></li>
               <li><Link to="/careers" className="text-sm text-text-secondary hover:text-accent transition-colors">Careers</Link></li>
-              <li><Link to="/privacy-policy" className="text-sm text-text-secondary hover:text-accent transition-colors">Privacy Policy</Link></li>
-              <li><Link to="/terms-of-service" className="text-sm text-text-secondary hover:text-accent transition-colors">Terms of Service</Link></li>
+              <li><Link to="/contact-us" className="text-sm text-text-secondary hover:text-accent transition-colors">Contact Us</Link></li>
             </ul>
           </div>
 
-          {/* Column 5: Resources */}
+          {/* Column 5: Legal */}
           <div>
-            <h4 className="text-text-primary font-bold mb-4">Resources</h4>
+            <h4 className="text-text-primary font-bold mb-4">Legal</h4>
             <ul className="space-y-3">
-              <li><Link to="/whitepaper" className="text-sm text-text-secondary hover:text-accent transition-colors">Cryptographic Whitepaper</Link></li>
-              <li><Link to="/changelog" className="text-sm text-text-secondary hover:text-accent transition-colors">Changelog</Link></li>
-              <li><Link to="/blog" className="text-sm text-text-secondary hover:text-accent transition-colors">Engineering Blog</Link></li>
-              <li><a href="https://discord.gg/zancrypt" target="_blank" rel="noopener noreferrer" className="text-sm text-text-secondary hover:text-accent transition-colors">Community Forum</a></li>
+              <li><Link to="/terms-of-service" className="text-sm text-text-secondary hover:text-accent transition-colors">Terms of Service</Link></li>
+              <li><Link to="/privacy-policy" className="text-sm text-text-secondary hover:text-accent transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/refund-policy" className="text-sm text-text-secondary hover:text-accent transition-colors">Refund Policy</Link></li>
+              <li><Link to="/disclaimer" className="text-sm text-text-secondary hover:text-accent transition-colors">Disclaimer</Link></li>
             </ul>
           </div>
         </div>
