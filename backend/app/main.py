@@ -84,7 +84,7 @@ async def on_startup() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS storage_used BIGINT DEFAULT 0;"))
-        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS api_credits BIGINT DEFAULT 0;"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS api_credits BIGINT DEFAULT 1000000;"))
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS total_api_calls BIGINT DEFAULT 0;"))
         await conn.execute(text("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS scopes JSONB DEFAULT '[\"*\"]'::jsonb;"))
         await conn.execute(text("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS app_restrictions JSONB DEFAULT '{}'::jsonb;"))

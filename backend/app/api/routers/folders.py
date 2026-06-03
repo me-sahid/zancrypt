@@ -8,7 +8,7 @@ from app.services.folder_service import FolderService
 
 router = APIRouter()
 
-@router.post("/", response_model=FolderResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=FolderResponse, status_code=status.HTTP_201_CREATED)
 async def create_folder(
     folder_in: FolderCreate,
     current_user=Security(get_current_user_or_api_key, scopes=["storage"]),
@@ -19,7 +19,7 @@ async def create_folder(
     await session.commit()
     return folder
 
-@router.get("/", response_model=List[FolderResponse])
+@router.get("", response_model=List[FolderResponse])
 async def list_folders(
     parent_id: Optional[int] = None,
     current_user=Security(get_current_user_or_api_key, scopes=["storage"]),

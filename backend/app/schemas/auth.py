@@ -43,7 +43,9 @@ class UserResponse(BaseModel):
     full_name: str | None
     region: str | None
     role: str
-    mfa_enabled: bool
+    mfa_enabled: bool = False
+    api_credits: int = 0
+    total_api_calls: int = 0
     created_at: datetime
     updated_at: datetime
 

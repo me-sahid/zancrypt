@@ -81,11 +81,9 @@ api.interceptors.response.use(
       }
     }
 
-    // Connectivity tracking
-    if (!error.response || error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK') {
-      useNetworkStore.getState().setConnectivity({ isBackendReachable: false });
-    }
-
+    // Connectivity tracking is now handled exclusively by NetworkProvider's health checks
+    // to respect the FAILURE_THRESHOLD and avoid random offline screens on single request failures.
+    
     return Promise.reject(error);
   }
 );
