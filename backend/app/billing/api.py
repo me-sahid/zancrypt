@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.db import get_session
+from app.db import get_async_session
 from app.models.user import User
 from app.api.deps import get_current_user
 from app.billing.schemas import OrderCreateRequest, OrderCreateResponse, PaymentVerifyRequest, PaymentVerifyResponse
@@ -56,7 +56,7 @@ async def create_order(
 async def verify_payment(
     request: PaymentVerifyRequest,
     current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_async_session)
 ):
     plan_name = request.plan_name.upper()
     if plan_name == "CUSTOM":
