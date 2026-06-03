@@ -221,25 +221,17 @@ async def login_verify(
         user_id = auth_session["user_id"]
         credentials = await credential_repo.get_by_user_id(user_id)
         
-        # We need to pass the credential objects to verify
-        # but fido2 verify_authentication_response expects the specific credential used
-        # The response from the client contains the credentialId used.
-        used_credential_id = websafe_decode(request.response["id"])
-        target_credential = next((c for c in credentials if c.credential_id == used_credential_id), None)
-        
-        if not target_credential:
-            raise HTTPException(status_code=400, detail="Credential not recognized")
-
         from fido2.webauthn import AttestedCredentialData
+        valid_credentials = [AttestedCredentialData(c.public_key) for c in credentials]
         
         auth_data, new_counter = webauthn_service.verify_authentication_response(
             request.response,
             auth_session["state"],
-            [AttestedCredentialData(target_credential.public_key)]
+            valid_credentials
         )
         
         # Update sign count
-        await credential_repo.update_sign_count(target_credential.credential_id, new_counter)
+        await credential_repo.update_sign_count(auth_data.credential_id, new_counter)
 
         from app.security.jwt import create_access_token
         from app.repositories.session_repo import SessionRepository
