@@ -7,7 +7,7 @@ from app.db import async_session_maker
 DEFAULT_NODES = [
     {
         "node_name": "Backblaze-Node1", 
-        "region": "us-west-004", 
+        "region": os.environ.get("B2_REGION","us-east-005"), 
         "provider": "S3",
         "metadata":{
             "bucket": os.environ.get("B2_BUCKET", "zancrypt-node-1"),
