@@ -49,6 +49,16 @@ export const registerPasskey = async (options) => {
       },
     };
 
+    // Override RP ID to match the current domain dynamically
+    if (createOptions.publicKey.rp) {
+      createOptions.publicKey.rp.id = window.location.hostname;
+    }
+
+    // Remove authenticatorAttachment to allow cross-platform authenticators (like phones)
+    if (createOptions.publicKey.authenticatorSelection?.authenticatorAttachment) {
+      delete createOptions.publicKey.authenticatorSelection.authenticatorAttachment;
+    }
+
     const credential = await navigator.credentials.create(createOptions);
 
     return {
@@ -84,6 +94,9 @@ export const authenticatePasskey = async (options) => {
         })),
       },
     };
+
+    // Override RP ID to match the current domain dynamically
+    getOptions.publicKey.rpId = window.location.hostname;
 
     const assertion = await navigator.credentials.get(getOptions);
 
