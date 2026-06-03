@@ -10,7 +10,11 @@ class JWTService:
         else:
             expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         
-        to_encode = {"exp": expire, "sub": str(subject), "type": "access"}
+        to_encode = {
+            "exp": expire, 
+            "sub": str(subject), 
+            "type": "access"
+        }
         encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY.get_secret_value(), algorithm=settings.JWT_ALGORITHM)
         return encoded_jwt
 

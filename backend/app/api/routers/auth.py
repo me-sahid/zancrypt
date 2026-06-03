@@ -1,3 +1,4 @@
+from app.api.routers.share import limiter
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
@@ -16,11 +17,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.post("/register", response_model=UserResponse)
+@limiter.limit("3/minute")
 async def register_user(payload: UserCreate, session: AsyncSession = Depends(get_async_session)) -> UserResponse:
     user = await UserService(session).create_user(payload)
     return UserResponse.model_validate(user)
 
 @router.post("/login", response_model=TokenResponse)
+@limiter.limit("7/minute")
 async def login(
     response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(), 
@@ -40,6 +43,7 @@ async def login(
     return tokens
 
 @router.post("/refresh", response_model=TokenResponse)
+@limiter.limit("7/minute")
 async def refresh_token(
     request: Request,
     response: Response,
