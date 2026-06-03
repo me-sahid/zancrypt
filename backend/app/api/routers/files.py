@@ -66,6 +66,7 @@ import zipfile
 @router.get("/download/{file_id}")
 @limiter.limit("30/minute")
 async def download_file(
+    request: Request,
     file_id: int, 
     current_user=Security(get_current_user_or_api_key, scopes=["storage"]), 
     session: AsyncSession = Depends(get_async_session)
