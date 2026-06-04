@@ -117,3 +117,4 @@ async def on_startup() -> None:
         await conn.execute(text("ALTER TABLE files ADD COLUMN IF NOT EXISTS folder_id INTEGER REFERENCES folders(id);"))
     await initialize_nodes()
     instrument_app(app)
+# cache-bust
