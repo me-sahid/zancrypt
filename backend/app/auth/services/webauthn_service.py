@@ -36,7 +36,6 @@ class WebAuthnService:
                 "pubKeyCredParams": [{"type": p.type, "alg": p.alg} for p in options.public_key.pub_key_cred_params],
                 "timeout": options.public_key.timeout,
                 "authenticatorSelection": {
-                    "authenticatorAttachment": "platform",
                     "residentKey": "preferred",
                     "userVerification": "preferred"
                 },
