@@ -84,6 +84,8 @@ const Navbar = () => {
     setIsMobileMenuOpen(false);
     setActiveDropdown(null);
     if (href.startsWith('#')) {
+      // Bare '#' is not a valid CSS selector – skip scroll attempt
+      if (href === '#') return;
       if (window.location.pathname !== '/') {
         window.location.href = '/' + href;
         return;
