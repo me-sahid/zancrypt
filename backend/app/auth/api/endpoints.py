@@ -149,8 +149,8 @@ async def register_verify(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=is_secure,
-        samesite="lax",
+        secure=True,
+        samesite="none",
         max_age=7 * 24 * 60 * 60,
     )
 
@@ -257,8 +257,8 @@ async def login_verify(
             key="refresh_token",
             value=refresh_token,
             httponly=True,
-            secure=is_secure,
-            samesite="lax",
+            secure=True,
+            samesite="none",
             max_age=7 * 24 * 60 * 60,
         )
         
@@ -318,8 +318,8 @@ async def login_fallback(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=is_secure,
-        samesite="lax",
+        secure=True,
+        samesite="none",
         max_age=7 * 24 * 60 * 60,
     )
     
@@ -347,25 +347,51 @@ async def refresh_token(
     response: Response,
     session: AsyncSession = Depends(get_async_session)
 ) -> TokenResponse:
-    # Read refresh token from HttpOnly cookie
-    token = request.cookies.get("refresh_token")
-    if not token:
+    old_token = request.cookies.get("refresh_token")
+    if not old_token:
         raise HTTPException(status_code=401, detail="Refresh token missing")
-        
-    tokens = await AuthService(session).refresh_tokens(token)
-    
-    is_secure = request.url.scheme == "https"
-    
-    # Rotate the refresh cookie
+
+    from app.repositories.session_repo import SessionRepository
+    from app.repositories.user_repo import UserRepository
+    from app.security.jwt import create_access_token
+
+    session_repo = SessionRepository(session)
+
+    # Validate old token
+    user_session = await session_repo.get_by_token(old_token)
+    if not user_session:
+        raise HTTPException(status_code=401, detail="Invalid or expired session")
+
+    # Rotate — delete old, issue new
+    await session_repo.delete_session(old_token)
+    new_access_token = create_access_token(subject=str(user_session.user_id))
+    new_refresh_token = await session_repo.create_session(user_session.user_id)
+
     response.set_cookie(
         key="refresh_token",
-        value=tokens.refresh_token,
+        value=new_refresh_token,
         httponly=True,
-        secure=is_secure,
-        samesite="lax",
-        max_age=7 * 24 * 60 * 60, # 7 days
+        secure=True,             # ✅
+        samesite="none",         # ✅
+        max_age=7 * 24 * 60 * 60,
     )
-    return tokens
+
+    user_repo = UserRepository(session)
+    user = await user_repo.get_by_id(user_session.user_id)
+
+    return TokenResponse(
+        access_token=new_access_token,
+        refresh_token=new_refresh_token,
+        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        user={
+            "id": user.id,
+            "email": user.email,
+            "username": user.username,
+            "full_name": user.full_name,
+            "role": user.role,
+            "region": user.region,
+        }
+    )
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 async def logout(
@@ -374,21 +400,22 @@ async def logout(
     current_user=Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> None:
-    # Revoke the access JWT in Redis so it cannot be reused
     from app.security.jwt import revoke_token
+    from app.repositories.session_repo import SessionRepository
+
     auth_header = request.headers.get("Authorization", "")
     if auth_header.startswith("Bearer "):
         revoke_token(auth_header.split(" ", 1)[1])
-    await SessionService(session).revoke_active_sessions(current_user.id)
-    
-    is_secure = request.url.scheme == "https"
-    
-    # Clear the refresh token cookie
+
+    # Use SessionRepository directly — revoke all sessions for this user
+    session_repo = SessionRepository(session)
+    await session_repo.revoke_all_by_user(current_user.id)
+
     response.delete_cookie(
         key="refresh_token",
         httponly=True,
-        secure=is_secure,
-        samesite="lax"
+        secure=True,
+        samesite="none",
     )
 
 @router.put("/profile")
