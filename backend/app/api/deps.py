@@ -12,12 +12,12 @@ from app.repositories.session_repo import SessionRepository
 from app.repositories.user_repo import UserRepository
 from app.security.jwt import decode_access_token
 from app.security.tokens import TokenData
-from app.services.auth_service import AuthService
+from fastapi.security import OAuth2PasswordBearer
 from app.services.session_service import SessionService
 from app.storage.routing import StorageRouter
 from app.db import get_async_session
 
-async def get_current_user(token: str = Depends(AuthService.oauth2_scheme), session: AsyncSession = Depends(get_async_session)) -> User:
+async def get_current_user(token: str = Depends(OAuth2PasswordBearer(tokenUrl="/auth/login")), session: AsyncSession = Depends(get_async_session)) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -193,7 +193,7 @@ async def get_current_user_from_api_key(
 async def get_current_user_or_api_key(
     request: Request,
     security_scopes: SecurityScopes,
-    token: str = Depends(AuthService.oauth2_scheme),
+    token: str = Depends(OAuth2PasswordBearer(tokenUrl="/auth/login")),,
     api_key: str = Depends(api_key_header),
     session: AsyncSession = Depends(get_async_session)
 ) -> User:
