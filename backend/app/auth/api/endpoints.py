@@ -339,7 +339,6 @@ async def login_fallback(
     )
 
 from app.api.deps import get_current_user
-from app.services.auth_service import AuthService
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_token(
