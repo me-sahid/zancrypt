@@ -193,7 +193,7 @@ async def get_current_user_from_api_key(
 async def get_current_user_or_api_key(
     request: Request,
     security_scopes: SecurityScopes,
-    token: str = Depends(OAuth2PasswordBearer(tokenUrl="/auth/login")),,
+    token: str = Depends(OAuth2PasswordBearer(tokenUrl="/auth/login")),
     api_key: str = Depends(api_key_header),
     session: AsyncSession = Depends(get_async_session)
 ) -> User:
