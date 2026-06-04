@@ -8,7 +8,6 @@ import logging
 
 from app.api.deps import get_async_session, get_current_user
 from app.schemas.auth import LoginRequest, RefreshRequest, TokenResponse, UserCreate, UserResponse, UserUpdate
-from app.services.auth_service import AuthService
 from app.services.user_service import UserService
 from app.services.session_service import SessionService
 
