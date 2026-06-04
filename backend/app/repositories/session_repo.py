@@ -1,45 +1,58 @@
-from datetime import datetime, timedelta
 import hashlib
 import secrets
+from datetime import datetime, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.models.session import Session
+
+
+def _hash_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
+
 
 class SessionRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    def _hash_token(self, token: str) -> str:
-        return hashlib.sha256(token.encode()).hexdigest()
-
     async def create_session(self, user_id: int) -> str:
-        refresh_token = secrets.token_urlsafe(64)
-        session = Session(
+        raw_token = secrets.token_urlsafe(64)
+        db_session = Session(
             user_id=user_id,
-            refresh_token_hash=self._hash_token(refresh_token),
-            expires_at=datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+            refresh_token_hash=_hash_token(raw_token),
+            expires_at=datetime.utcnow() + timedelta(days=7),
+            revoked=False,
         )
-        self.session.add(session)
+        self.session.add(db_session)
         await self.session.commit()
-        return refresh_token
+        await self.session.refresh(db_session)
+        return raw_token
 
-    async def get_by_refresh_token(self, token: str) -> Session | None:
-        hashed = self._hash_token(token)
-        result = await self.session.execute(select(Session).where(Session.refresh_token_hash == hashed))
+    async def get_by_token(self, raw_token: str) -> Session | None:
+        token_hash = _hash_token(raw_token)
+        result = await self.session.execute(
+            select(Session).where(
+                Session.refresh_token_hash == token_hash,
+                Session.revoked == False,
+                Session.expires_at > datetime.utcnow(),
+            )
+        )
         return result.scalar_one_or_none()
 
-    async def rotate_refresh_token(self, session: Session) -> str:
-        new_token = secrets.token_urlsafe(64)
-        session.refresh_token_hash = self._hash_token(new_token)
-        session.expires_at = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    async def delete_session(self, raw_token: str) -> None:
+        token_hash = _hash_token(raw_token)
+        await self.session.execute(
+            update(Session)
+            .where(Session.refresh_token_hash == token_hash)
+            .values(revoked=True)
+        )
         await self.session.commit()
-        return new_token
 
-    async def revoke_sessions_for_user(self, user_id: int) -> None:
-        result = await self.session.execute(select(Session).where(Session.user_id == user_id, Session.revoked == False))
-        for session in result.scalars().all():
-            session.revoked = True
+    async def revoke_all_by_user(self, user_id: int) -> None:
+        await self.session.execute(
+            update(Session)
+            .where(Session.user_id == user_id, Session.revoked == False)
+            .values(revoked=True)
+        )
         await self.session.commit()
