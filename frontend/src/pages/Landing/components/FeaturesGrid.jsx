@@ -5,7 +5,7 @@ import {
   ShieldCheck, Server, Zap
 } from 'lucide-react';
 
-const FeaturesGrid = () => {
+const FeaturesGrid = ({ isLoading }) => {
   const containerRef = useRef(null);
 
   const features = [
@@ -113,9 +113,9 @@ const FeaturesGrid = () => {
             return (
               <div 
                 key={i} 
-                className={`group relative rounded-2xl bg-surface/20 border border-border/40 overflow-hidden transition-all duration-500 hover:border-accent/40 hover:bg-surface-raised/40 animate-on-scroll ${colSpan} ${
+                className={`group relative rounded-2xl border border-border/40 overflow-hidden transition-all duration-500 animate-on-scroll ${colSpan} ${
                   isLarge ? 'p-8 md:p-12 min-h-[380px] flex flex-col justify-between' : 'p-6 md:p-8 flex flex-col justify-between'
-                }`}
+                } ${isLoading ? 'bg-surface-raised animate-pulse' : 'bg-surface/20 hover:border-accent/40 hover:bg-surface-raised/40'}`}
                 style={{ transitionDelay: `${i * 60}ms` }}
               >
                 {/* Neon Hover Glow */}

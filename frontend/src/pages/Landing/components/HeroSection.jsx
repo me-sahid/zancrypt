@@ -1,13 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import gsap from 'gsap';
+import { motion } from 'framer-motion';
 import { 
   Lock, FileText, FileVideo, FileImage, 
   Database, Search, Eye, Download, Trash2 
 } from 'lucide-react';
 import { useLanguageStore } from '../../../store/useLanguageStore';
 
-const HeroSection = () => {
+const HeroSection = ({ isLoading }) => {
   const containerRef = useRef(null);
   const vizRef = useRef(null);
   const { t } = useLanguageStore();
@@ -73,7 +74,15 @@ const HeroSection = () => {
 
         {/* RIGHT COLUMN: macOS Product Mockup Scene */}
         <div className="relative w-full h-[400px] sm:h-[500px] lg:h-[620px] flex items-center justify-center select-none overflow-hidden sm:overflow-visible">
-          <div className="relative transform scale-[0.55] sm:scale-75 lg:scale-100 flex items-center justify-center mt-8 lg:mt-0">
+          {isLoading ? (
+            <div className="w-full max-w-md h-[400px] bg-surface-raised border border-border/10 rounded-xl animate-pulse"></div>
+          ) : (
+            <motion.div 
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="relative transform scale-[0.55] sm:scale-75 lg:scale-100 flex items-center justify-center mt-8 lg:mt-0"
+            >
             {/* Subtle Glow Background */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[500px] bg-[#d97757]/4 rounded-full blur-[120px] pointer-events-none" />
 
@@ -274,9 +283,10 @@ const HeroSection = () => {
               </div>
             </div>
           </div>
-            </div>
-          </div>
+            </motion.div>
+          )}
         </div>
+      </div>
 
       {/* Marquee Ticker */}
       <div className="w-full border-t border-border py-4 overflow-hidden mt-12 bg-void z-10">
