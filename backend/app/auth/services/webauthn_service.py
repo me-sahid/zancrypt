@@ -53,26 +53,29 @@ class WebAuthnService:
 
     def verify_registration_response(self, response_data, state):
         from fido2.webauthn import (
-            RegistrationResponse,
             AuthenticatorAttestationResponse,
             CollectedClientData,
             AttestationObject
         )
 
-        client_data = CollectedClientData(websafe_decode(response_data["response"]["clientDataJSON"]))
-        attestation_object = AttestationObject(websafe_decode(response_data["response"]["attestationObject"]))
+        client_data = CollectedClientData(
+            websafe_decode(response_data["response"]["clientDataJSON"])
+        )
+        attestation_object = AttestationObject(
+            websafe_decode(response_data["response"]["attestationObject"])
+        )
 
         response = AuthenticatorAttestationResponse(
             client_data=client_data,
             attestation_object=attestation_object
         )
 
-        reg_response = RegistrationResponse(
-            raw_id=websafe_decode(response_data["rawId"]),
-            response=response
+    # fido2==1.1.3 uses credential_id not raw_id
+        auth_data = self.server.register_complete(
+            state,
+            response,
+            websafe_decode(response_data["rawId"])
         )
-
-        auth_data = self.server.register_complete(state, reg_response)
         return auth_data
 
     def generate_authentication_options(self, credentials):
