@@ -1,8 +1,6 @@
 from fido2.server import Fido2Server
-from fido2.webauthn import PublicKeyCredentialRpEntity, AuthenticatorSelectionCriteria, UserVerificationRequirement
+from fido2.webauthn import PublicKeyCredentialRpEntity, UserVerificationRequirement
 from fido2.utils import websafe_decode, websafe_encode
-from app.core.config import settings
-import json
 import os
 
 RP_ID = os.environ.get("WEBAUTHN_RP_ID", "zancrypt.in")
@@ -12,7 +10,7 @@ ORIGIN = os.environ.get("WEBAUTHN_ORIGIN", "https://zancrypt.in")
 class WebAuthnService:
     def __init__(self):
         rp = PublicKeyCredentialRpEntity(id=RP_ID, name=RP_NAME)
-        self.server = Fido2Server(rp)
+        self.server = Fido2Server(rp, allowed_origins=[ORIGIN])
 
     def generate_registration_options(self, user_id: bytes, username: str, display_name: str):
         options, state = self.server.register_begin(
@@ -39,7 +37,7 @@ class WebAuthnService:
                     "residentKey": "preferred",
                     "userVerification": "preferred"
                 },
-                "attestation": options.public_key.attestation.value if hasattr(options.public_key.attestation, 'value') else options.public_key.attestation,
+                "attestation": "none",
                 "excludeCredentials": []
             }
         }
@@ -47,25 +45,25 @@ class WebAuthnService:
 
     def verify_registration_response(self, response_data, state):
         from fido2.webauthn import (
-            RegistrationResponse, 
-            AuthenticatorAttestationResponse, 
-            CollectedClientData, 
+            RegistrationResponse,
+            AuthenticatorAttestationResponse,
+            CollectedClientData,
             AttestationObject
         )
-        
+
         client_data = CollectedClientData(websafe_decode(response_data["response"]["clientDataJSON"]))
         attestation_object = AttestationObject(websafe_decode(response_data["response"]["attestationObject"]))
-        
+
         response = AuthenticatorAttestationResponse(
             client_data=client_data,
             attestation_object=attestation_object
         )
-        
+
         reg_response = RegistrationResponse(
             raw_id=websafe_decode(response_data["rawId"]),
             response=response
         )
-        
+
         auth_data = self.server.register_complete(state, reg_response)
         return auth_data
 
@@ -74,7 +72,7 @@ class WebAuthnService:
             credentials,
             user_verification=UserVerificationRequirement.PREFERRED
         )
-        
+
         serializable_options = {
             "publicKey": {
                 "challenge": websafe_encode(options.public_key.challenge),
@@ -95,26 +93,26 @@ class WebAuthnService:
             CollectedClientData,
             AuthenticatorData
         )
-        
+
         client_data = CollectedClientData(websafe_decode(response_data["response"]["clientDataJSON"]))
         auth_data_parsed = AuthenticatorData(websafe_decode(response_data["response"]["authenticatorData"]))
-        
+
         response = AuthenticatorAssertionResponse(
             client_data=client_data,
             authenticator_data=auth_data_parsed,
             signature=websafe_decode(response_data["response"]["signature"]),
             user_handle=websafe_decode(response_data["response"]["userHandle"]) if response_data["response"].get("userHandle") else None
         )
-        
+
         auth_response = AuthenticationResponse(
             raw_id=websafe_decode(response_data["rawId"]),
             response=response
         )
-        
+
         auth_data = self.server.authenticate_complete(
             state,
             credentials,
             auth_response
         )
-        
+
         return auth_data, auth_response.response.authenticator_data.counter
