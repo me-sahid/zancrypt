@@ -1,13 +1,24 @@
+import base64
+
 import json
 import secrets
 from typing import Optional
-from webauthn.helpers import bytes_to_base64url as websafe_encode
+
 
 from app.core.config import settings
 import redis
 import logging
 
 logger = logging.getLogger(__name__)
+
+def websafe_encode(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).rstrip(b'=').decode('utf-8')
+
+def websafe_decode(data: str) -> bytes:
+    padding = 4 - len(data) % 4
+    if padding != 4:
+        data += '=' * padding
+    return base64.urlsafe_b64decode(data)
 
 
 def _encode_bytes(obj):
