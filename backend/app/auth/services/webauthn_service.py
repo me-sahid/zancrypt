@@ -44,28 +44,9 @@ class WebAuthnService:
         # Store challenge as bytes for later verification
         state = {"challenge": options.challenge}
 
-        serializable_options = {
-            "publicKey": {
-                "rp": {"name": options.rp.name, "id": options.rp.id},
-                "user": {
-                    "id": base64.urlsafe_b64encode(options.user.id).rstrip(b"=").decode(),
-                    "name": options.user.name,
-                    "displayName": options.user.display_name,
-                },
-                "challenge": base64.urlsafe_b64encode(options.challenge).rstrip(b"=").decode(),
-                "pubKeyCredParams": [
-                    {"type": "public-key", "alg": p.alg.value}
-                    for p in options.pub_key_cred_params
-                ],
-                "timeout": options.timeout,
-                "attestation": "none",
-                "authenticatorSelection": {
-                    "residentKey": "preferred",
-                    "userVerification": "preferred",
-                },
-                "excludeCredentials": [],
-            }
-        }
+        import json
+        from webauthn.helpers.options_to_json import options_to_json
+        serializable_options = json.loads(options_to_json(options))
 
         return serializable_options, state
 
@@ -92,21 +73,9 @@ class WebAuthnService:
 
         state = {"challenge": options.challenge, "user_verification": options.user_verification.value if hasattr(options.user_verification, 'value') else options.user_verification}
 
-        serializable_options = {
-            "publicKey": {
-                "challenge": base64.urlsafe_b64encode(options.challenge).rstrip(b"=").decode(),
-                "timeout": options.timeout,
-                "rpId": options.rp_id,
-                "allowCredentials": [
-                    {
-                        "type": "public-key",
-                        "id": base64.urlsafe_b64encode(c.id).rstrip(b"=").decode(),
-                    }
-                    for c in options.allow_credentials
-                ],
-                "userVerification": "preferred",
-            }
-        }
+        import json
+        from webauthn.helpers.options_to_json import options_to_json
+        serializable_options = json.loads(options_to_json(options))
 
         return serializable_options, state
 
