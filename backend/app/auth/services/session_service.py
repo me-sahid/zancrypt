@@ -2,7 +2,6 @@ import json
 import secrets
 from typing import Optional
 
-from fido2.utils import websafe_encode, websafe_decode
 from app.core.config import settings
 import redis
 import logging
