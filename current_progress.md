@@ -64,7 +64,7 @@ This document tracks all completed features, active developments, and pending sy
 ---
 
 ## 🔄 Last Sync Telemetry
-- **Last Sync**: 2026-06-06 14:45:18 UTC
+- **Last Sync**: 2026-06-06 15:19:04 UTC
 - **Active Branch**: `main`
-- **Latest Commit**: `ad2171a - fix: complete webauthn service with proper bytes conversion (me-sahid)`
+- **Latest Commit**: `fc4ec53 - chnaged the frontend files for the passkey bug (me-sahid)`
 - **Sync Action**: Git Push Triggered

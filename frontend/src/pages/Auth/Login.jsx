@@ -32,16 +32,16 @@ const Login = () => {
   setIsLoading(true);
 
   if (!showFallback) {
-    toast.loading("Initiating zero-knowledge challenge...", { id: 'auth-toast' });
-
     try {
+      toast.loading("Initiating zero-knowledge challenge...", { id: 'auth-toast' });
       const startResponse = await api.post('/auth/login/start', { email });
       const { options, session_id } = startResponse.data;
 
-      toast.loading("Awaiting biometric confirmation...", { id: 'auth-toast' });
-      
-      // Fix — wrap options in publicKey if not already wrapped
+      // Trigger biometric IMMEDIATELY after getting options
+      // No toast before this — any delay can cause NotAllowedError
       const passkeyOptions = options.publicKey ? options : { publicKey: options };
+      
+      toast.dismiss('auth-toast'); // Clear loading toast before biometric
       const assertion = await authenticatePasskey(passkeyOptions);
 
       toast.loading("Verifying cryptographic signature...", { id: 'auth-toast' });
@@ -56,25 +56,22 @@ const Login = () => {
       navigate('/dashboard');
     } catch (error) {
       let errorMsg = error.response?.data?.detail || error.message || 'Authentication failed';
-      if (
-        errorMsg.includes("navigator.credentials") ||
-        errorMsg.includes("undefined is not an object (evaluating 'navigator.credentials.get')")
-      ) {
-        errorMsg = "Passkeys require HTTPS/Localhost. Local IP detected.";
+      if (errorMsg.includes("NotAllowedError") || errorMsg.includes("timed out")) {
+        errorMsg = "Biometric prompt timed out. Please try again quickly after clicking.";
       }
-      toast.error(`${errorMsg} Switching to Access Key.`, { id: 'auth-toast' });
+      toast.error(errorMsg, { id: 'auth-toast' });
       setShowFallback(true);
     } finally {
       setIsLoading(false);
     }
   } else {
+    // fallback login — keep existing code
     toast.loading("Verifying identity via Access Key...", { id: 'auth-toast' });
     try {
       const response = await api.post('/auth/login/fallback', {
         email,
         access_key: accessKey
       });
-
       const { access_token, user } = response.data;
       setAuth(user, access_token);
       toast.success('Access granted via Security Key.', { id: 'auth-toast' });
