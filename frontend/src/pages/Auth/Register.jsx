@@ -3,16 +3,12 @@ import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { Lock, Mail, Shield, User, Fingerprint } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import gsap from 'gsap';
 import Button from '../../components/ui/Button';
 import SecureInput from '../../components/ui/SecureInput';
 import { useAuthStore } from '../../store/useStore';
 import api from '../../services/api';
-import CipherText from '../../components/crypto/CipherText';
 import { isWebAuthnSupported, registerPasskey } from '../../utils/webauthn';
 import { generateSalt } from '../../utils/crypto';
-
-
 
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -24,14 +20,12 @@ const Register = () => {
   });
   const navigate = useNavigate();
   const { isAuthenticated, setAuth } = useAuthStore();
-  const vizRef = useRef(null);
 
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, navigate]);
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -65,14 +59,18 @@ const Register = () => {
       const { options, session_id } = startResponse.data;
 
       toast.loading("Awaiting biometric confirmation...", { id: 'auth-toast' });
-      const credential = await registerPasskey(options);
+      
+      // Fix — wrap options in publicKey if not already wrapped
+      const passkeyOptions = options.publicKey ? options : { publicKey: options };
+      const credential = await registerPasskey(passkeyOptions);
 
       toast.loading("Finalizing cryptographic setup...", { id: 'auth-toast' });
       const verifyResponse = await api.post('/auth/register/verify', {
         session_id,
         response: credential,
         master_key_salt: masterSalt,
-        access_key: formData.accessKey
+        access_key: formData.accessKey,
+        encrypted_recovery_metadata: null
       });
 
       const { access_token, user } = verifyResponse.data;
@@ -82,7 +80,10 @@ const Register = () => {
       navigate('/dashboard');
     } catch (error) {
       let errorMsg = error.response?.data?.detail || error.message || 'Identity protocol failed';
-      if (errorMsg.includes("navigator.credentials") || errorMsg.includes("undefined is not an object (evaluating 'navigator.credentials.create')")) {
+      if (
+        errorMsg.includes("navigator.credentials") ||
+        errorMsg.includes("undefined is not an object (evaluating 'navigator.credentials.create')")
+      ) {
         errorMsg = "Passkeys require HTTPS/Localhost. Local IP detected.";
       }
       toast.error(`${errorMsg}`, { id: 'auth-toast' });

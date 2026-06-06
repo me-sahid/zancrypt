@@ -28,59 +28,65 @@ const Login = () => {
 
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
+  e.preventDefault();
+  setIsLoading(true);
 
-    if (!showFallback) {
-      toast.loading("Initiating zero-knowledge challenge...", { id: 'auth-toast' });
+  if (!showFallback) {
+    toast.loading("Initiating zero-knowledge challenge...", { id: 'auth-toast' });
 
-      try {
-        const startResponse = await api.post('/auth/login/start', { email });
-        const { options, session_id } = startResponse.data;
+    try {
+      const startResponse = await api.post('/auth/login/start', { email });
+      const { options, session_id } = startResponse.data;
 
-        toast.loading("Awaiting biometric confirmation...", { id: 'auth-toast' });
-        const assertion = await authenticatePasskey(options);
+      toast.loading("Awaiting biometric confirmation...", { id: 'auth-toast' });
+      
+      // Fix — wrap options in publicKey if not already wrapped
+      const passkeyOptions = options.publicKey ? options : { publicKey: options };
+      const assertion = await authenticatePasskey(passkeyOptions);
 
-        toast.loading("Verifying cryptographic signature...", { id: 'auth-toast' });
-        const verifyResponse = await api.post('/auth/login/verify', {
-          session_id,
-          response: assertion
-        });
+      toast.loading("Verifying cryptographic signature...", { id: 'auth-toast' });
+      const verifyResponse = await api.post('/auth/login/verify', {
+        session_id,
+        response: assertion
+      });
 
-        const { access_token, user } = verifyResponse.data;
-        setAuth(user, access_token);
-        toast.success('Access granted via Biometrics.', { id: 'auth-toast' });
-        navigate('/dashboard');
-      } catch (error) {
-        let errorMsg = error.response?.data?.detail || error.message || 'Authentication failed';
-        if (errorMsg.includes("navigator.credentials") || errorMsg.includes("undefined is not an object (evaluating 'navigator.credentials.get')")) {
-          errorMsg = "Passkeys require HTTPS/Localhost. Local IP detected.";
-        }
-        toast.error(`${errorMsg} Switching to Access Key.`, { id: 'auth-toast' });
-        setShowFallback(true);
-      } finally {
-        setIsLoading(false);
+      const { access_token, user } = verifyResponse.data;
+      setAuth(user, access_token);
+      toast.success('Access granted via Biometrics.', { id: 'auth-toast' });
+      navigate('/dashboard');
+    } catch (error) {
+      let errorMsg = error.response?.data?.detail || error.message || 'Authentication failed';
+      if (
+        errorMsg.includes("navigator.credentials") ||
+        errorMsg.includes("undefined is not an object (evaluating 'navigator.credentials.get')")
+      ) {
+        errorMsg = "Passkeys require HTTPS/Localhost. Local IP detected.";
       }
-    } else {
-      toast.loading("Verifying identity via Access Key...", { id: 'auth-toast' });
-      try {
-        const response = await api.post('/auth/login/fallback', {
-          email,
-          access_key: accessKey
-        });
-
-        const { access_token, user } = response.data;
-        setAuth(user, access_token);
-        toast.success('Access granted via Security Key.', { id: 'auth-toast' });
-        navigate('/dashboard');
-      } catch (error) {
-        const errorMsg = error.response?.data?.detail || 'Invalid Access Key. Access Denied.';
-        toast.error(errorMsg, { id: 'auth-toast' });
-      } finally {
-        setIsLoading(false);
-      }
+      toast.error(`${errorMsg} Switching to Access Key.`, { id: 'auth-toast' });
+      setShowFallback(true);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  } else {
+    toast.loading("Verifying identity via Access Key...", { id: 'auth-toast' });
+    try {
+      const response = await api.post('/auth/login/fallback', {
+        email,
+        access_key: accessKey
+      });
+
+      const { access_token, user } = response.data;
+      setAuth(user, access_token);
+      toast.success('Access granted via Security Key.', { id: 'auth-toast' });
+      navigate('/dashboard');
+    } catch (error) {
+      const errorMsg = error.response?.data?.detail || 'Invalid Access Key. Access Denied.';
+      toast.error(errorMsg, { id: 'auth-toast' });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+};
 
   return (
     <div className="min-h-[100dvh] flex items-center justify-center bg-void overflow-y-auto p-4 sm:p-6 md:p-8">
