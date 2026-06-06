@@ -272,7 +272,6 @@ const Files = () => {
       toast.success('Items destroyed', { id: 'multi-delete' });
       setSelectedIds({});
       fetchFiles();
-      if (currentFolderId) fetchFolders(currentFolderId);
     } catch (error) {
       toast.error('Failed to destroy some items', { id: 'multi-delete' });
     }
@@ -332,8 +331,6 @@ const Files = () => {
         clearClipboard();
       }
       fetchFiles();
-      if (currentFolderId) fetchFolders(currentFolderId);
-      else fetchFolders(null);
     } catch (e) {
       toast.error('Failed to paste items', { id: 'paste' });
     }
@@ -371,8 +368,6 @@ const Files = () => {
       toast.success('Renamed successfully', { id: 'rename' });
       setIsRenameModalOpen(false);
       fetchFiles();
-      if (currentFolderId) fetchFolders(currentFolderId);
-      else fetchFolders(null);
     } catch (e) {
       toast.error('Failed to rename', { id: 'rename' });
     }

@@ -1,3 +1,6 @@
+import base64
+from webauthn.helpers import base64url_to_bytes
+from app.auth.repositories import credential_repo
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
@@ -18,8 +21,6 @@ from app.auth.schemas.auth import (
     LoginStartResponse, LoginVerifyRequest, TokenResponse,
     FallbackLoginRequest
 )
-from fido2.utils import websafe_encode, websafe_decode
-from fido2.webauthn import PublicKeyCredentialDescriptor
 from passlib.hash import bcrypt
 from app.models.user import UserRole
 from slowapi import Limiter
@@ -62,7 +63,7 @@ async def register_start(
         "email": body.email,
         "full_name": body.full_name,
         "region": body.region,
-        "user_id": websafe_encode(user_id),
+        "user_id": base64.urlsafe_b64encode(user_id).rstrip(b"=").decode(),
         "state": state
     })
 
@@ -120,9 +121,9 @@ async def register_verify(
 
         credential = WebAuthnCredential(
             user_id=user.id,
-            credential_id=bytes(auth_data.credential_data.credential_id),
-            public_key=bytes(auth_data.credential_data),
-            sign_count=auth_data.counter
+            credential_id=auth_data.credential_id,
+            public_key=auth_data.credential_public_key,
+            sign_count=auth_data.sign_count
         )
         session.add(credential)
         await session.commit()
@@ -149,8 +150,8 @@ async def register_verify(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=is_secure,
-        samesite="lax",
+        secure=True,
+        samesite="none",
         max_age=7 * 24 * 60 * 60,
     )
 
@@ -186,17 +187,11 @@ async def login_start(
     if not credentials:
         raise HTTPException(status_code=400, detail="No passkeys registered for this account")
 
-    from fido2.webauthn import PublicKeyCredentialDescriptor
-    allowed_credentials = [
-        PublicKeyCredentialDescriptor(type="public-key", id=c.credential_id)
-        for c in credentials
-    ]
-
-    options, state = webauthn_service.generate_authentication_options(allowed_credentials)
+    options, state = webauthn_service.generate_authentication_options(credentials)
 
     session_id = session_service.create_auth_session({
         "email": user.email,
-        "user_id": user.id,
+        "user_id": str(user.id),
         "state": state
     })
 
@@ -221,15 +216,20 @@ async def login_verify(
         user_id = auth_session["user_id"]
         credentials = await credential_repo.get_by_user_id(user_id)
         
-        from fido2.webauthn import AttestedCredentialData
-        valid_credentials = [AttestedCredentialData(c.public_key) for c in credentials]
+        # We need to pass the credential objects to verify
+        # but fido2 verify_authentication_response expects the specific credential used
+        # The response from the client contains the credentialId used.
+        used_credential_id = base64url_to_bytes(request.response["id"])
+        target_credential = next((c for c in credentials if c.credential_id == used_credential_id), None)
         
+        if not target_credential:
+            raise HTTPException(status_code=400, detail="Credential not recognized")
+
         auth_data, new_counter = webauthn_service.verify_authentication_response(
             request.response,
             auth_session["state"],
-            valid_credentials
+            credentials
         )
-        
         # Update sign count
         await credential_repo.update_sign_count(auth_data.credential_id, new_counter)
 
@@ -250,8 +250,8 @@ async def login_verify(
             key="refresh_token",
             value=refresh_token,
             httponly=True,
-            secure=is_secure,
-            samesite="lax",
+            secure=True,
+            samesite="none",
             max_age=7 * 24 * 60 * 60,
         )
         
@@ -312,8 +312,8 @@ async def login_fallback(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=is_secure,
-        samesite="lax",
+        secure=True,
+        samesite="none",
         max_age=7 * 24 * 60 * 60,
     )
     
@@ -334,7 +334,6 @@ async def login_fallback(
     )
 
 from app.api.deps import get_current_user
-from app.services.auth_service import AuthService
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_token(
@@ -342,25 +341,51 @@ async def refresh_token(
     response: Response,
     session: AsyncSession = Depends(get_async_session)
 ) -> TokenResponse:
-    # Read refresh token from HttpOnly cookie
-    token = request.cookies.get("refresh_token")
-    if not token:
+    old_token = request.cookies.get("refresh_token")
+    if not old_token:
         raise HTTPException(status_code=401, detail="Refresh token missing")
-        
-    tokens = await AuthService(session).refresh_tokens(token)
-    
-    is_secure = request.url.scheme == "https"
-    
-    # Rotate the refresh cookie
+
+    from app.repositories.session_repo import SessionRepository
+    from app.repositories.user_repo import UserRepository
+    from app.security.jwt import create_access_token
+
+    session_repo = SessionRepository(session)
+
+    # Validate old token
+    user_session = await session_repo.get_by_token(old_token)
+    if not user_session:
+        raise HTTPException(status_code=401, detail="Invalid or expired session")
+
+    # Rotate — delete old, issue new
+    await session_repo.delete_session(old_token)
+    new_access_token = create_access_token(subject=str(user_session.user_id))
+    new_refresh_token = await session_repo.create_session(user_session.user_id)
+
     response.set_cookie(
         key="refresh_token",
-        value=tokens.refresh_token,
+        value=new_refresh_token,
         httponly=True,
-        secure=is_secure,
-        samesite="lax",
-        max_age=7 * 24 * 60 * 60, # 7 days
+        secure=True,             # ✅
+        samesite="none",         # ✅
+        max_age=7 * 24 * 60 * 60,
     )
-    return tokens
+
+    user_repo = UserRepository(session)
+    user = await user_repo.get_by_id(user_session.user_id)
+
+    return TokenResponse(
+        access_token=new_access_token,
+        refresh_token=new_refresh_token,
+        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        user={
+            "id": user.id,
+            "email": user.email,
+            "username": user.username,
+            "full_name": user.full_name,
+            "role": user.role,
+            "region": user.region,
+        }
+    )
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 async def logout(
@@ -369,21 +394,22 @@ async def logout(
     current_user=Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> None:
-    # Revoke the access JWT in Redis so it cannot be reused
     from app.security.jwt import revoke_token
+    from app.repositories.session_repo import SessionRepository
+
     auth_header = request.headers.get("Authorization", "")
     if auth_header.startswith("Bearer "):
         revoke_token(auth_header.split(" ", 1)[1])
-    await SessionService(session).revoke_active_sessions(current_user.id)
-    
-    is_secure = request.url.scheme == "https"
-    
-    # Clear the refresh token cookie
+
+    # Use SessionRepository directly — revoke all sessions for this user
+    session_repo = SessionRepository(session)
+    await session_repo.revoke_all_by_user(current_user.id)
+
     response.delete_cookie(
         key="refresh_token",
         httponly=True,
-        secure=is_secure,
-        samesite="lax"
+        secure=True,
+        samesite="none",
     )
 
 @router.get("/me")

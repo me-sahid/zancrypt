@@ -5,7 +5,7 @@ const SecureInput = React.forwardRef(({ className, type, label, error, leftIcon,
   return (
     <div className="w-full">
       {label && (
-        <label className="block font-mono text-[11px] text-text-muted mb-1.5 uppercase tracking-[0.1em]">
+        <label className="block font-mono text-xs text-text-muted mb-1.5 uppercase tracking-[0.1em]">
           {label}
         </label>
       )}
@@ -18,7 +18,7 @@ const SecureInput = React.forwardRef(({ className, type, label, error, leftIcon,
         <input
           type={type}
           className={twMerge(
-            'flex h-12 w-full rounded-md border border-border bg-void px-4 py-2 font-sans text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_0_2px_var(--color-accent-dim)] transition-all',
+            'flex h-12 w-full rounded-md border border-border bg-void px-4 py-2 font-sans text-base text-text-primary placeholder:text-text-secondary/70 focus:outline-none focus:border-accent focus:shadow-[0_0_0_2px_var(--color-accent-dim)] transition-all',
             leftIcon && 'pl-10',
             rightIcon && 'pr-10',
             error && 'border-danger focus:border-danger focus:shadow-[0_0_0_2px_rgba(255,68,85,0.2)]',

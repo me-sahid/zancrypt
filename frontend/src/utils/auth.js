@@ -1,5 +1,7 @@
+import { useAuthStore } from '../store/useStore';
+
 export function getAuthHeader() {
-  const token = localStorage.getItem('zancrypt-auth');
+  const token = useAuthStore.getState().token;  // reads _memoryToken ✅
   if (!token) {
     return {};
   }

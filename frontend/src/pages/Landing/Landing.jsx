@@ -10,7 +10,13 @@ const Footer = lazy(() => import('./components/Footer'));
 
 const Landing = () => {
   const containerRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(true);
 
+  useEffect(() => {
+    // Simulate initial loading sequence for visual skeletons
+    const timer = setTimeout(() => setIsLoading(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Global Intersection Observer for scroll animations
   useEffect(() => {
@@ -44,13 +50,13 @@ const Landing = () => {
   return (
     <div ref={containerRef} className="min-h-screen bg-void text-text-primary selection:bg-accent/20 selection:text-accent font-sans overflow-x-hidden scroll-smooth">
       <Navbar />
-      <HeroSection />
+      <HeroSection isLoading={isLoading} />
 
 
 
       {/* FEATURES section */}
       <section id="features">
-        <FeaturesGrid />
+        <FeaturesGrid isLoading={isLoading} />
       </section>
 
       {/* ARCHITECTURE section */}
