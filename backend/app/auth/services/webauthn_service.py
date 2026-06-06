@@ -60,7 +60,7 @@ class WebAuthnService:
             user_display_name=display_name,
             attestation=AttestationConveyancePreference.NONE,
             authenticator_selection=AuthenticatorSelectionCriteria(
-                resident_key=ResidentKeyRequirement.PREFERRED,
+                resident_key=ResidentKeyRequirement.REQUIRED,
                 user_verification=UserVerificationRequirement.PREFERRED,
             ),
         )

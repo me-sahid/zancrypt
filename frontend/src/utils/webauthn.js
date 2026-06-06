@@ -46,6 +46,13 @@ export const registerPasskey = async (options) => {
           ...c,
           id: base64urlToBuffer(c.id),
         })),
+        // Force discoverable credential so passkey is saved on the device
+        authenticatorSelection: {
+          ...(publicKey.authenticatorSelection || {}),
+          residentKey: 'required',
+          requireResidentKey: true,
+          userVerification: publicKey.authenticatorSelection?.userVerification || 'preferred',
+        },
       },
     };
 
