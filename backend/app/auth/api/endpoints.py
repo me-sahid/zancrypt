@@ -214,13 +214,21 @@ async def login_verify(
         credential_repo = WebAuthnRepository(session)
         user_id = auth_session["user_id"]
         credentials = await credential_repo.get_by_user_id(user_id)
-        
-        # We need to pass the credential objects to verify
-        # but fido2 verify_authentication_response expects the specific credential used
-        # The response from the client contains the credentialId used.
+
+        if not credentials:
+            raise HTTPException(status_code=400, detail="No passkeys found")
+
+        # ← fix: compare bytes properly
+        from webauthn.helpers import base64url_to_bytes
         used_credential_id = base64url_to_bytes(request.response["id"])
-        target_credential = next((c for c in credentials if c.credential_id == used_credential_id), None)
-        
+
+        target_credential = None
+        for c in credentials:
+            db_cred_id = bytes(c.credential_id) if not isinstance(c.credential_id, bytes) else c.credential_id
+            if db_cred_id == used_credential_id:
+                target_credential = c
+                break
+
         if not target_credential:
             raise HTTPException(status_code=400, detail="Credential not recognized")
 
@@ -229,22 +237,21 @@ async def login_verify(
             auth_session["state"],
             credentials
         )
-        # Update sign count
+
         await credential_repo.update_sign_count(target_credential.credential_id, new_counter)
 
         from app.security.jwt import create_access_token
         from app.repositories.session_repo import SessionRepository
-        
-        # Issue Tokens
+
         access_token = create_access_token(subject=str(user_id))
         session_repo = SessionRepository(session)
         refresh_token = await session_repo.create_session(user_id)
-        
+
         user_repo = UserRepository(session)
         user = await user_repo.get_by_id(user_id)
-        
+
         is_secure = req.url.scheme == "https"
-        
+
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,
@@ -253,7 +260,7 @@ async def login_verify(
             samesite="none",
             max_age=7 * 24 * 60 * 60,
         )
-        
+
         return TokenResponse(
             access_token=access_token,
             refresh_token=refresh_token,

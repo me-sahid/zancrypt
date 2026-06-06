@@ -106,28 +106,29 @@ class WebAuthnService:
         return serializable_options, state
 
     def verify_authentication_response(self, response_data, state, credentials):
+        from webauthn.helpers import base64url_to_bytes
+    
         credential_id = base64url_to_bytes(response_data["id"])
-
+    
+    # find matching credential — convert DB bytes properly
         target = None
         for c in credentials:
-            stored_id = _str_to_bytes(
-                c.id if hasattr(c, 'id') else c.credential_id
-            )
-            if stored_id == credential_id:
+            db_cred_id = bytes(c.credential_id) if not isinstance(c.credential_id, bytes) else c.credential_id
+            if db_cred_id == credential_id:
                 target = c
                 break
 
         if not target:
             raise ValueError("Credential not found")
 
-        public_key = _str_to_bytes(target.public_key)
+        db_public_key = bytes(target.public_key) if not isinstance(target.public_key, bytes) else target.public_key
 
         verification = verify_authentication_response(
             credential=response_data,
             expected_challenge=state["challenge"],
             expected_rp_id=RP_ID,
             expected_origin=ALLOWED_ORIGINS,
-            credential_public_key=public_key,
+            credential_public_key=db_public_key,
             credential_current_sign_count=target.sign_count,
         )
 
