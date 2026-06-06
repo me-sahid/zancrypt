@@ -27,22 +27,24 @@ const Login = () => {
   }, [isAuthenticated, navigate]);
 
 
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
   e.preventDefault();
-  setIsLoading(true);
 
   if (!showFallback) {
     try {
-      // Step 1 — get options from server
+      setIsLoading(true);
+      
+      // 1. Get options - fast network call
       const startResponse = await api.post('/auth/login/start', { email });
       const { options, session_id } = startResponse.data;
-
-      // Step 2 — trigger biometric IMMEDIATELY, no toast before this
       const passkeyOptions = options.publicKey ? options : { publicKey: options };
+
+      // 2. Trigger biometric immediately - NO state changes before this
       const assertion = await authenticatePasskey(passkeyOptions);
 
-      // Step 3 — verify after biometric completes
+      // 3. Only after biometric succeeds, show loading
       toast.loading("Verifying...", { id: 'auth-toast' });
+
       const verifyResponse = await api.post('/auth/login/verify', {
         session_id,
         response: assertion
@@ -54,15 +56,22 @@ const Login = () => {
       navigate('/dashboard');
 
     } catch (error) {
-      const msg = error.response?.data?.detail || error.message || 'Failed';
-      toast.error(msg, { id: 'auth-toast' });
-      setShowFallback(true);
+      setIsLoading(false);
+      if (error.name === 'NotAllowedError') {
+        toast.error('Biometric cancelled or timed out. Use Access Key instead.', { id: 'auth-toast' });
+        setShowFallback(true);
+      } else {
+        const msg = error.response?.data?.detail || error.message || 'Failed';
+        toast.error(msg, { id: 'auth-toast' });
+        setShowFallback(true);
+      }
     } finally {
       setIsLoading(false);
     }
+
   } else {
-    // fallback access key login
     try {
+      setIsLoading(true);
       toast.loading("Verifying Access Key...", { id: 'auth-toast' });
       const response = await api.post('/auth/login/fallback', {
         email,
