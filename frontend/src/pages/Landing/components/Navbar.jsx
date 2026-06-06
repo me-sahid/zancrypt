@@ -506,7 +506,7 @@ const Navbar = () => {
 
               <Link
                 to="/register"
-                className="h-10 px-5 flex items-center bg-text-primary hover:bg-text-primary/90 text-surface font-sans text-sm font-semibold rounded-lg transition-all shadow-lg shadow-text-primary/20"
+                className="h-10 px-5 flex items-center bg-accent hover:bg-accent/90 text-void font-sans text-sm font-semibold rounded-lg transition-all shadow-lg shadow-accent/20"
               >
                 Get Started
               </Link>
@@ -672,7 +672,7 @@ const Navbar = () => {
                   </Link>
                   <Link
                     to="/register"
-                    className="w-full py-2.5 bg-text-primary text-surface font-sans text-xs font-semibold rounded-lg text-center hover:bg-text-primary/90 transition-all"
+                    className="w-full py-2.5 bg-accent text-void font-sans text-xs font-semibold rounded-lg text-center hover:bg-accent/90 transition-all"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Get Started

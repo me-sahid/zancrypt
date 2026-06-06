@@ -1,6 +1,7 @@
 import json
 import secrets
 from typing import Optional
+from webauthn.helpers import bytes_to_base64url as websafe_encode
 
 from app.core.config import settings
 import redis
