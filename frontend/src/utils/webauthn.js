@@ -85,10 +85,6 @@ export const authenticatePasskey = async (options) => {
       publicKey: {
         ...publicKey,
         challenge: base64urlToBuffer(publicKey.challenge),
-        allowCredentials: (publicKey.allowCredentials || []).map((c) => ({
-          ...c,
-          id: base64urlToBuffer(c.id),
-        })),
       },
     };
 
