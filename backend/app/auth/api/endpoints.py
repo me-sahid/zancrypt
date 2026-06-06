@@ -1,5 +1,5 @@
 import base64
-from webauthn.helpers import base64url_to_bytes
+from webauthn import base64url_to_bytes
 from app.auth.repositories import credential_repo
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
