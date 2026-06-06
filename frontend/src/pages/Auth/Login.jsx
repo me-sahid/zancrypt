@@ -11,6 +11,9 @@ import api from '../../services/api';
 import CipherText from '../../components/crypto/CipherText';
 import { authenticatePasskey } from '../../utils/webauthn';
 
+/** Simple email format check to avoid 422s on partial input */
+const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -26,81 +29,114 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  const pendingChallengeRef = useRef(null);
 
- const [pendingChallenge, setPendingChallenge] = useState(null);
-
-// Pre-fetch challenge when user types email
-useEffect(() => {
-  if (!email || showFallback) return;
-  const prefetch = async () => {
-    try {
-      const res = await api.post('/auth/login/start', { email });
-      setPendingChallenge(res.data);
-    } catch (_) {}
-  };
-  const timer = setTimeout(prefetch, 800); // debounce
-  return () => clearTimeout(timer);
-}, [email, showFallback]);
-
-const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  if (!showFallback) {
-    try {
-      // Use pre-fetched challenge — no await before biometric
-      const { options, session_id } = pendingChallenge || 
-        (await api.post('/auth/login/start', { email })).data;
-
-      const passkeyOptions = options.publicKey ? options : { publicKey: options };
-      
-      // Biometric fires synchronously after user click
-      const assertion = await authenticatePasskey(passkeyOptions);
-
-      setIsLoading(true);
-      toast.loading("Verifying...", { id: 'auth-toast' });
-
-      const verifyResponse = await api.post('/auth/login/verify', {
-        session_id,
-        response: assertion
-      });
-
-      const { access_token, user } = verifyResponse.data;
-      setAuth(user, access_token);
-      toast.success('Access granted.', { id: 'auth-toast' });
-      navigate('/dashboard');
-
-    } catch (error) {
-      setIsLoading(false);
-      setPendingChallenge(null); // reset — fetch fresh next time
-      if (error.name === 'NotAllowedError') {
-        setShowFallback(true);
-        toast.error('Biometric failed. Use Access Key.', { id: 'auth-toast' });
-      } else {
-        toast.error(error.response?.data?.detail || 'Failed', { id: 'auth-toast' });
-        setShowFallback(true);
+  // Pre-fetch challenge when user types a VALID email
+  useEffect(() => {
+    if (!email || showFallback || !isValidEmail(email)) {
+      pendingChallengeRef.current = null;
+      return;
+    }
+    const prefetch = async () => {
+      try {
+        const res = await api.post('/auth/login/start', { email });
+        pendingChallengeRef.current = res.data;
+      } catch (_) {
+        pendingChallengeRef.current = null;
       }
-    } finally {
-      setIsLoading(false);
-    }
+    };
+    const timer = setTimeout(prefetch, 800); // debounce
+    return () => clearTimeout(timer);
+  }, [email, showFallback]);
 
-  } else {
-    try {
-      setIsLoading(true);
-      const response = await api.post('/auth/login/fallback', {
-        email,
-        access_key: accessKey
-      });
-      const { access_token, user } = response.data;
-      setAuth(user, access_token);
-      toast.success('Access granted.', { id: 'auth-toast' });
-      navigate('/dashboard');
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Invalid Access Key.', { id: 'auth-toast' });
-    } finally {
-      setIsLoading(false);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (isLoading) return;
+
+    if (!showFallback) {
+      // ── Passkey flow ──
+      // Step 1: Get challenge (use pre-fetched if available, otherwise fetch now)
+      let challengeData = pendingChallengeRef.current;
+
+      if (!challengeData) {
+        try {
+          setIsLoading(true);
+          toast.loading("Preparing challenge...", { id: 'auth-toast' });
+          const res = await api.post('/auth/login/start', { email });
+          challengeData = res.data;
+          setIsLoading(false);
+          toast.dismiss('auth-toast');
+        } catch (error) {
+          setIsLoading(false);
+          const detail = error.response?.data?.detail || 'Failed to start authentication.';
+          toast.error(detail, { id: 'auth-toast' });
+          // If 404 (user not found) or 400 (no passkeys), show fallback
+          if (error.response?.status === 404 || error.response?.status === 400) {
+            setShowFallback(true);
+          }
+          return;
+        }
+      }
+
+      // Step 2: Fire the biometric prompt — MUST happen in user-gesture context
+      // We split this into a separate try/catch so that even if the fetch above
+      // consumed some time, the navigator.credentials.get() call is the FIRST
+      // await after the user's click event.
+      try {
+        const { options, session_id } = challengeData;
+        const passkeyOptions = options.publicKey ? options : { publicKey: options };
+
+        // This fires the biometric prompt (Touch ID / Face ID / YubiKey)
+        const assertion = await authenticatePasskey(passkeyOptions);
+
+        // Step 3: Verify with server
+        setIsLoading(true);
+        toast.loading("Verifying...", { id: 'auth-toast' });
+
+        const verifyResponse = await api.post('/auth/login/verify', {
+          session_id,
+          response: assertion
+        });
+
+        const { access_token, user } = verifyResponse.data;
+        setAuth(user, access_token);
+        toast.success('Access granted.', { id: 'auth-toast' });
+        navigate('/dashboard');
+
+      } catch (error) {
+        setIsLoading(false);
+        pendingChallengeRef.current = null; // reset — fetch fresh next time
+        if (error.name === 'NotAllowedError') {
+          setShowFallback(true);
+          toast.error('Biometric cancelled or not available. Use Access Key.', { id: 'auth-toast' });
+        } else {
+          toast.error(error.response?.data?.detail || 'Authentication failed.', { id: 'auth-toast' });
+          setShowFallback(true);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+
+    } else {
+      // ── Access Key fallback flow ──
+      try {
+        setIsLoading(true);
+        toast.loading("Authenticating...", { id: 'auth-toast' });
+        const response = await api.post('/auth/login/fallback', {
+          email,
+          access_key: accessKey
+        });
+        const { access_token, user } = response.data;
+        setAuth(user, access_token);
+        toast.success('Access granted.', { id: 'auth-toast' });
+        navigate('/dashboard');
+      } catch (error) {
+        toast.error(error.response?.data?.detail || 'Invalid Access Key.', { id: 'auth-toast' });
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }
-};
+  };
 
   return (
     <div className="min-h-[100dvh] flex items-center justify-center bg-void overflow-y-auto p-4 sm:p-6 md:p-8">
@@ -175,7 +211,6 @@ const handleSubmit = async (e) => {
               variant="primary"
               className="w-full h-12"
               isLoading={isLoading}
-              disabled = {false}
             >
               {showFallback ? '[ Authenticate ]' : '[ Request Challenge ]'}
             </Button>
@@ -183,7 +218,10 @@ const handleSubmit = async (e) => {
             {showFallback && (
               <button
                 type="button"
-                onClick={() => setShowFallback(false)}
+                onClick={() => {
+                  setShowFallback(false);
+                  pendingChallengeRef.current = null;
+                }}
                 className="w-full font-mono text-xs text-text-muted hover:text-accent uppercase tracking-widest transition-colors mt-4"
               >
                 Retry Passkey
