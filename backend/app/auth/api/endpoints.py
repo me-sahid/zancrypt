@@ -186,16 +186,11 @@ async def login_start(
     if not credentials:
         raise HTTPException(status_code=400, detail="No passkeys registered for this account")
 
-    allowed_credentials = [
-        PublicKeyCredentialDescriptor(type="public-key", id=c.credential_id)
-        for c in credentials
-    ]
-
-    options, state = webauthn_service.generate_authentication_options(allowed_credentials)
+    options, state = webauthn_service.generate_authentication_options(credentials)
 
     session_id = session_service.create_auth_session({
         "email": user.email,
-        "user_id": user.id,
+        "user_id": str(user.id),
         "state": state
     })
 
