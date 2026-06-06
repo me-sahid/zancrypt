@@ -27,22 +27,35 @@ const Login = () => {
   }, [isAuthenticated, navigate]);
 
 
- const handleSubmit = async (e) => {
+ const [pendingChallenge, setPendingChallenge] = useState(null);
+
+// Pre-fetch challenge when user types email
+useEffect(() => {
+  if (!email || showFallback) return;
+  const prefetch = async () => {
+    try {
+      const res = await api.post('/auth/login/start', { email });
+      setPendingChallenge(res.data);
+    } catch (_) {}
+  };
+  const timer = setTimeout(prefetch, 800); // debounce
+  return () => clearTimeout(timer);
+}, [email, showFallback]);
+
+const handleSubmit = async (e) => {
   e.preventDefault();
 
   if (!showFallback) {
     try {
-      // NO setIsLoading here — any state change breaks WebAuthn
+      // Use pre-fetched challenge — no await before biometric
+      const { options, session_id } = pendingChallenge || 
+        (await api.post('/auth/login/start', { email })).data;
 
-      // 1. Get challenge from server
-      const startResponse = await api.post('/auth/login/start', { email });
-      const { options, session_id } = startResponse.data;
       const passkeyOptions = options.publicKey ? options : { publicKey: options };
-
-      // 2. Biometric fires here — zero state changes before this line
+      
+      // Biometric fires synchronously after user click
       const assertion = await authenticatePasskey(passkeyOptions);
 
-      // 3. NOW safe to update state
       setIsLoading(true);
       toast.loading("Verifying...", { id: 'auth-toast' });
 
@@ -58,12 +71,12 @@ const Login = () => {
 
     } catch (error) {
       setIsLoading(false);
+      setPendingChallenge(null); // reset — fetch fresh next time
       if (error.name === 'NotAllowedError') {
         setShowFallback(true);
-        toast.error('Use Access Key instead.', { id: 'auth-toast' });
+        toast.error('Biometric failed. Use Access Key.', { id: 'auth-toast' });
       } else {
-        const msg = error.response?.data?.detail || error.message || 'Failed';
-        toast.error(msg, { id: 'auth-toast' });
+        toast.error(error.response?.data?.detail || 'Failed', { id: 'auth-toast' });
         setShowFallback(true);
       }
     } finally {
@@ -73,7 +86,6 @@ const Login = () => {
   } else {
     try {
       setIsLoading(true);
-      toast.loading("Verifying Access Key...", { id: 'auth-toast' });
       const response = await api.post('/auth/login/fallback', {
         email,
         access_key: accessKey
