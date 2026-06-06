@@ -32,17 +32,18 @@ const Login = () => {
 
   if (!showFallback) {
     try {
-      setIsLoading(true);
-      
-      // 1. Get options - fast network call
+      // NO setIsLoading here — any state change breaks WebAuthn
+
+      // 1. Get challenge from server
       const startResponse = await api.post('/auth/login/start', { email });
       const { options, session_id } = startResponse.data;
       const passkeyOptions = options.publicKey ? options : { publicKey: options };
 
-      // 2. Trigger biometric immediately - NO state changes before this
+      // 2. Biometric fires here — zero state changes before this line
       const assertion = await authenticatePasskey(passkeyOptions);
 
-      // 3. Only after biometric succeeds, show loading
+      // 3. NOW safe to update state
+      setIsLoading(true);
       toast.loading("Verifying...", { id: 'auth-toast' });
 
       const verifyResponse = await api.post('/auth/login/verify', {
@@ -58,8 +59,8 @@ const Login = () => {
     } catch (error) {
       setIsLoading(false);
       if (error.name === 'NotAllowedError') {
-        toast.error('Biometric cancelled or timed out. Use Access Key instead.', { id: 'auth-toast' });
         setShowFallback(true);
+        toast.error('Use Access Key instead.', { id: 'auth-toast' });
       } else {
         const msg = error.response?.data?.detail || error.message || 'Failed';
         toast.error(msg, { id: 'auth-toast' });
@@ -162,6 +163,7 @@ const Login = () => {
               variant="primary"
               className="w-full h-12"
               isLoading={isLoading}
+              disabled = {false}
             >
               {showFallback ? '[ Authenticate ]' : '[ Request Challenge ]'}
             </Button>
