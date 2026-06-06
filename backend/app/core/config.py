@@ -10,6 +10,8 @@ from pydantic import Field, PostgresDsn, SecretStr
 from pydantic_settings import BaseSettings
 
 ALLOWED_ORIGINS = [
+    "https://zancrypt.in",
+    "https://www.zancrypt.in",
     "https://zancrypt-front.pages.dev",
     "http://localhost:5173",
     "http://localhost:80",
@@ -78,6 +80,9 @@ class Settings(BaseSettings):
     ENABLE_OTEL: bool = Field(True, env="ENABLE_OTEL")
     PROMETHEUS_METRICS_ENABLED: bool = Field(True, env="PROMETHEUS_METRICS_ENABLED")
     LOG_LEVEL: str = Field("INFO", env="LOG_LEVEL")
+
+    RAZORPAY_KEY_ID: str | None = Field(None, env="RAZORPAY_KEY_ID")
+    RAZORPAY_KEY_SECRET: str | None = Field(None, env="RAZORPAY_KEY_SECRET")
 
     @property
     def CORS_ORIGINS(self) -> List[str]:

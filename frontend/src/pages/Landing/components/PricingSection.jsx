@@ -1,13 +1,118 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { useThemeStore } from '../../../store/useThemeStore';
+import { useAuthStore } from '../../../store/useStore';
+import api from '../../../services/api';
+import toast from 'react-hot-toast';
 
 const PricingSection = () => {
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
+  const { isAuthenticated, user, setAuth } = useAuthStore();
+  const navigate = useNavigate();
 
   const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' | 'yearly'
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [customStorage, setCustomStorage] = useState(100); // 100 GB default
+
+  useEffect(() => {
+    // Dynamically load Razorpay script
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+    
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
+
+  const handlePurchase = async (tier) => {
+    if (!isAuthenticated) {
+      toast.error("Please login to continue with your purchase");
+      navigate('/login');
+      return;
+    }
+
+    if (tier.baseInr === 0) {
+      navigate('/dashboard');
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      const toastId = toast.loading('Initializing secure checkout...');
+
+      // 1. Create order on the backend
+      const payload = { plan_name: tier.name };
+      if (tier.isCustom) {
+        payload.custom_storage_gb = customStorage;
+      }
+      const { data: orderData } = await api.post('/billing/create-order', payload);
+
+      toast.dismiss(toastId);
+
+      // 2. Initialize Razorpay options
+      const options = {
+        key: orderData.key_id, // Enter the Key ID generated from the Dashboard
+        amount: orderData.amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+        currency: orderData.currency,
+        name: "Zancrypt",
+        description: `Upgrade to ${tier.name} Plan`,
+        image: "https://zancrypt.in/logo.png",
+        order_id: orderData.order_id, // This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+        handler: async function (response) {
+          const verifyToast = toast.loading('Verifying secure payment...');
+          try {
+            // 3. Verify payment signature on the backend
+            const verifyPayload = {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              plan_name: tier.name
+            };
+            if (tier.isCustom) {
+              verifyPayload.custom_storage_gb = customStorage;
+            }
+            const verifyRes = await api.post('/billing/verify-payment', verifyPayload);
+
+            toast.success(`Successfully upgraded to ${verifyRes.data.plan_type}!`, { id: verifyToast });
+            
+            // Fetch updated profile
+            const meRes = await api.get('/auth/me');
+            setAuth(meRes.data, localStorage.getItem('zancrypt-auth'));
+            
+            navigate('/dashboard');
+          } catch (err) {
+            toast.error(err.response?.data?.detail || 'Payment verification failed', { id: verifyToast });
+          }
+        },
+        prefill: {
+          name: user?.full_name || user?.username || "",
+          email: user?.email || "",
+          contact: ""
+        },
+        theme: {
+          color: "#4FFFBA"
+        }
+      };
+
+      const rzp1 = new window.Razorpay(options);
+      rzp1.on('payment.failed', function (response) {
+        toast.error(`Payment failed: ${response.error.description}`);
+      });
+      rzp1.open();
+      
+    } catch (error) {
+      toast.dismiss();
+      toast.error(error.response?.data?.detail || "Failed to initiate checkout");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const tiers = [
     {
@@ -35,7 +140,7 @@ const PricingSection = () => {
         "Passkey (WebAuthn) authentication", 
         "Client-side AES-256-GCM encryption",
         "Download and share encrypted files",
-        "Self-destructing file links", 
+        "Password protected link sharing", 
         "Priority multi-cloud routing",
         "Dedicated upload bandwidth"
       ],
@@ -52,7 +157,7 @@ const PricingSection = () => {
         "Passkey (WebAuthn) authentication", 
         "Client-side AES-256-GCM encryption",
         "Download and share encrypted files",
-        "Self-destructing file links", 
+        "Password protected link sharing", 
         "Priority multi-cloud routing", 
         "OpenTelemetry monitoring export", 
         "Immutable audit log exports", 
@@ -60,11 +165,37 @@ const PricingSection = () => {
       ],
       cta: "Contact Sales",
       recommended: false
+    },
+    {
+      name: "CUSTOM",
+      baseInr: 0, // dynamically calculated
+      description: "Scale on demand with precise custom storage allocations.",
+      features: [
+        "Select your exact storage", 
+        "Custom private node connection", 
+        "Passkey (WebAuthn) authentication", 
+        "Client-side AES-256-GCM encryption",
+        "OpenTelemetry monitoring export", 
+        "Immutable audit log exports"
+      ],
+      cta: "Buy Custom",
+      recommended: false,
+      isCustom: true
     }
   ];
 
-  const getPriceString = (baseInrMonthly) => {
-    if (baseInrMonthly === 0) {
+  const getPriceString = (tier) => {
+    if (tier.isCustom) {
+      const monthlyRate = customStorage * 3;
+      const rateToDisplay = billingCycle === 'monthly' ? monthlyRate : Math.round(monthlyRate * 0.8);
+      return {
+        primary: `₹${rateToDisplay}`,
+        secondary: billingCycle === 'yearly' ? `Billed annually as ₹${rateToDisplay * 12}/yr` : `Billed monthly`,
+        period: 'mo'
+      };
+    }
+    
+    if (tier.baseInr === 0) {
       return {
         primary: '₹0',
         secondary: 'Forever free storage',
@@ -73,7 +204,7 @@ const PricingSection = () => {
     }
 
     // Apply 20% discount for yearly billing
-    const monthlyRate = billingCycle === 'monthly' ? baseInrMonthly : Math.round(baseInrMonthly * 0.8);
+    const monthlyRate = billingCycle === 'monthly' ? tier.baseInr : Math.round(tier.baseInr * 0.8);
 
     return {
       primary: `₹${monthlyRate}`,
@@ -129,9 +260,9 @@ const PricingSection = () => {
         </div>
 
         {/* Pricing Cards Grid */}
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 items-stretch">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 items-stretch">
           {tiers.map((tier, i) => {
-            const priceInfo = getPriceString(tier.baseInr);
+            const priceInfo = getPriceString(tier);
             return (
               <div 
                 key={i} 
@@ -170,6 +301,27 @@ const PricingSection = () => {
                   </div>
                 </div>
 
+                {tier.isCustom && (
+                  <div className="mb-6">
+                    <label className="text-xs text-text-secondary font-mono block mb-2">
+                      STORAGE: <span className="text-accent font-bold">{customStorage >= 1000 ? `${(customStorage/1024).toFixed(1)} TB` : `${customStorage} GB`}</span>
+                    </label>
+                    <input 
+                      type="range" 
+                      min="100" 
+                      max="10240" 
+                      step="100" 
+                      value={customStorage} 
+                      onChange={(e) => setCustomStorage(Number(e.target.value))}
+                      className="w-full accent-accent bg-border/40 h-1.5 rounded-full appearance-none outline-none"
+                    />
+                    <div className="flex justify-between text-[9px] text-text-muted font-mono mt-1.5 uppercase">
+                      <span>100GB</span>
+                      <span>10TB</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="w-full h-[1px] bg-border/40 mb-6" />
                 
                 {/* Features List */}
@@ -188,16 +340,17 @@ const PricingSection = () => {
                   ))}
                 </ul>
                 
-                <Link 
-                  to={tier.recommended ? "/register" : "/contact"} 
+                <button 
+                  onClick={() => handlePurchase(tier)}
+                  disabled={isProcessing}
                   className={`w-full py-4 text-center rounded-2xl font-mono text-xs uppercase tracking-widest transition-all duration-300 font-bold ${
-                    tier.recommended 
+                    tier.recommended || tier.isCustom
                       ? 'bg-accent text-void hover:brightness-110 active:scale-98 shadow-lg shadow-accent/15' 
                       : 'border border-border/80 text-text-secondary hover:text-text-primary hover:border-border-active hover:bg-border/20 active:scale-98'
-                  }`}
+                  } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  [ {tier.cta} ]
-                </Link>
+                  [ {isProcessing ? 'PROCESSING...' : (tier.baseInr === 0 && !tier.isCustom ? (isAuthenticated ? 'GO TO DASHBOARD' : 'GET STARTED') : 'BUY NOW')} ]
+                </button>
               </div>
             );
           })}

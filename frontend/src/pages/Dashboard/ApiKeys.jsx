@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Key, Eye, EyeOff, Copy, Trash2, ShieldAlert, CheckCircle2, Zap, Sliders } from 'lucide-react';
 import { useAuthStore } from '../../store/useStore';
 import { apiKeysService } from '../../services/apiKeysService';
+import api from '../../services/api';
 import toast from 'react-hot-toast';
 
 const ApiKeys = () => {
-  const { user } = useAuthStore();
+  const { user, token, setAuth } = useAuthStore();
   const [keys, setKeys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -36,8 +37,18 @@ const ApiKeys = () => {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const res = await api.get('/auth/me');
+      setAuth({ ...user, ...res.data }, token);
+    } catch (e) {
+      // silently fail
+    }
+  };
+
   useEffect(() => {
     fetchKeys();
+    refreshUser();
   }, []);
 
   const handleCreateKey = async (e) => {

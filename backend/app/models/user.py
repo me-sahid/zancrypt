@@ -33,6 +33,12 @@ class User(Base, TimestampMixin):
     # API Usage & Billing
     api_credits = Column(BigInteger, default=0, nullable=False)
     total_api_calls = Column(BigInteger, default=0, nullable=False)
+    
+    # Subscriptions & Razorpay
+    plan_type = Column(String(50), default="FREE", nullable=False)
+    storage_limit = Column(BigInteger, default=5368709120, nullable=False) # 5GB default
+    razorpay_customer_id = Column(String(255), nullable=True)
+    razorpay_subscription_id = Column(String(255), nullable=True)
 
     sessions = relationship("Session", back_populates="user")
     files = relationship("File", back_populates="owner")

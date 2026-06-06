@@ -57,6 +57,7 @@ app.middleware("http")(security_headers_middleware)
 # routers
 from app.auth.api.endpoints import router as enterprise_auth_router
 from app.api.routers import files, admin, share, notifications, dashboard, folders, api_keys
+from app.billing.api import router as billing_router
 
 app.include_router(enterprise_auth_router, prefix="/auth", tags=["auth"])
 app.include_router(files.router, prefix="/files", tags=["files"])
@@ -66,6 +67,7 @@ app.include_router(share.router, prefix="/api/share", tags=["share"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
 app.include_router(api_keys.router, prefix="/api/keys", tags=["api_keys"])
+app.include_router(billing_router, prefix="/api/billing", tags=["billing"])
 app.include_router(prometheus_router)
 
 register_exception_handlers(app)
@@ -102,7 +104,7 @@ async def on_startup() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS storage_used BIGINT DEFAULT 0;"))
-        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS api_credits BIGINT DEFAULT 0;"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS api_credits BIGINT DEFAULT 1000000;"))
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS total_api_calls BIGINT DEFAULT 0;"))
         await conn.execute(text("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS scopes JSONB DEFAULT '[\"*\"]'::jsonb;"))
         await conn.execute(text("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS app_restrictions JSONB DEFAULT '{}'::jsonb;"))

@@ -68,7 +68,13 @@ api.interceptors.response.use(
           { withCredentials: true }
         );
         const newToken = data.access_token;
-        useAuthStore.getState().restoreToken(newToken);
+        
+        // Explicitly fetch the user profile since /refresh only returns tokens
+        const meRes = await axios.get(`${import.meta.env.VITE_API_URL || ''}/auth/me`, {
+          headers: { Authorization: `Bearer ${newToken}` }
+        });
+        
+        useAuthStore.getState().setAuth(meRes.data, newToken);
         processQueue(null, newToken);
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);
@@ -81,11 +87,9 @@ api.interceptors.response.use(
       }
     }
 
-    // Connectivity tracking
-    if (!error.response || error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK') {
-      useNetworkStore.getState().setConnectivity({ isBackendReachable: false });
-    }
-
+    // Connectivity tracking is now handled exclusively by NetworkProvider's health checks
+    // to respect the FAILURE_THRESHOLD and avoid random offline screens on single request failures.
+    
     return Promise.reject(error);
   }
 );
@@ -100,7 +104,7 @@ api.interceptors.response.use(
  * are ignored so the user is NOT logged out on transient failures.
  */
 export async function silentRefresh() {
-  const { isAuthenticated, restoreToken, setInitialized } = useAuthStore.getState();
+  const { isAuthenticated, setAuth, setInitialized } = useAuthStore.getState();
 
   // Not logged in — nothing to restore
   if (!isAuthenticated) {
@@ -114,8 +118,14 @@ export async function silentRefresh() {
       {},
       { withCredentials: true }
     );
-    // Refresh succeeded — update token in localStorage and memory
-    restoreToken(data.access_token);
+    const newToken = data.access_token;
+    
+    // Explicitly fetch the user profile
+    const meRes = await axios.get(`${import.meta.env.VITE_API_URL || ''}/auth/me`, {
+      headers: { Authorization: `Bearer ${newToken}` }
+    });
+    
+    setAuth(meRes.data, newToken);
   } catch {
     // Refresh failed (expired cookie, sleeping backend, network error, etc.)
     // DO NOT logout here. The access token in localStorage may still be valid.

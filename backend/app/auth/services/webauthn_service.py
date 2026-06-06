@@ -1,18 +1,30 @@
-from fido2.server import Fido2Server
-from fido2.webauthn import PublicKeyCredentialRpEntity, AuthenticatorSelectionCriteria, UserVerificationRequirement
-from fido2.utils import websafe_decode, websafe_encode
-from app.core.config import settings
 import json
 import os
-
-RP_ID = os.environ.get("WEBAUTHN_RP_ID", "zancrypt.in")
-RP_NAME = os.environ.get("WEBAUTHN_RP_NAME", "Zancrypt")
-ORIGIN = os.environ.get("WEBAUTHN_ORIGIN", "https://zancrypt.in")
+from fido2.server import Fido2Server
+from fido2.webauthn import (
+    PublicKeyCredentialRpEntity, 
+    AuthenticatorSelectionCriteria, 
+    UserVerificationRequirement,
+    RegistrationResponse,
+    AuthenticationResponse,
+    AuthenticatorAttestationResponse, 
+    CollectedClientData, 
+    AttestationObject,
+    AuthenticatorAssertionResponse,
+    AuthenticatorData
+)
+from fido2.utils import websafe_encode, websafe_decode
+from app.core.config import settings
 
 class WebAuthnService:
     def __init__(self):
-        rp = PublicKeyCredentialRpEntity(id=RP_ID, name=RP_NAME)
-        self.server = Fido2Server(rp)
+        rp = PublicKeyCredentialRpEntity(id=settings.RP_ID, name=settings.RP_NAME)
+        
+        # Accept origins matching our known deployments
+        def verify_origin(origin: str) -> bool:
+            return origin in settings.ALLOWED_ORIGINS or origin == f"https://{settings.RP_ID}"
+            
+        self.server = Fido2Server(rp, verify_origin=verify_origin)
 
     def generate_registration_options(self, user_id: bytes, username: str, display_name: str):
         options, state = self.server.register_begin(
@@ -47,13 +59,6 @@ class WebAuthnService:
         return serializable_options, state
 
     def verify_registration_response(self, response_data, state):
-        from fido2.webauthn import (
-            RegistrationResponse, 
-            AuthenticatorAttestationResponse, 
-            CollectedClientData, 
-            AttestationObject
-        )
-        
         client_data = CollectedClientData(websafe_decode(response_data["response"]["clientDataJSON"]))
         attestation_object = AttestationObject(websafe_decode(response_data["response"]["attestationObject"]))
         
@@ -75,28 +80,9 @@ class WebAuthnService:
             credentials,
             user_verification=UserVerificationRequirement.PREFERRED
         )
-        
-        serializable_options = {
-            "publicKey": {
-                "challenge": websafe_encode(options.public_key.challenge),
-                "timeout": options.public_key.timeout,
-                "rpId": options.public_key.rp_id,
-                "allowCredentials": [
-                    {"type": c.type, "id": websafe_encode(c.id)} for c in options.public_key.allow_credentials
-                ] if options.public_key.allow_credentials else [],
-                "userVerification": options.public_key.user_verification.value if hasattr(options.public_key.user_verification, 'value') else options.public_key.user_verification
-            }
-        }
-        return serializable_options, state
+        return {"publicKey": dict(options.public_key)}, state
 
     def verify_authentication_response(self, response_data, state, credentials):
-        from fido2.webauthn import (
-            AuthenticationResponse,
-            AuthenticatorAssertionResponse,
-            CollectedClientData,
-            AuthenticatorData
-        )
-        
         client_data = CollectedClientData(websafe_decode(response_data["response"]["clientDataJSON"]))
         auth_data_parsed = AuthenticatorData(websafe_decode(response_data["response"]["authenticatorData"]))
         
