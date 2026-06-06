@@ -1,3 +1,6 @@
+import base64
+from webauthn.helpers import base64url_to_bytes
+from app.auth.repositories import credential_repo
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
@@ -18,8 +21,6 @@ from app.auth.schemas.auth import (
     LoginStartResponse, LoginVerifyRequest, TokenResponse,
     FallbackLoginRequest
 )
-from fido2.utils import websafe_encode, websafe_decode
-from fido2.webauthn import PublicKeyCredentialDescriptor
 from passlib.hash import bcrypt
 from app.models.user import UserRole
 from slowapi import Limiter
@@ -62,7 +63,7 @@ async def register_start(
         "email": body.email,
         "full_name": body.full_name,
         "region": body.region,
-        "user_id": websafe_encode(user_id),
+        "user_id": base64.urlsafe_b64encode(user_id).rstrip(b"=").decode(),
         "state": state
     })
 
@@ -120,9 +121,9 @@ async def register_verify(
 
         credential = WebAuthnCredential(
             user_id=user.id,
-            credential_id=bytes(auth_data.credential_data.credential_id),
-            public_key=bytes(auth_data.credential_data),
-            sign_count=auth_data.counter
+            credential_id=auth_data.credential_id,
+            public_key=auth_data.credential_public_key,
+            sign_count=auth_data.sign_count
         )
         session.add(credential)
         await session.commit()
@@ -185,7 +186,6 @@ async def login_start(
     if not credentials:
         raise HTTPException(status_code=400, detail="No passkeys registered for this account")
 
-    from fido2.webauthn import PublicKeyCredentialDescriptor
     allowed_credentials = [
         PublicKeyCredentialDescriptor(type="public-key", id=c.credential_id)
         for c in credentials
@@ -223,20 +223,17 @@ async def login_verify(
         # We need to pass the credential objects to verify
         # but fido2 verify_authentication_response expects the specific credential used
         # The response from the client contains the credentialId used.
-        used_credential_id = websafe_decode(request.response["id"])
+        used_credential_id = base64url_to_bytes(request.response["id"])
         target_credential = next((c for c in credentials if c.credential_id == used_credential_id), None)
         
         if not target_credential:
             raise HTTPException(status_code=400, detail="Credential not recognized")
 
-        from fido2.webauthn import AttestedCredentialData
-        
         auth_data, new_counter = webauthn_service.verify_authentication_response(
             request.response,
             auth_session["state"],
-            [AttestedCredentialData(target_credential.public_key)]
+            credentials
         )
-        
         # Update sign count
         await credential_repo.update_sign_count(target_credential.credential_id, new_counter)
 

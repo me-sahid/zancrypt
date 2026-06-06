@@ -1,129 +1,131 @@
-from fido2.server import Fido2Server
-from fido2.webauthn import PublicKeyCredentialRpEntity, UserVerificationRequirement
-from fido2.utils import websafe_decode, websafe_encode
 import os
+import base64
+from webauthn import (
+    generate_registration_options,
+    verify_registration_response,
+    generate_authentication_options,
+    verify_authentication_response,
+    base64url_to_bytes,
+)
+from webauthn.helpers.structs import (
+    AuthenticatorSelectionCriteria,
+    UserVerificationRequirement,
+    ResidentKeyRequirement,
+    PublicKeyCredentialDescriptor,
+    AttestationConveyancePreference,
+)
+from webauthn.helpers.cose import COSEAlgorithmIdentifier
 
 RP_ID = os.environ.get("WEBAUTHN_RP_ID", "zancrypt.in")
 RP_NAME = os.environ.get("WEBAUTHN_RP_NAME", "Zancrypt")
 ORIGIN = os.environ.get("WEBAUTHN_ORIGIN", "https://zancrypt.in")
 
-def verify_origin(origin: str) -> bool:
-    allowed = [
-        "https://zancrypt.in",
-        "https://www.zancrypt.in",
-        "https://vault.zancrypt.in",
-    ]
-    return origin in allowed
+ALLOWED_ORIGINS = [
+    "https://zancrypt.in",
+    "https://www.zancrypt.in",
+    "https://vault.zancrypt.in",
+]
 
 class WebAuthnService:
-    def __init__(self):
-        rp = PublicKeyCredentialRpEntity(id=RP_ID, name=RP_NAME)
-        self.server = Fido2Server(rp, verify_origin=verify_origin)
-
     def generate_registration_options(self, user_id: bytes, username: str, display_name: str):
-        options, state = self.server.register_begin(
-            user={
-                "id": user_id,
-                "name": username,
-                "displayName": display_name,
-            },
-            user_verification=UserVerificationRequirement.PREFERRED
+        options = generate_registration_options(
+            rp_id=RP_ID,
+            rp_name=RP_NAME,
+            user_id=user_id,
+            user_name=username,
+            user_display_name=display_name,
+            attestation=AttestationConveyancePreference.NONE,
+            authenticator_selection=AuthenticatorSelectionCriteria(
+                resident_key=ResidentKeyRequirement.PREFERRED,
+                user_verification=UserVerificationRequirement.PREFERRED,
+            ),
         )
-        
+
+        # Store challenge as bytes for later verification
+        state = {"challenge": options.challenge}
+
         serializable_options = {
             "publicKey": {
-                "rp": {"name": options.public_key.rp.name, "id": options.public_key.rp.id},
+                "rp": {"name": options.rp.name, "id": options.rp.id},
                 "user": {
-                    "id": websafe_encode(options.public_key.user.id),
-                    "name": options.public_key.user.name,
-                    "displayName": options.public_key.user.display_name
+                    "id": base64.urlsafe_b64encode(options.user.id).rstrip(b"=").decode(),
+                    "name": options.user.name,
+                    "displayName": options.user.display_name,
                 },
-                "challenge": websafe_encode(options.public_key.challenge),
-                "pubKeyCredParams": [{"type": p.type, "alg": p.alg} for p in options.public_key.pub_key_cred_params],
-                "timeout": options.public_key.timeout,
+                "challenge": base64.urlsafe_b64encode(options.challenge).rstrip(b"=").decode(),
+                "pubKeyCredParams": [
+                    {"type": "public-key", "alg": p.alg.value}
+                    for p in options.pub_key_cred_params
+                ],
+                "timeout": options.timeout,
+                "attestation": "none",
                 "authenticatorSelection": {
                     "residentKey": "preferred",
-                    "userVerification": "preferred"
+                    "userVerification": "preferred",
                 },
-                "attestation": "none",
-                "excludeCredentials": []
+                "excludeCredentials": [],
             }
         }
+
         return serializable_options, state
 
     def verify_registration_response(self, response_data, state):
-        from fido2.webauthn import (
-            AuthenticatorAttestationResponse,
-            CollectedClientData,
-            AttestationObject
+        verification = verify_registration_response(
+            credential=response_data,
+            expected_challenge=state["challenge"],
+            expected_rp_id=RP_ID,
+            expected_origin=ALLOWED_ORIGINS,
         )
-
-        client_data = CollectedClientData(
-            websafe_decode(response_data["response"]["clientDataJSON"])
-        )
-        attestation_object = AttestationObject(
-            websafe_decode(response_data["response"]["attestationObject"])
-        )
-
-        response = AuthenticatorAttestationResponse(
-            client_data=client_data,
-            attestation_object=attestation_object
-        )
-
-    # fido2==1.1.3 uses credential_id not raw_id
-        auth_data = self.server.register_complete(
-            state,
-            response,
-            websafe_decode(response_data["rawId"])
-        )
-        return auth_data
+        return verification
 
     def generate_authentication_options(self, credentials):
-        options, state = self.server.authenticate_begin(
-            credentials,
-            user_verification=UserVerificationRequirement.PREFERRED
+        allow_credentials = [
+            PublicKeyCredentialDescriptor(id=c.id if hasattr(c, 'id') else c.credential_id)
+            for c in credentials
+        ]
+
+        options = generate_authentication_options(
+            rp_id=RP_ID,
+            allow_credentials=allow_credentials,
+            user_verification=UserVerificationRequirement.PREFERRED,
         )
+
+        state = {"challenge": options.challenge}
 
         serializable_options = {
             "publicKey": {
-                "challenge": websafe_encode(options.public_key.challenge),
-                "timeout": options.public_key.timeout,
-                "rpId": options.public_key.rp_id,
+                "challenge": base64.urlsafe_b64encode(options.challenge).rstrip(b"=").decode(),
+                "timeout": options.timeout,
+                "rpId": options.rp_id,
                 "allowCredentials": [
-                    {"type": c.type, "id": websafe_encode(c.id)} for c in options.public_key.allow_credentials
-                ] if options.public_key.allow_credentials else [],
-                "userVerification": options.public_key.user_verification.value if hasattr(options.public_key.user_verification, 'value') else options.public_key.user_verification
+                    {
+                        "type": "public-key",
+                        "id": base64.urlsafe_b64encode(c.id).rstrip(b"=").decode(),
+                    }
+                    for c in options.allow_credentials
+                ],
+                "userVerification": "preferred",
             }
         }
+
         return serializable_options, state
 
     def verify_authentication_response(self, response_data, state, credentials):
-        from fido2.webauthn import (
-            AuthenticationResponse,
-            AuthenticatorAssertionResponse,
-            CollectedClientData,
-            AuthenticatorData
+        # Find the credential that matches
+        credential_id = base64url_to_bytes(response_data["id"])
+        target = next(
+            (c for c in credentials if c.credential_id == credential_id), None
+        )
+        if not target:
+            raise ValueError("Credential not found")
+
+        verification = verify_authentication_response(
+            credential=response_data,
+            expected_challenge=state["challenge"],
+            expected_rp_id=RP_ID,
+            expected_origin=ALLOWED_ORIGINS,
+            credential_public_key=target.public_key,
+            credential_current_sign_count=target.sign_count,
         )
 
-        client_data = CollectedClientData(websafe_decode(response_data["response"]["clientDataJSON"]))
-        auth_data_parsed = AuthenticatorData(websafe_decode(response_data["response"]["authenticatorData"]))
-
-        response = AuthenticatorAssertionResponse(
-            client_data=client_data,
-            authenticator_data=auth_data_parsed,
-            signature=websafe_decode(response_data["response"]["signature"]),
-            user_handle=websafe_decode(response_data["response"]["userHandle"]) if response_data["response"].get("userHandle") else None
-        )
-
-        auth_response = AuthenticationResponse(
-            raw_id=websafe_decode(response_data["rawId"]),
-            response=response
-        )
-
-        auth_data = self.server.authenticate_complete(
-            state,
-            credentials,
-            auth_response
-        )
-
-        return auth_data, auth_response.response.authenticator_data.counter
+        return verification, verification.new_sign_count
