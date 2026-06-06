@@ -54,4 +54,4 @@ celery
 apscheduler
 
 # Security
-py_webauthn>=2.1.0
+webauthn>=2.1.0
