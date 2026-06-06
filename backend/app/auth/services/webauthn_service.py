@@ -90,7 +90,7 @@ class WebAuthnService:
             user_verification=UserVerificationRequirement.PREFERRED,
         )
 
-        state = {"challenge": options.challenge}
+        state = {"challenge": options.challenge,"user_verification": options.user_verification}
 
         serializable_options = {
             "publicKey": {
