@@ -33,18 +33,16 @@ const Login = () => {
 
   if (!showFallback) {
     try {
-      toast.loading("Initiating zero-knowledge challenge...", { id: 'auth-toast' });
+      // Step 1 — get options from server
       const startResponse = await api.post('/auth/login/start', { email });
       const { options, session_id } = startResponse.data;
 
-      // Trigger biometric IMMEDIATELY after getting options
-      // No toast before this — any delay can cause NotAllowedError
+      // Step 2 — trigger biometric IMMEDIATELY, no toast before this
       const passkeyOptions = options.publicKey ? options : { publicKey: options };
-      
-      toast.dismiss('auth-toast'); // Clear loading toast before biometric
       const assertion = await authenticatePasskey(passkeyOptions);
 
-      toast.loading("Verifying cryptographic signature...", { id: 'auth-toast' });
+      // Step 3 — verify after biometric completes
+      toast.loading("Verifying...", { id: 'auth-toast' });
       const verifyResponse = await api.post('/auth/login/verify', {
         session_id,
         response: assertion
@@ -52,33 +50,30 @@ const Login = () => {
 
       const { access_token, user } = verifyResponse.data;
       setAuth(user, access_token);
-      toast.success('Access granted via Biometrics.', { id: 'auth-toast' });
+      toast.success('Access granted.', { id: 'auth-toast' });
       navigate('/dashboard');
+
     } catch (error) {
-      let errorMsg = error.response?.data?.detail || error.message || 'Authentication failed';
-      if (errorMsg.includes("NotAllowedError") || errorMsg.includes("timed out")) {
-        errorMsg = "Biometric prompt timed out. Please try again quickly after clicking.";
-      }
-      toast.error(errorMsg, { id: 'auth-toast' });
+      const msg = error.response?.data?.detail || error.message || 'Failed';
+      toast.error(msg, { id: 'auth-toast' });
       setShowFallback(true);
     } finally {
       setIsLoading(false);
     }
   } else {
-    // fallback login — keep existing code
-    toast.loading("Verifying identity via Access Key...", { id: 'auth-toast' });
+    // fallback access key login
     try {
+      toast.loading("Verifying Access Key...", { id: 'auth-toast' });
       const response = await api.post('/auth/login/fallback', {
         email,
         access_key: accessKey
       });
       const { access_token, user } = response.data;
       setAuth(user, access_token);
-      toast.success('Access granted via Security Key.', { id: 'auth-toast' });
+      toast.success('Access granted.', { id: 'auth-toast' });
       navigate('/dashboard');
     } catch (error) {
-      const errorMsg = error.response?.data?.detail || 'Invalid Access Key. Access Denied.';
-      toast.error(errorMsg, { id: 'auth-toast' });
+      toast.error(error.response?.data?.detail || 'Invalid Access Key.', { id: 'auth-toast' });
     } finally {
       setIsLoading(false);
     }
