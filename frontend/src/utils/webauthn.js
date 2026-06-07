@@ -85,10 +85,12 @@ export const authenticatePasskey = async (options) => {
       publicKey: {
         ...publicKey,
         challenge: base64urlToBuffer(publicKey.challenge),
+        userVerification: 'required',         // forces biometric prompt
         ...(publicKey.allowCredentials && {
           allowCredentials: publicKey.allowCredentials.map((c) => ({
             ...c,
             id: base64urlToBuffer(c.id),
+            transports: c.transports || ['internal'],  // tell browser it's biometric
           })),
         }),
       },
