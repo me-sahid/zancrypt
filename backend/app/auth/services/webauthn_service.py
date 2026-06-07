@@ -30,11 +30,9 @@ ALLOWED_ORIGINS = [
 
 
 def _to_bytes(value) -> bytes:
-    """Convert any credential_id format to raw bytes."""
     if isinstance(value, (bytes, bytearray, memoryview)):
         return bytes(value)
     if isinstance(value, str):
-        # Try base64url first
         try:
             padding = 4 - len(value) % 4
             if padding != 4:
@@ -99,14 +97,27 @@ class WebAuthnService:
             )
         }
 
-        serializable_options = json.loads(options_to_json(options))
-        return serializable_options, state
+        serializable_options = {
+            "challenge": base64.urlsafe_b64encode(options.challenge).rstrip(b"=").decode(),
+            "timeout": options.timeout,
+            "rpId": options.rp_id,
+            "allowCredentials": [
+                {
+                    "id": base64.urlsafe_b64encode(
+                        _to_bytes(c.id if hasattr(c, 'id') else c.credential_id)
+                    ).rstrip(b"=").decode(),
+                    "type": "public-key"
+                }
+                for c in credentials
+            ],
+            "userVerification": "preferred",
+        }
+
+        return {"publicKey": serializable_options}, state
 
     def verify_authentication_response(self, response_data, state, credentials):
-        # Get the credential_id from browser response
         credential_id = base64url_to_bytes(response_data["id"])
 
-        # Find matching credential — compare as raw bytes
         target = None
         for c in credentials:
             stored_id = _to_bytes(
