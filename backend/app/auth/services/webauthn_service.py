@@ -84,20 +84,17 @@ class WebAuthnService:
     def generate_authentication_options(self, credentials):
         allow_credentials = []
         for c in credentials:
-            raw_id = c.id if hasattr(c, 'id') else c.credential_id
-            raw_id = _to_bytes(raw_id)
             allow_credentials.append(
                 PublicKeyCredentialDescriptor(
-                    id=raw_id,
+                    id=bytes(c.credential_id),          
                     type=PublicKeyCredentialType.PUBLIC_KEY,
                     transports=[AuthenticatorTransport.INTERNAL],
-                    )
+                )
             )
-
         options = generate_authentication_options(
             rp_id=RP_ID,
             allow_credentials=allow_credentials,
-            user_verification=UserVerificationRequirement.PREFERRED,
+            user_verification=UserVerificationRequirement.REQUIRED,
         )
 
         state = {
@@ -116,13 +113,14 @@ class WebAuthnService:
             "allowCredentials": [
                 {
                     "id": base64.urlsafe_b64encode(
-                        _to_bytes(c.id if hasattr(c, 'id') else c.credential_id)
+                        bytes(c.credential_id)
                     ).rstrip(b"=").decode(),
-                    "type": "public-key"
+                    "type": "public-key",
+                    "transports": c.transports or ["internal"],
                 }
                 for c in credentials
             ],
-            "userVerification": "preferred",
+            "userVerification": "required",
         }
 
         return {"publicKey": serializable_options}, state
