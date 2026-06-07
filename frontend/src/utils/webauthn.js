@@ -46,12 +46,11 @@ export const registerPasskey = async (options) => {
           ...c,
           id: base64urlToBuffer(c.id),
         })),
-        // Force discoverable credential so passkey is saved on the device
         authenticatorSelection: {
           ...(publicKey.authenticatorSelection || {}),
           residentKey: 'required',
           requireResidentKey: true,
-          userVerification: publicKey.authenticatorSelection?.userVerification || 'preferred',
+          userVerification: 'required',  // ✅ fixed
         },
       },
     };
@@ -79,18 +78,23 @@ export const registerPasskey = async (options) => {
  */
 export const authenticatePasskey = async (options) => {
   try {
-    const publicKey = options.publicKey || options;
+    const publicKey = options?.publicKey ?? options;
+
+    if (!publicKey?.challenge) {
+      throw new Error('Missing challenge in options');
+    }
 
     const getOptions = {
       publicKey: {
-        ...publicKey,
         challenge: base64urlToBuffer(publicKey.challenge),
-        userVerification: 'required',         // forces biometric prompt
-        ...(publicKey.allowCredentials && {
+        timeout: publicKey.timeout || 60000,
+        rpId: publicKey.rpId,
+        userVerification: publicKey.userVerification || 'required',
+        ...(publicKey.allowCredentials?.length > 0 && {
           allowCredentials: publicKey.allowCredentials.map((c) => ({
-            ...c,
             id: base64urlToBuffer(c.id),
-            transports: c.transports || ['internal'],  // tell browser it's biometric
+            type: c.type || 'public-key',
+            transports: c.transports || ['internal'],
           })),
         }),
       },

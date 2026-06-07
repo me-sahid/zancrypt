@@ -1,17 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Lock, Mail, ShieldCheck, AlertCircle, ScanFace } from 'lucide-react';
+import { Lock, Mail, AlertCircle, ScanFace } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import gsap from 'gsap';
 import Button from '../../components/ui/Button';
 import SecureInput from '../../components/ui/SecureInput';
 import { useAuthStore } from '../../store/useStore';
 import api from '../../services/api';
-import CipherText from '../../components/crypto/CipherText';
 import { authenticatePasskey } from '../../utils/webauthn';
 
-/** Simple email format check to avoid 422s on partial input */
 const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 const Login = () => {
@@ -21,7 +18,6 @@ const Login = () => {
   const [showFallback, setShowFallback] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated, setAuth } = useAuthStore();
-  const vizRef = useRef(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -29,76 +25,68 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const pendingChallengeRef = useRef(null);
-
-  // Pre-fetch challenge when user types a VALID email
-  // DELETE this entire useEffect
-  useEffect(() => {
-    if (!email || showFallback || !isValidEmail(email)) {
-      pendingChallengeRef.current = null;
-      return;
-    }
-    const prefetch = async () => {
-      try {
-        const res = await api.post('/auth/login/start', { email });
-        pendingChallengeRef.current = res.data;
-      } catch (_) {
-        pendingChallengeRef.current = null;
-      }
-    };
-    const timer = setTimeout(prefetch, 800);
-    return () => clearTimeout(timer);
-  }, [email, showFallback]);
-
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (isLoading) return;
+    e.preventDefault();
+    if (isLoading) return;
 
-  if (!showFallback) {
-    try {
-      setIsLoading(true);
-      toast.loading("Preparing Authentication...", { id: 'auth-toast' });
+    if (!showFallback) {
+      try {
+        setIsLoading(true);
+        toast.loading("Preparing Authentication...", { id: 'auth-toast' });
 
-      const res = await api.post('/auth/login/start', { email });
-      const { options, session_id } = res.data;
+        const res = await api.post('/auth/login/start', { email });
+        const { options, session_id } = res.data;
 
-      console.log("options from backend:", options); // debug
+        toast.loading("Waiting for biometric...", { id: 'auth-toast' });
 
-      toast.loading("Waiting for biometric...", { id: 'auth-toast' });
+        // ✅ pass options directly — backend already returns { publicKey: {...} }
+        const assertion = await authenticatePasskey(options);
 
-      // No setIsLoading(false) here — keep loading state on
-      const passkeyOptions = { publicKey: options }; // adjust based on backend
-      const assertion = await authenticatePasskey(passkeyOptions);
+        toast.loading("Verifying...", { id: 'auth-toast' });
 
-      toast.loading("Verifying...", { id: 'auth-toast' });
+        const verifyResponse = await api.post('/auth/login/verify', {
+          session_id,
+          response: assertion,
+        });
 
-      const verifyResponse = await api.post('/auth/login/verify', {
-        session_id,
-        response: assertion,
-      });
+        const { access_token, user } = verifyResponse.data;
+        setAuth(user, access_token);
+        toast.success('Access granted.', { id: 'auth-toast' });
+        navigate('/dashboard');
 
-      const { access_token, user } = verifyResponse.data;
-      setAuth(user, access_token);
-      toast.success('Access granted.', { id: 'auth-toast' });
-      navigate('/dashboard');
-
-    } catch (error) {
-      pendingChallengeRef.current = null;
-      if (error.name === 'NotAllowedError') {
-        setShowFallback(true);
-        toast.error('Biometric cancelled. Use Access Key.', { id: 'auth-toast' });
-      } else {
-        toast.error(error.response?.data?.detail || 'Authentication failed.', { id: 'auth-toast' });
-        setShowFallback(true);
+      } catch (error) {
+        console.error('Auth error:', error.name, error.message);
+        if (error.name === 'NotAllowedError') {
+          setShowFallback(true);
+          toast.error('Biometric cancelled. Use Access Key.', { id: 'auth-toast' });
+        } else {
+          toast.error(error.response?.data?.detail || error.message || 'Authentication failed.', { id: 'auth-toast' });
+          setShowFallback(true);
+        }
+      } finally {
+        setIsLoading(false);
       }
-    } finally {
-      setIsLoading(false); // 
-    }
 
-  } else {
-    // fallback unchanged
-  }
-};
+    } else {
+      // Access Key fallback
+      try {
+        setIsLoading(true);
+        toast.loading("Authenticating...", { id: 'auth-toast' });
+        const response = await api.post('/auth/login/fallback', {
+          email,
+          access_key: accessKey,
+        });
+        const { access_token, user } = response.data;
+        setAuth(user, access_token);
+        toast.success('Access granted.', { id: 'auth-toast' });
+        navigate('/dashboard');
+      } catch (error) {
+        toast.error(error.response?.data?.detail || 'Invalid Access Key.', { id: 'auth-toast' });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
 
   return (
     <div className="min-h-[100dvh] flex items-center justify-center bg-void overflow-y-auto p-4 sm:p-6 md:p-8">
@@ -180,10 +168,7 @@ const Login = () => {
             {showFallback && (
               <button
                 type="button"
-                onClick={() => {
-                  setShowFallback(false);
-                  pendingChallengeRef.current = null;
-                }}
+                onClick={() => setShowFallback(false)}
                 className="w-full font-mono text-xs text-text-muted hover:text-accent uppercase tracking-widest transition-colors mt-4"
               >
                 Retry Passkey
