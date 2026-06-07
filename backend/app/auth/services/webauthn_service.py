@@ -17,17 +17,17 @@ from webauthn.helpers.structs import (
 )
 from webauthn.helpers.cose import COSEAlgorithmIdentifier
 from webauthn.helpers.options_to_json import options_to_json
+from app.core.config import settings
 
-RP_ID = os.environ.get("WEBAUTHN_RP_ID", "zancrypt.in")
-RP_NAME = os.environ.get("WEBAUTHN_RP_NAME", "Zancrypt")
-ORIGIN = os.environ.get("WEBAUTHN_ORIGIN", "https://zancrypt.in")
+RP_ID = settings.RP_ID
+RP_NAME = settings.RP_NAME
 
 ALLOWED_ORIGINS = [
     "https://zancrypt.in",
     "https://www.zancrypt.in",
     "https://vault.zancrypt.in",
     "https://zancrypt-front.pages.dev",
-]
+] + settings.CORS_ORIGINS
 
 
 def _str_to_bytes(value) -> bytes:
