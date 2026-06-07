@@ -10,6 +10,8 @@ from pydantic import Field, PostgresDsn, SecretStr
 from pydantic_settings import BaseSettings
 
 ALLOWED_ORIGINS = [
+    "https://zancrypt.in",
+    "https://www.zancrypt.in",
     "https://zancrypt-front.pages.dev",
     "http://localhost:5173",
     "http://localhost:80",

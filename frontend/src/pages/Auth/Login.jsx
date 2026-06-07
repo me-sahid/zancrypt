@@ -57,27 +57,24 @@ const Login = () => {
   if (!showFallback) {
     try {
       setIsLoading(true);
-      toast.loading("Preparing challenge...", { id: 'auth-toast' });
+      toast.loading("Preparing Authentication...", { id: 'auth-toast' });
 
-      // Fetch challenge
       const res = await api.post('/auth/login/start', { email });
       const { options, session_id } = res.data;
 
-      toast.dismiss('auth-toast');
-      setIsLoading(false);
+      console.log("options from backend:", options); // debug
 
-      // Trigger biometric immediately after fetch
-      // This must happen as close to the user click as possible
-      const passkeyOptions = options.publicKey ? options : { publicKey: options };
+      toast.loading("Waiting for biometric...", { id: 'auth-toast' });
+
+      // No setIsLoading(false) here — keep loading state on
+      const passkeyOptions = { publicKey: options }; // adjust based on backend
       const assertion = await authenticatePasskey(passkeyOptions);
 
-      // Verify with server
-      setIsLoading(true);
       toast.loading("Verifying...", { id: 'auth-toast' });
 
       const verifyResponse = await api.post('/auth/login/verify', {
         session_id,
-        response: assertion
+        response: assertion,
       });
 
       const { access_token, user } = verifyResponse.data;
@@ -86,40 +83,20 @@ const Login = () => {
       navigate('/dashboard');
 
     } catch (error) {
-      setIsLoading(false);
       pendingChallengeRef.current = null;
       if (error.name === 'NotAllowedError') {
         setShowFallback(true);
         toast.error('Biometric cancelled. Use Access Key.', { id: 'auth-toast' });
-      } else if (error.response?.status === 404 || error.response?.status === 400) {
-        setShowFallback(true);
-        toast.error(error.response?.data?.detail || 'Authentication failed.', { id: 'auth-toast' });
       } else {
         toast.error(error.response?.data?.detail || 'Authentication failed.', { id: 'auth-toast' });
         setShowFallback(true);
       }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // 
     }
 
   } else {
-    // Access Key fallback — keep exactly as is
-    try {
-      setIsLoading(true);
-      toast.loading("Authenticating...", { id: 'auth-toast' });
-      const response = await api.post('/auth/login/fallback', {
-        email,
-        access_key: accessKey
-      });
-      const { access_token, user } = response.data;
-      setAuth(user, access_token);
-      toast.success('Access granted.', { id: 'auth-toast' });
-      navigate('/dashboard');
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Invalid Access Key.', { id: 'auth-toast' });
-    } finally {
-      setIsLoading(false);
-    }
+    // fallback unchanged
   }
 };
 

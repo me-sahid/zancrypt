@@ -15,6 +15,12 @@ from webauthn.helpers.structs import (
     PublicKeyCredentialDescriptor,
     AttestationConveyancePreference,
 )
+from webauthn.helpers.structs import (
+    UserVerificationRequirement,
+    PublicKeyCredentialDescriptor,
+    PublicKeyCredentialType,
+    AuthenticatorTransport,        # ← add this
+)
 from webauthn.helpers.options_to_json import options_to_json
 
 from app.core.config import settings
@@ -59,7 +65,7 @@ class WebAuthnService:
             attestation=AttestationConveyancePreference.NONE,
             authenticator_selection=AuthenticatorSelectionCriteria(
                 resident_key=ResidentKeyRequirement.PREFERRED,
-                user_verification=UserVerificationRequirement.PREFERRED,
+                user_verification=UserVerificationRequirement.REQUIRED,
             ),
         )
         state = {"challenge": options.challenge}
@@ -81,7 +87,11 @@ class WebAuthnService:
             raw_id = c.id if hasattr(c, 'id') else c.credential_id
             raw_id = _to_bytes(raw_id)
             allow_credentials.append(
-                PublicKeyCredentialDescriptor(id=raw_id)
+                PublicKeyCredentialDescriptor(
+                    id=raw_id,
+                    type=PublicKeyCredentialType.PUBLIC_KEY,
+                    transports=[AuthenticatorTransport.INTERNAL],
+                    )
             )
 
         options = generate_authentication_options(
