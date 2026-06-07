@@ -17,11 +17,13 @@ from webauthn.helpers.structs import (
 )
 from webauthn.helpers.options_to_json import options_to_json
 
-RP_ID = os.environ.get("WEBAUTHN_RP_ID", "zancrypt.in")
-RP_NAME = os.environ.get("WEBAUTHN_RP_NAME", "Zancrypt")
+from app.core.config import settings
+
+RP_ID = settings.RP_ID
+RP_NAME = settings.RP_NAME
 ORIGIN = os.environ.get("WEBAUTHN_ORIGIN", "https://zancrypt.in")
 
-ALLOWED_ORIGINS = [
+ALLOWED_ORIGINS = settings.CORS_ORIGINS + [
     "https://zancrypt.in",
     "https://www.zancrypt.in",
     "https://vault.zancrypt.in",

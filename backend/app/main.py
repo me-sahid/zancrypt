@@ -28,7 +28,7 @@ app = FastAPI(
 # CORS — must be first
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
+    allow_origins=settings.CORS_ORIGINS + [
         "https://zancrypt.in",
         "https://www.zancrypt.in",
         "https://zancrypt-front.pages.dev",

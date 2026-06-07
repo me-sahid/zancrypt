@@ -83,7 +83,7 @@ const Login = () => {
       // consumed some time, the navigator.credentials.get() call is the FIRST
       // await after the user's click event.
       try {
-        const { options, session_id } = startResponse.data;
+        const { options, session_id } = challengeData;
         console.log("OPTIONS:", JSON.stringify(options, null, 2));
         const passkeyOptions = options.publicKey ? options : { publicKey: options };
 
