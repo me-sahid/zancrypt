@@ -15,30 +15,33 @@ from webauthn.helpers.structs import (
     PublicKeyCredentialDescriptor,
     AttestationConveyancePreference,
 )
-from webauthn.helpers.cose import COSEAlgorithmIdentifier
 from webauthn.helpers.options_to_json import options_to_json
-from app.core.config import settings
 
-RP_ID = settings.RP_ID
-RP_NAME = settings.RP_NAME
+RP_ID = os.environ.get("WEBAUTHN_RP_ID", "zancrypt.in")
+RP_NAME = os.environ.get("WEBAUTHN_RP_NAME", "Zancrypt")
+ORIGIN = os.environ.get("WEBAUTHN_ORIGIN", "https://zancrypt.in")
 
 ALLOWED_ORIGINS = [
     "https://zancrypt.in",
     "https://www.zancrypt.in",
     "https://vault.zancrypt.in",
     "https://zancrypt-front.pages.dev",
-] + settings.CORS_ORIGINS
+]
 
 
-def _str_to_bytes(value) -> bytes:
-    """Convert credential_id from string to bytes safely."""
-    if isinstance(value, bytes):
-        return value
+def _to_bytes(value) -> bytes:
+    """Convert any credential_id format to raw bytes."""
+    if isinstance(value, (bytes, bytearray, memoryview)):
+        return bytes(value)
     if isinstance(value, str):
-        padding = 4 - len(value) % 4
-        if padding != 4:
-            value += '=' * padding
-        return base64.urlsafe_b64decode(value)
+        # Try base64url first
+        try:
+            padding = 4 - len(value) % 4
+            if padding != 4:
+                value += '=' * padding
+            return base64.urlsafe_b64decode(value)
+        except Exception:
+            return value.encode()
     if isinstance(value, int):
         return value.to_bytes((value.bit_length() + 7) // 8, 'big')
     return bytes(value)
@@ -46,12 +49,7 @@ def _str_to_bytes(value) -> bytes:
 
 class WebAuthnService:
 
-    def generate_registration_options(
-        self,
-        user_id: bytes,
-        username: str,
-        display_name: str
-    ):
+    def generate_registration_options(self, user_id: bytes, username: str, display_name: str):
         options = generate_registration_options(
             rp_id=RP_ID,
             rp_name=RP_NAME,
@@ -60,11 +58,10 @@ class WebAuthnService:
             user_display_name=display_name,
             attestation=AttestationConveyancePreference.NONE,
             authenticator_selection=AuthenticatorSelectionCriteria(
-                resident_key=ResidentKeyRequirement.REQUIRED,
+                resident_key=ResidentKeyRequirement.PREFERRED,
                 user_verification=UserVerificationRequirement.PREFERRED,
             ),
         )
-
         state = {"challenge": options.challenge}
         serializable_options = json.loads(options_to_json(options))
         return serializable_options, state
@@ -82,7 +79,7 @@ class WebAuthnService:
         allow_credentials = []
         for c in credentials:
             raw_id = c.id if hasattr(c, 'id') else c.credential_id
-            raw_id = _str_to_bytes(raw_id)
+            raw_id = _to_bytes(raw_id)
             allow_credentials.append(
                 PublicKeyCredentialDescriptor(id=raw_id)
             )
@@ -106,30 +103,31 @@ class WebAuthnService:
         return serializable_options, state
 
     def verify_authentication_response(self, response_data, state, credentials):
-        from webauthn.helpers import base64url_to_bytes
-    
+        # Get the credential_id from browser response
         credential_id = base64url_to_bytes(response_data["id"])
-    
-    # find matching credential — convert DB bytes properly
+
+        # Find matching credential — compare as raw bytes
         target = None
         for c in credentials:
-            db_cred_id = bytes(c.credential_id) if not isinstance(c.credential_id, bytes) else c.credential_id
-            if db_cred_id == credential_id:
+            stored_id = _to_bytes(
+                c.id if hasattr(c, 'id') else c.credential_id
+            )
+            if stored_id == credential_id:
                 target = c
                 break
 
         if not target:
-            raise ValueError("Credential not found")
+            raise ValueError(f"Credential not found. Looking for {len(credential_id)} bytes among {len(credentials)} stored credentials.")
 
-        db_public_key = bytes(target.public_key) if not isinstance(target.public_key, bytes) else target.public_key
+        public_key = _to_bytes(target.public_key)
 
         verification = verify_authentication_response(
             credential=response_data,
             expected_challenge=state["challenge"],
             expected_rp_id=RP_ID,
             expected_origin=ALLOWED_ORIGINS,
-            credential_public_key=db_public_key,
-            credential_current_sign_count=target.sign_count,
+            credential_public_key=public_key,
+            credential_current_sign_count=target.sign_count or 0,
         )
 
         return verification, verification.new_sign_count
