@@ -350,33 +350,21 @@ const Footer = () => {
         <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
 
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-16">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-16">
 
             {/* Column 1: Brand */}
             <div className="col-span-2 md:col-span-2">
-              <Link to="/" className="flex items-center space-x-2 mb-6 group">
-                <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shadow-[0_0_15px_rgba(79,255,176,0.3)] group-hover:scale-105 transition-all duration-300">
-                  <Lock className="w-5 h-5 text-void" strokeWidth={2.5} />
-                </div>
-                <span className="text-2xl font-bold text-text-primary tracking-tight">
-                  Zan<span className="text-accent">crypt</span>
+              <Link to="/" className="inline-block mb-6 group">
+                <span className="text-2xl font-bold text-white tracking-widest uppercase hover:text-accent transition-colors duration-300">
+                  ZANCRYPT
                 </span>
               </Link>
-              <p className="text-sm text-text-secondary mb-8 pr-4 leading-relaxed">
-                Enterprise-grade distributed zero-knowledge storage infrastructure. Built for scale, engineered for absolute privacy.
+              <p className="text-sm text-text-secondary mb-8 pr-4 leading-relaxed font-medium">
+                Your security, Our responsibility.
               </p>
             </div>
 
-            {/* Column 2: Platform */}
-            <div>
-              <h4 className="text-text-primary font-bold mb-4">Platform</h4>
-              <ul className="space-y-3">
-                <li><Link to="/features" className="text-sm text-text-secondary hover:text-accent transition-colors">Platform Features</Link></li>
-                <li><Link to="/security-architecture" className="text-sm text-text-secondary hover:text-accent transition-colors">Security Architecture</Link></li>
-                <li><Link to="/global-network" className="text-sm text-text-secondary hover:text-accent transition-colors">Global Network</Link></li>
-                <li><Link to="/system-architecture" className="text-sm text-text-secondary hover:text-accent transition-colors">System Architecture</Link></li>
-              </ul>
-            </div>
+
 
             {/* Column 3: Resources */}
             <div>
@@ -407,7 +395,6 @@ const Footer = () => {
                 <li><Link to="/terms-of-service" className="text-sm text-text-secondary hover:text-accent transition-colors">Terms of Service</Link></li>
                 <li><Link to="/privacy-policy" className="text-sm text-text-secondary hover:text-accent transition-colors">Privacy Policy</Link></li>
                 <li><Link to="/refund-policy" className="text-sm text-text-secondary hover:text-accent transition-colors">Refund Policy</Link></li>
-                <li><Link to="/disclaimer" className="text-sm text-text-secondary hover:text-accent transition-colors">Disclaimer</Link></li>
               </ul>
             </div>
           </div>

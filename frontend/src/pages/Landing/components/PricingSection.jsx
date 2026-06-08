@@ -102,7 +102,7 @@ const PricingSection = () => {
           <div className="bg-surface border border-border/60 p-1 rounded-full flex items-center shadow-sm">
             <button
               onClick={() => setBillingCycle('monthly')}
-              className={`px-6 py-2 rounded-full font-mono text-xs uppercase tracking-wider transition-all duration-300 ${
+              className={`px-8 py-3 rounded-full font-mono text-lg uppercase tracking-wider transition-all duration-300 ${
                 billingCycle === 'monthly'
                   ? 'bg-accent text-void font-bold shadow-md'
                   : 'text-text-secondary hover:text-text-primary'
@@ -112,18 +112,13 @@ const PricingSection = () => {
             </button>
             <button
               onClick={() => setBillingCycle('yearly')}
-              className={`px-6 py-2 rounded-full font-mono text-xs uppercase tracking-wider transition-all duration-300 flex items-center gap-1.5 ${
+              className={`px-8 py-3 rounded-full font-mono text-lg uppercase tracking-wider transition-all duration-300 flex items-center justify-center ${
                 billingCycle === 'yearly'
                   ? 'bg-accent text-void font-bold shadow-md'
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
               Yearly
-              <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase transition-all ${
-                billingCycle === 'yearly' ? 'bg-void/25 text-void' : 'bg-accent/15 text-accent'
-              }`}>
-                -20%
-              </span>
             </button>
           </div>
         </div>
@@ -147,13 +142,14 @@ const PricingSection = () => {
                 style={{ transitionDelay: `${i * 80}ms` }}
               >
                 {tier.recommended && (
-                  <div className="absolute top-5 right-5 font-mono text-[9px] text-accent uppercase tracking-widest border border-accent/30 px-2.5 py-1 rounded bg-accent/10 font-bold">
-                    MOST POPULAR
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex items-center justify-center w-full">
+                    <span className="font-mono text-sm text-accent uppercase tracking-widest border border-accent/40 px-5 py-1.5 rounded-full bg-void shadow-lg shadow-accent/10 font-bold">
+                      RECOMMENDED
+                    </span>
                   </div>
                 )}
                 
-                <h3 className="font-mono text-text-muted tracking-widest uppercase mb-2 text-xs font-bold">{tier.name}</h3>
-                <p className="text-xs text-text-secondary mb-6 font-sans leading-relaxed">{tier.description}</p>
+                <h3 className="font-mono text-white tracking-widest uppercase mb-8 text-2xl font-bold">{tier.name}</h3>
                 
                 {/* Pricing Block */}
                 <div className="mb-6">
@@ -161,11 +157,11 @@ const PricingSection = () => {
                     <span className="text-4xl md:text-5xl font-extrabold text-text-primary tracking-tight font-mono">
                       {priceInfo.primary}
                     </span>
-                    <span className="text-xs text-text-secondary font-mono">
+                    <span className="text-sm text-text-secondary font-mono">
                       / {priceInfo.period}
                     </span>
                   </div>
-                  <div className="text-[11px] text-text-secondary/80 mt-2 font-mono min-h-[16px]">
+                  <div className="text-[13px] text-text-secondary/80 mt-2 font-mono min-h-[16px]">
                     {priceInfo.secondary}
                   </div>
                 </div>
@@ -175,7 +171,7 @@ const PricingSection = () => {
                 {/* Features List */}
                 <ul className="flex-1 space-y-4 mb-8">
                   {tier.features.map((feature, j) => (
-                    <li key={j} className="font-sans text-sm text-text-secondary flex items-start">
+                    <li key={j} className="font-sans text-[15px] text-text-secondary flex items-start">
                       <span className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center mr-3 mt-0.5 ${
                         tier.recommended
                           ? 'bg-accent/15 text-accent'
@@ -190,7 +186,7 @@ const PricingSection = () => {
                 
                 <Link 
                   to={tier.recommended ? "/register" : "/contact"} 
-                  className={`w-full py-4 text-center rounded-2xl font-mono text-xs uppercase tracking-widest transition-all duration-300 font-bold ${
+                  className={`w-full py-4 text-center rounded-2xl font-mono text-sm uppercase tracking-widest transition-all duration-300 font-bold ${
                     tier.recommended 
                       ? 'bg-accent text-void hover:brightness-110 active:scale-98 shadow-lg shadow-accent/15' 
                       : 'border border-border/80 text-text-secondary hover:text-text-primary hover:border-border-active hover:bg-border/20 active:scale-98'

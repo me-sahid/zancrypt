@@ -1,5 +1,92 @@
-import React, { useEffect, useRef } from 'react';
-import { ShieldAlert, Fingerprint, History, Binary } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { ShieldAlert, Fingerprint, History, Binary, CheckCircle2, Lock } from 'lucide-react';
+
+const PasskeyAnimation = () => {
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setStep((prev) => (prev + 1) % 3);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="relative w-full max-w-sm mx-auto h-[320px] flex items-center justify-center">
+      {/* Background elements */}
+      <div className="absolute inset-0 bg-surface/20 rounded-3xl border border-border/50 backdrop-blur-md shadow-2xl flex flex-col overflow-hidden">
+        
+        {/* Browser Mockup Header */}
+        <div className="h-10 bg-surface border-b border-border/50 flex items-center px-4 gap-2">
+          <div className="flex gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-border" />
+            <div className="w-2.5 h-2.5 rounded-full bg-border" />
+            <div className="w-2.5 h-2.5 rounded-full bg-border" />
+          </div>
+          <div className="mx-auto flex items-center gap-2 bg-void/50 px-3 py-1 rounded-md text-[10px] font-mono text-text-muted border border-border/30">
+            <Lock className="w-3 h-3" /> zancrypt.in
+          </div>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col items-center justify-center p-8 relative">
+          
+          {step === 0 && (
+            <div className="flex flex-col items-center animate-in fade-in zoom-in duration-500">
+              <div className="w-16 h-16 rounded-2xl bg-surface-elevated border border-border/50 flex items-center justify-center shadow-lg mb-6">
+                <ShieldAlert className="w-8 h-8 text-accent" />
+              </div>
+              <h4 className="text-text-primary font-bold text-lg text-center mb-2">Sign in with Passkey</h4>
+              <p className="text-text-secondary text-sm text-center">Verify your identity to access your vault.</p>
+            </div>
+          )}
+
+          {step === 1 && (
+            <div className="flex flex-col items-center animate-in fade-in duration-500">
+              <div className="relative mb-6">
+                <Fingerprint className="w-20 h-20 text-accent/20" />
+                <div className="absolute inset-0 overflow-hidden">
+                  <Fingerprint className="w-20 h-20 text-accent" style={{
+                    clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)',
+                    animation: 'scan 1.5s ease-in-out infinite alternate'
+                  }} />
+                  {/* CSS scanline */}
+                  <div className="absolute top-0 left-0 w-full h-[2px] bg-accent shadow-[0_0_10px_rgba(79,255,176,0.8)]"
+                    style={{
+                      animation: 'scanline 1.5s ease-in-out infinite alternate'
+                    }}
+                  />
+                </div>
+              </div>
+              <h4 className="text-accent font-bold text-lg text-center animate-pulse">Scanning biometric...</h4>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="flex flex-col items-center animate-in fade-in zoom-in duration-500">
+              <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center mb-6">
+                <CheckCircle2 className="w-8 h-8 text-accent" />
+              </div>
+              <h4 className="text-text-primary font-bold text-lg text-center mb-2">Authenticated</h4>
+              <p className="text-accent text-sm text-center font-mono">Master key derived locally</p>
+            </div>
+          )}
+
+        </div>
+      </div>
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes scanline {
+          0% { transform: translateY(0); }
+          100% { transform: translateY(80px); }
+        }
+        @keyframes scan {
+          0% { clip-path: inset(0 0 100% 0); }
+          100% { clip-path: inset(0 0 0 0); }
+        }
+      `}} />
+    </div>
+  );
+};
 
 const EnterpriseSecurity = () => {
   const containerRef = useRef(null);
@@ -83,38 +170,9 @@ const EnterpriseSecurity = () => {
           </div>
         </div>
 
-        {/* Right: Radar Graphic */}
-        <div className="relative h-[460px] flex items-center justify-center animate-on-scroll" style={{ transitionDelay: '200ms' }}>
-          {/* Concentric rings */}
-          <div className="absolute w-[400px] h-[400px] border border-red-500/15 rounded-full" />
-          <div className="absolute w-[300px] h-[300px] border border-red-500/20 rounded-full" />
-          <div className="absolute w-[200px] h-[200px] border border-red-500/20 rounded-full bg-red-500/3" />
-          <div className="absolute w-[100px] h-[100px] border border-red-500/30 rounded-full bg-red-500/5" />
-
-          {/* Center pulse dot */}
-          <div className="relative w-4 h-4 rounded-full bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.8)] z-10">
-            <div className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-40" />
-          </div>
-
-          {/* Radar sweep — pure CSS rotation */}
-          <div
-            className="absolute top-1/2 left-1/2 w-[200px] h-px origin-left opacity-60"
-            style={{
-              background: 'linear-gradient(to right, rgba(239,68,68,0.8), transparent)',
-              animation: 'spin 4s linear infinite',
-              transformOrigin: '0 50%',
-              marginTop: '-0.5px',
-            }}
-          />
-
-          {/* Blip dots */}
-          <div className="absolute top-[28%] right-[30%] w-2 h-2 bg-red-500 rounded-full shadow-[0_0_12px_rgba(239,68,68,0.9)] animate-pulse" />
-          <div className="absolute bottom-[28%] left-[28%] w-1.5 h-1.5 bg-red-400 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.8)] animate-pulse" style={{ animationDelay: '700ms' }} />
-          <div className="absolute top-[55%] left-[22%] w-1 h-1 bg-red-300 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse" style={{ animationDelay: '1400ms' }} />
-
-          {/* Corner labels */}
-          <div className="absolute top-6 right-6 font-mono text-[9px] uppercase tracking-widest text-red-400/50">THREAT SCAN</div>
-          <div className="absolute bottom-6 left-6 font-mono text-[9px] uppercase tracking-widest text-red-400/50">ACTIVE · 360°</div>
+        {/* Right: Security Details Block */}
+        <div className="relative flex flex-col items-center justify-center animate-on-scroll w-full" style={{ transitionDelay: '200ms' }}>
+          <PasskeyAnimation />
         </div>
       </div>
     </section>

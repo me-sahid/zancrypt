@@ -33,6 +33,7 @@ const RecycleBin = lazy(() => import('./pages/RecycleBin/RecycleBin'));
 const PublicInfoPage = lazy(() => import('./pages/Static/PublicInfoPage'));
 const Pricing = lazy(() => import('./pages/Pricing/Pricing'));
 const Architecture = lazy(() => import('./pages/Architecture/Architecture'));
+const PrivacyPolicy = lazy(() => import('./pages/Static/PrivacyPolicy'));
 
 // Loading Placeholder
 const PageLoader = () => (
@@ -63,6 +64,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/architecture" element={<Architecture />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
           {/* Static Info Pages */}
           {Object.entries(pageContent).map(([key, content]) => (

@@ -63,15 +63,7 @@ export const pageContent = {
     ],
     isCareers: true
   },
-  privacyPolicy: {
-    title: "Privacy Policy",
-    subtitle: "Our commitment to your data.",
-    content: [
-      "Since Zancrypt is a zero-knowledge platform, we fundamentally cannot read, scan, or analyze the files you upload. We collect only the absolute minimum telemetry required to keep the network operational.",
-      "We do not sell your data, we do not run third-party trackers, and we minimize our dependency on external analytics services.",
-      "Your authentication details are secured locally via WebAuthn, meaning we never store a password that could be compromised. We believe that the best way to protect your privacy is to not have your data in the first place."
-    ]
-  },
+
   termsOfService: {
     title: "Terms of Service",
     subtitle: "Rules of the network.",

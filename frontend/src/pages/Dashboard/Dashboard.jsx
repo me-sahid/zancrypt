@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useDashboardStore } from '../../store/useDashboardStore';
 import { useAuthStore } from '../../store/useStore';
+import { useLanguageStore } from '../../store/useLanguageStore';
 import { useSimulationEngine } from '../../hooks/useSimulationEngine';
 import MetricCard from '../../components/dashboard/MetricCard';
 import NodeStatusGrid from '../../components/dashboard/NodeStatusGrid';
@@ -21,6 +22,7 @@ const Dashboard = () => {
   
   const { metrics, nodes, files, setFiles, setNodes, updateMetrics } = useDashboardStore();
   const { user } = useAuthStore();
+  const { t } = useLanguageStore();
 
   useEffect(() => {
     let isMounted = true;
@@ -122,22 +124,22 @@ const Dashboard = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-4 md:pb-6">
         <div>
           <h1 className="font-mono text-2xl text-text-primary tracking-widest uppercase">
-            Dashboard
+            {t('dashboard', 'title')}
           </h1>
           <p className="text-text-muted mt-2 font-mono text-xs uppercase tracking-widest">
-            Welcome, {user?.full_name?.split(' ')[0] || user?.username || 'Operator'}
+            {t('dashboard', 'welcome')}, {user?.full_name?.split(' ')[0] || user?.username || 'Operator'}
           </p>
         </div>
         
         <Link to="/uploads" className="px-6 py-3 w-full md:w-auto text-center border border-accent text-accent font-mono text-xs uppercase tracking-widest hover:bg-accent/10 transition-colors">
-          [ Init Upload ]
+          {t('dashboard', 'upload')}
         </Link>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard 
-          label="Total Storage" 
+          label={t('dashboard', 'totalStorage')} 
           value={storageInfo.value} 
           suffix={storageInfo.suffix} 
           icon={HardDrive} 
@@ -145,7 +147,7 @@ const Dashboard = () => {
           isPositive={true} 
         />
         <MetricCard 
-          label="Security Protocol" 
+          label={t('dashboard', 'securityProtocol')} 
           value={safeMetrics.securityScore || 100} 
           suffix="%" 
           icon={ShieldCheck} 
@@ -153,12 +155,12 @@ const Dashboard = () => {
           isPositive={true} 
         />
         <MetricCard 
-          label="Encrypted Items" 
+          label={t('dashboard', 'encryptedItems')} 
           value={files ? files.length : 0} 
           icon={Database} 
         />
         <MetricCard 
-          label="Active Nodes" 
+          label={t('dashboard', 'activeNodes')} 
           value={cloudNodes.length > 0 ? cloudNodes.filter(n => n.health === 'Healthy').length : liveNodesCount} 
           icon={Server} 
           trend="ONLINE" 
@@ -173,10 +175,10 @@ const Dashboard = () => {
           <div className="flex items-center justify-between p-4 border-b border-border">
             <div className="font-mono text-[11px] uppercase tracking-widest text-text-muted flex items-center">
               <FileText className="w-3.5 h-3.5 mr-2" />
-              Recent Ciphertexts
+              {t('dashboard', 'recentFiles')}
             </div>
             <Link to="/vault" className="text-accent hover:underline font-mono text-xs uppercase tracking-widest">
-              View Log
+              {t('dashboard', 'viewLog')}
             </Link>
           </div>
           
@@ -204,7 +206,7 @@ const Dashboard = () => {
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-center">
                 <FileText className="w-6 h-6 mb-2 text-text-muted" />
-                <p className="font-mono text-xs text-text-muted uppercase tracking-widest">Vault Empty</p>
+                <p className="font-mono text-xs text-text-muted uppercase tracking-widest">{t('dashboard', 'vaultEmpty')}</p>
               </div>
             )}
           </div>
@@ -215,7 +217,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between p-4 border-b border-border">
             <div className="font-mono text-[11px] uppercase tracking-widest text-text-muted flex items-center">
               <Activity className="w-3.5 h-3.5 mr-2" />
-              Node Matrix
+              {t('dashboard', 'nodeMatrix')}
             </div>
           </div>
           <div className="flex-1 overflow-y-auto custom-scrollbar p-2">

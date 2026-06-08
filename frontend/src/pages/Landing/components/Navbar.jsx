@@ -140,8 +140,8 @@ const Navbar = () => {
         <div className="flex items-center gap-12">
           {/* ── Logo Section ── */}
           <Link to="/" className="flex items-center gap-2 group shrink-0" onClick={() => handleNavClick('#')}>
-            <span className="text-3xl font-bold text-text-primary tracking-tight">
-              Zancrypt
+            <span className="text-2xl font-bold text-text-primary tracking-[0.15em] uppercase">
+              ZANCRYPT
             </span>
           </Link>
 

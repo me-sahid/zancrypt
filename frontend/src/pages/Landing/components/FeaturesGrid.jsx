@@ -10,7 +10,7 @@ const FeaturesGrid = ({ isLoading }) => {
 
   const features = [
     { 
-      icon: Lock, 
+      imgSrc: '/zk-shield-lock.png', 
       title: 'Zero-Knowledge Encryption', 
       desc: 'End-to-end client-side encryption. Every file is encrypted in your browser before it ever hits the network. We cannot access your data under any circumstances — your recovery device passkey never leaves your local system.',
       badge: 'Core Protocol'
@@ -134,9 +134,17 @@ const FeaturesGrid = ({ isLoading }) => {
                     <div className={`${
                       isLarge ? 'w-16 h-16 rounded-2xl bg-accent/10 border border-accent/30' : 'w-12 h-12 rounded-xl bg-surface-raised border border-border/50'
                     } flex items-center justify-center relative group-hover:scale-105 group-hover:border-accent/50 transition-all duration-300 shadow-[0_0_20px_rgba(79,255,176,0.05)]`}>
-                      <feature.icon className={`${
-                        isLarge ? 'w-8 h-8 text-accent' : 'w-5 h-5 text-text-secondary group-hover:text-accent'
-                      } transition-colors`} />
+                      {feature.imgSrc ? (
+                        <img 
+                          src={feature.imgSrc} 
+                          alt={feature.title} 
+                          className={`${isLarge ? 'w-8 h-8' : 'w-5 h-5'} object-contain filter invert brightness-0 opacity-90 group-hover:opacity-100 transition-all`} 
+                        />
+                      ) : (
+                        <feature.icon className={`${
+                          isLarge ? 'w-8 h-8 text-accent' : 'w-5 h-5 text-text-secondary group-hover:text-accent'
+                        } transition-colors`} />
+                      )}
                     </div>
                     <span className="font-mono text-[9px] uppercase tracking-widest text-text-muted bg-surface/80 border border-border/30 px-2 py-0.5 rounded-full">
                       {feature.badge}

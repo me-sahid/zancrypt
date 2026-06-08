@@ -20,6 +20,7 @@ import FileThumbnail from '../../components/vault/FileThumbnail';
 import { deriveKey, decryptData } from '../../utils/crypto';
 import CipherText from '../../components/crypto/CipherText';
 import SecureInput from '../../components/ui/SecureInput';
+import { useLanguageStore } from '../../store/useLanguageStore';
 
 // Category Sniffer
 const getFileCategory = (filename) => {
@@ -105,6 +106,7 @@ const Files = () => {
     currentFolderId, setCurrentFolderId, folders, setFolders,
     clipboard, setClipboard, clearClipboard
   } = useDashboardStore();
+  const { t } = useLanguageStore();
   const [isLoading, setIsLoading] = useState(false);
   const [previewData, setPreviewData] = useState(null);
   const [selectedIds, setSelectedIds] = useState({});
@@ -572,10 +574,10 @@ const Files = () => {
         <div>
           <h1 className="font-mono text-2xl text-text-primary tracking-widest uppercase flex items-center">
             <Database className="w-6 h-6 mr-3 text-accent" />
-            Vault
+            {t('vault', 'title')}
           </h1>
           <p className="text-text-muted mt-2 font-mono text-xs uppercase tracking-widest">
-            {isDecrypting ? "Decrypting Index..." : "Encrypted Storage Matrix"}
+            {isDecrypting ? t('vault', 'decryptingIndex') : t('vault', 'encryptedMatrix')}
           </p>
         </div>
         
@@ -585,14 +587,14 @@ const Files = () => {
           </button>
           {clipboard.files.length > 0 && (
             <button onClick={handlePaste} className="flex-1 md:flex-none px-4 md:px-6 py-3 border border-border text-text-primary font-mono text-[10px] md:text-xs uppercase tracking-widest hover:bg-surface-raised transition-colors flex items-center justify-center whitespace-nowrap">
-              <ClipboardPaste className="w-4 h-4 md:mr-2" /> <span className="hidden sm:inline">Paste</span> ({clipboard.files.length})
+              <ClipboardPaste className="w-4 h-4 md:mr-2" /> <span className="hidden sm:inline">{t('vault', 'paste')}</span> ({clipboard.files.length})
             </button>
           )}
           <button onClick={() => setIsNewFolderModalOpen(true)} className="flex-1 md:flex-none px-4 md:px-6 py-3 border border-border text-text-primary font-mono text-[10px] md:text-xs uppercase tracking-widest hover:bg-surface-raised transition-colors flex items-center justify-center whitespace-nowrap">
-            <FolderPlus className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">New Folder</span>
+            <FolderPlus className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">{t('vault', 'newFolder')}</span>
           </button>
           <Link to="/uploads" className="flex-1 md:flex-none px-4 md:px-6 py-3 border border-accent text-accent text-center font-mono text-[10px] md:text-xs uppercase tracking-widest hover:bg-accent/10 transition-colors whitespace-nowrap">
-            [ Upload ]
+            {t('vault', 'upload')}
           </Link>
         </div>
       </div>
@@ -602,7 +604,7 @@ const Files = () => {
         <div className="relative w-full sm:flex-1">
           <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
           <input 
-            placeholder="Search Decrypted Names..." 
+            placeholder={t('vault', 'search')} 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-void border border-border focus:border-accent text-text-primary font-mono text-sm py-4 pl-12 pr-4 outline-none transition-colors"
@@ -627,19 +629,19 @@ const Files = () => {
                   </th>
                   <th className="py-4 px-6 cursor-pointer hover:text-accent" onClick={() => handleSort('name')}>
                     <div className="flex items-center space-x-2">
-                      <span>Filename</span>
+                      <span>{t('vault', 'filename')}</span>
                       {sortField === 'name' && (sortDirection === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />)}
                     </div>
                   </th>
                   <th className="py-4 px-6 cursor-pointer hover:text-accent" onClick={() => handleSort('size')}>
                     <div className="flex items-center space-x-2">
-                      <span>Size</span>
+                      <span>{t('vault', 'size')}</span>
                       {sortField === 'size' && (sortDirection === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />)}
                     </div>
                   </th>
                   <th className="py-4 px-6 cursor-pointer hover:text-accent hidden sm:table-cell" onClick={() => handleSort('uploaded_at')}>
                     <div className="flex items-center space-x-2">
-                      <span>Timestamp</span>
+                      <span>{t('vault', 'timestamp')}</span>
                       {sortField === 'uploaded_at' && (sortDirection === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />)}
                     </div>
                   </th>
@@ -781,7 +783,7 @@ const Files = () => {
                 className="border border-border bg-void rounded-xl p-4 flex flex-col items-center justify-center hover:border-accent/50 hover:bg-surface-raised transition-all cursor-pointer aspect-square shadow-lg"
               >
                 <CornerLeftUp className="w-10 h-10 text-text-muted mb-3" />
-                <span className="font-bold tracking-widest text-text-muted text-sm uppercase">Up</span>
+                <span className="font-bold tracking-widest text-text-muted text-sm uppercase">{t('vault', 'up')}</span>
               </div>
             )}
 
