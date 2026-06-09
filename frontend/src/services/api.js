@@ -113,14 +113,13 @@ export async function silentRefresh() {
       {},
       { withCredentials: true }
     );
-    // Refresh succeeded — update token in localStorage and memory
-    restoreToken(data.access_token);
-  } catch(error) {
-    if(error.response?.status === 401 || error.response?.status === 403){
+    // ← pass both token AND user from refresh response
+    restoreToken(data.access_token, data.user ?? null);
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
       logout();
     }
   } finally {
-    // Always unblock ProtectedRoute regardless of outcome
     setInitialized();
   }
 }

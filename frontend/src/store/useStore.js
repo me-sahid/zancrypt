@@ -30,10 +30,15 @@ export const useAuthStore = create(
         localStorage.removeItem('zancrypt-auth-state');
       },
 
-      restoreToken: (token) => {
-        _memoryToken = token ?? null;  //memory only
-        set({ isAuthenticated: true, isInitializing: false });
-      },
+      restoreToken: (token, user = null) => {
+        _memoryToken = token ?? null;
+        set((state) => ({
+        isAuthenticated: true,
+        isInitializing: false,
+    // keep existing user if no new one provided
+        user: user ?? state.user,
+      }));
+},
 
       setInitialized: () => set({ isInitializing: false }),
     }),
