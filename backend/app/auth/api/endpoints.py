@@ -249,7 +249,8 @@ async def login_verify(
             value=refresh_token,
             httponly=True,
             secure=True,
-            samesite="none",
+            samesite="lax",
+            domain=".zancrypt.in",
             max_age=7 * 24 * 60 * 60,
         )
 
@@ -400,7 +401,8 @@ async def logout(
         key="refresh_token",
         httponly=True,
         secure=True,
-        samesite="none",
+        samesite="lax",          
+        domain=".zancrypt.in",   
     )
 
 @router.put("/profile")
