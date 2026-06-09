@@ -83,7 +83,7 @@ const EnterpriseSecurity = () => {
       <div className="w-full max-w-4xl mx-auto relative z-10">
         <div className="mb-14 text-center">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium text-text-primary mb-5 tracking-tight">
-            Security & Architecture
+            Frequently Asked Questions
           </h2>
           <p className="text-text-secondary text-base md:text-lg max-w-2xl mx-auto">
             Everything you need to know about our zero-knowledge architecture and how we protect your data.

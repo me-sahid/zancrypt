@@ -162,7 +162,7 @@ const Login = () => {
               className="w-full h-12"
               isLoading={isLoading}
             >
-              {showFallback ? '[ Authenticate ]' : '[ Request Challenge ]'}
+              Login
             </Button>
 
             {showFallback && (
