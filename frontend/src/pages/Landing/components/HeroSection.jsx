@@ -7,11 +7,14 @@ import {
   Database, Search, Eye, Download, Trash2 
 } from 'lucide-react';
 import { useLanguageStore } from '../../../store/useLanguageStore';
+import { useThemeStore } from '../../../store/useThemeStore';
 
 const HeroSection = ({ isLoading }) => {
   const containerRef = useRef(null);
   const vizRef = useRef(null);
   const { t } = useLanguageStore();
+  const { theme } = useThemeStore();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     let ctx = gsap.context(() => {
@@ -43,7 +46,7 @@ const HeroSection = ({ isLoading }) => {
           <h1 className="text-5xl sm:text-6xl lg:text-[72px] leading-[1.05] mb-8 text-text-primary tracking-tight font-display">
             <div className="overflow-hidden"><div className="hero-text-line">{t('hero', 'files')}</div></div>
             <div className="overflow-hidden"><div className="hero-text-line">{t('hero', 'encrypted')}</div></div>
-            <div className="overflow-hidden"><div className="hero-text-line italic">{t('hero', 'untouchable')}</div></div>
+            <div className="overflow-hidden"><div className="hero-text-line italic"><span style={{color: isDark ? '#9ca3af' : '#d97757'}}>{t('hero', 'untouchable')}</span></div></div>
           </h1>
           
           <div className="overflow-hidden mb-8 lg:mb-10">

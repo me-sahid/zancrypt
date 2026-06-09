@@ -154,7 +154,7 @@ const Navbar = () => {
             onMouseEnter={() => handleMouseEnter('products')}
             onMouseLeave={handleMouseLeave}
           >
-            <button className="flex items-center gap-1 font-sans text-base font-medium text-text-secondary hover:text-text-primary transition-colors py-2 cursor-pointer">
+            <button className="flex items-center gap-1 font-sans text-base font-normal text-text-secondary hover:text-text-primary transition-colors py-2 cursor-pointer">
               Product
               <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === 'products' ? 'rotate-180 text-text-primary' : 'text-text-muted'}`} />
             </button>
@@ -166,86 +166,20 @@ const Navbar = () => {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 12, scale: 0.97 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[600px] bg-surface border border-border shadow-2xl rounded-xl z-50 overflow-hidden backdrop-blur-xl"
+                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[320px] bg-surface border border-border shadow-2xl rounded-xl z-50 overflow-hidden backdrop-blur-xl"
                 >
-                  <div className="p-3 grid grid-cols-2 gap-2">
-                    <Link to="/vault" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
-                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <Lock className="w-6 h-6 text-text-primary" />
+                  <div className="p-3 grid grid-cols-1 gap-2">
+                    <Link to="/vault" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
+                      <div className="shrink-0 p-2.5 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
+                        <img src="/zk-shield-lock.png" alt="Secure Vault" className="w-5 h-5 object-contain" />
                       </div>
-                      <div className="space-y-1">
-                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">
-                          Secure Vault
-                        </p>
-                        <p className="font-sans text-sm text-text-secondary leading-relaxed">
-                          Zero-knowledge encrypted personal storage
-                        </p>
-                      </div>
+                      <p className="font-sans font-normal text-base text-text-primary transition-colors">Secure Vault</p>
                     </Link>
-                    <Link to="/shares" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
-                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <Share2 className="w-6 h-6 text-text-primary" />
+                    <Link to="/api" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
+                      <div className="shrink-0 p-2.5 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
+                        <img src="/Code-Bracket.png" alt="Developer API" className="w-5 h-5 object-contain" />
                       </div>
-                      <div className="space-y-1">
-                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">
-                          File Sharing
-                        </p>
-                        <p className="font-sans text-sm text-text-secondary leading-relaxed">
-                          Share files securely with expiring links
-                        </p>
-                      </div>
-                    </Link>
-                    <Link to="/nodes" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
-                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <Cloud className="w-6 h-6 text-text-primary" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">
-                          Multi-Cloud Nodes
-                        </p>
-                        <p className="font-sans text-sm text-text-secondary leading-relaxed">
-                          Distributed architecture across providers
-                        </p>
-                      </div>
-                    </Link>
-                    <Link to="/audit" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
-                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <FileText className="w-6 h-6 text-text-primary" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">
-                          Audit & Logs
-                        </p>
-                        <p className="font-sans text-sm text-text-secondary leading-relaxed">
-                          Comprehensive tracking of all access
-                        </p>
-                      </div>
-                    </Link>
-                    <Link to="/security" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
-                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <Key className="w-6 h-6 text-text-primary" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">
-                          Security & Encryption
-                        </p>
-                        <p className="font-sans text-sm text-text-secondary leading-relaxed">
-                          AES-256-GCM client-side encryption
-                        </p>
-                      </div>
-                    </Link>
-                    <Link to="/api" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
-                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <Code className="w-6 h-6 text-text-primary" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">
-                          Developer API
-                        </p>
-                        <p className="font-sans text-sm text-text-secondary leading-relaxed">
-                          Integrate with our secure network
-                        </p>
-                      </div>
+                      <p className="font-sans font-normal text-base text-text-primary transition-colors">Developer API</p>
                     </Link>
                   </div>
                   <div className="bg-surface-raised/40 p-4 border-t border-border">
@@ -264,7 +198,7 @@ const Navbar = () => {
             onMouseEnter={() => handleMouseEnter('company')}
             onMouseLeave={handleMouseLeave}
           >
-            <button className="flex items-center gap-1 font-sans text-base font-medium text-text-secondary hover:text-text-primary transition-colors py-2 cursor-pointer">
+            <button className="flex items-center gap-1 font-sans text-sm font-normal text-text-secondary hover:text-text-primary transition-colors py-2 cursor-pointer">
               Company
               <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === 'company' ? 'rotate-180 text-text-primary' : 'text-text-muted'}`} />
             </button>
@@ -276,62 +210,20 @@ const Navbar = () => {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 12, scale: 0.97 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[600px] bg-surface border border-border shadow-2xl rounded-xl z-50 overflow-hidden backdrop-blur-xl"
+                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[320px] bg-surface border border-border shadow-2xl rounded-xl z-50 overflow-hidden backdrop-blur-xl"
                 >
-                  <div className="p-3 grid grid-cols-2 gap-2">
-                    <a href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
-                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <Users className="w-6 h-6 text-text-primary" />
+                  <div className="p-3 grid grid-cols-1 gap-2">
+                    <a href="#" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
+                      <div className="shrink-0 p-2.5 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
+                        <Users className="w-5 h-5 text-text-primary" />
                       </div>
-                      <div className="space-y-1">
-                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">About Us</p>
-                        <p className="font-sans text-sm text-text-secondary leading-relaxed">Our mission and open-source team</p>
-                      </div>
+                      <p className="font-sans font-normal text-base text-text-primary transition-colors">About Us</p>
                     </a>
-                    <a href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
-                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <Briefcase className="w-6 h-6 text-text-primary" />
+                    <a href="#" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
+                      <div className="shrink-0 p-2.5 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
+                        <HelpCircle className="w-5 h-5 text-text-primary" />
                       </div>
-                      <div className="space-y-1">
-                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">Careers</p>
-                        <p className="font-sans text-sm text-text-secondary leading-relaxed">Join our fully remote global team</p>
-                      </div>
-                    </a>
-                    <a href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
-                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <HelpCircle className="w-6 h-6 text-text-primary" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">Contact Support</p>
-                        <p className="font-sans text-sm text-text-secondary leading-relaxed">Get 24/7 help with your secure vault</p>
-                      </div>
-                    </a>
-                    <a href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
-                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <BarChart className="w-6 h-6 text-text-primary" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">System Status</p>
-                        <p className="font-sans text-sm text-text-secondary leading-relaxed">Real-time network and node uptime</p>
-                      </div>
-                    </a>
-                    <a href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
-                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <Newspaper className="w-6 h-6 text-text-primary" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">Blog & News</p>
-                        <p className="font-sans text-sm text-text-secondary leading-relaxed">Latest product updates and security news</p>
-                      </div>
-                    </a>
-                    <a href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
-                      <div className="shrink-0 p-3 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <Shield className="w-6 h-6 text-text-primary" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="font-sans font-semibold text-base text-text-primary transition-colors">Trust Center</p>
-                        <p className="font-sans text-sm text-text-secondary leading-relaxed">Security policies and compliance docs</p>
-                      </div>
+                      <p className="font-sans font-normal text-base text-text-primary transition-colors">Contact Support</p>
                     </a>
                   </div>
                   <div className="bg-surface-raised/40 p-4 border-t border-border">
@@ -347,7 +239,7 @@ const Navbar = () => {
           {/* PRICING LINK */}
           <Link
             to="/pricing"
-            className="font-sans text-base font-medium text-text-secondary hover:text-text-primary transition-colors py-2 cursor-pointer"
+            className="font-sans text-base font-normal text-text-secondary hover:text-text-primary transition-colors py-2 cursor-pointer"
           >
             Pricing
           </Link>
@@ -553,27 +445,11 @@ const Navbar = () => {
                       className="overflow-hidden pl-3 mt-2 space-y-2"
                     >
                       <Link to="/vault" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <Lock className="w-4 h-4 text-text-secondary" />
+                        <img src="/zk-shield-lock.png" alt="Secure Vault" className="w-4 h-4 object-contain" />
                         <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Secure Vault</span>
                       </Link>
-                      <Link to="/shares" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <Share2 className="w-4 h-4 text-text-secondary" />
-                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">File Sharing</span>
-                      </Link>
-                      <Link to="/nodes" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <Cloud className="w-4 h-4 text-text-secondary" />
-                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Multi-Cloud Nodes</span>
-                      </Link>
-                      <Link to="/audit" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <FileText className="w-4 h-4 text-text-secondary" />
-                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Audit & Logs</span>
-                      </Link>
-                      <Link to="/security" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <Key className="w-4 h-4 text-text-secondary" />
-                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Security & Encryption</span>
-                      </Link>
                       <Link to="/api" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <Code className="w-4 h-4 text-text-secondary" />
+                        <img src="/Code-Bracket.png" alt="Developer API" className="w-4 h-4 object-contain" />
                         <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Developer API</span>
                       </Link>
                     </motion.div>
@@ -603,24 +479,8 @@ const Navbar = () => {
                         <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">About Us</span>
                       </a>
                       <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <Briefcase className="w-4 h-4 text-text-secondary" />
-                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Careers</span>
-                      </a>
-                      <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
                         <HelpCircle className="w-4 h-4 text-text-secondary" />
                         <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Contact Support</span>
-                      </a>
-                      <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <BarChart className="w-4 h-4 text-text-secondary" />
-                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">System Status</span>
-                      </a>
-                      <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <Newspaper className="w-4 h-4 text-text-secondary" />
-                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Blog & News</span>
-                      </a>
-                      <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <Shield className="w-4 h-4 text-text-secondary" />
-                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Trust Center</span>
                       </a>
                     </motion.div>
                   )}

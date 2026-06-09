@@ -1,178 +1,104 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ShieldAlert, Fingerprint, History, Binary, CheckCircle2, Lock } from 'lucide-react';
+import React, { useState } from 'react';
 
-const PasskeyAnimation = () => {
-  const [step, setStep] = useState(0);
+const faqData = [
+  {
+    "id": "q1",
+    "question": "What makes Zancrypt's zero-knowledge architecture different?",
+    "answer": "Unlike traditional cloud storage, encryption keys are derived client-side using Argon2id and your files are split into encrypted shards before ever hitting a server. We physically cannot read your files."
+  },
+  {
+    "id": "q2",
+    "question": "How securely are my access keys and credentials stored?",
+    "answer": "We utilize the OPAQUE protocol along with hardware-bound FIDO2/WebAuthn passkeys. Your raw passwords never leave your browser, and we only retain a secure bcrypt hash of a SHA-256 hash of your credential registry."
+  },
+  {
+    "id": "q3",
+    "question": "Where are my encrypted file shards distributed?",
+    "answer": "Your files are split using Shamir's Secret Sharing and Reed-Solomon erasure coding across 5 independent storage points, including AWS S3, Cloudflare R2, Backblaze B2, and self-hosted MinIO nodes. Any 4 shards can entirely reconstruct your file."
+  },
+  {
+    "id": "q4",
+    "question": "Is the system optimized for performance and network constraints?",
+    "answer": "Yes. The frontend handles parallel chunked uploads directly to edge nodes, utilizing lightweight, non-blocking JWT states stored purely in browser memory to eliminate Cross-Site Scripting (XSS) extraction risks."
+  }
+];
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setStep((prev) => (prev + 1) % 3);
-    }, 2000);
-    return () => clearInterval(timer);
-  }, []);
-
+const FAQAccordionItem = ({ item, isOpen, onClick }) => {
   return (
-    <div className="relative w-full max-w-sm mx-auto h-[320px] flex items-center justify-center">
-      {/* Background elements */}
-      <div className="absolute inset-0 bg-surface/20 rounded-3xl border border-border/50 backdrop-blur-md shadow-2xl flex flex-col overflow-hidden">
-        
-        {/* Browser Mockup Header */}
-        <div className="h-10 bg-surface border-b border-border/50 flex items-center px-4 gap-2">
-          <div className="flex gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-border" />
-            <div className="w-2.5 h-2.5 rounded-full bg-border" />
-            <div className="w-2.5 h-2.5 rounded-full bg-border" />
-          </div>
-          <div className="mx-auto flex items-center gap-2 bg-void/50 px-3 py-1 rounded-md text-[10px] font-mono text-text-muted border border-border/30">
-            <Lock className="w-3 h-3" /> zancrypt.in
+    <div className="border-b border-border/60 last:border-b-0">
+      <button
+        onClick={onClick}
+        className="w-full flex items-center justify-between py-6 px-6 md:px-8 text-left transition-colors hover:bg-surface-raised"
+        aria-expanded={isOpen}
+      >
+        <span className="text-text-primary font-normal text-base md:text-lg pr-4">
+          {item.question}
+        </span>
+        <div className="flex-shrink-0 text-text-secondary flex items-center justify-center w-6 h-6 ml-2">
+          <div className="relative w-3.5 h-3.5 flex items-center justify-center">
+            {/* Horizontal line (always present, rotates slightly for effect) */}
+            <span
+              className={`absolute w-full h-[2px] rounded-full bg-current transition-transform duration-300 ease-in-out ${
+                isOpen ? 'rotate-180' : 'rotate-0'
+              }`}
+            />
+            {/* Vertical line (disappears when open to form a minus) */}
+            <span
+              className={`absolute h-full w-[2px] rounded-full bg-current transition-transform duration-300 ease-in-out ${
+                isOpen ? 'rotate-90 scale-y-0' : 'rotate-0 scale-y-100'
+              }`}
+            />
           </div>
         </div>
-
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col items-center justify-center p-8 relative">
-          
-          {step === 0 && (
-            <div className="flex flex-col items-center animate-in fade-in zoom-in duration-500">
-              <div className="w-16 h-16 rounded-2xl bg-surface-elevated border border-border/50 flex items-center justify-center shadow-lg mb-6">
-                <ShieldAlert className="w-8 h-8 text-accent" />
-              </div>
-              <h4 className="text-text-primary font-bold text-lg text-center mb-2">Sign in with Passkey</h4>
-              <p className="text-text-secondary text-sm text-center">Verify your identity to access your vault.</p>
-            </div>
-          )}
-
-          {step === 1 && (
-            <div className="flex flex-col items-center animate-in fade-in duration-500">
-              <div className="relative mb-6">
-                <Fingerprint className="w-20 h-20 text-accent/20" />
-                <div className="absolute inset-0 overflow-hidden">
-                  <Fingerprint className="w-20 h-20 text-accent" style={{
-                    clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)',
-                    animation: 'scan 1.5s ease-in-out infinite alternate'
-                  }} />
-                  {/* CSS scanline */}
-                  <div className="absolute top-0 left-0 w-full h-[2px] bg-accent shadow-[0_0_10px_rgba(79,255,176,0.8)]"
-                    style={{
-                      animation: 'scanline 1.5s ease-in-out infinite alternate'
-                    }}
-                  />
-                </div>
-              </div>
-              <h4 className="text-accent font-bold text-lg text-center animate-pulse">Scanning biometric...</h4>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="flex flex-col items-center animate-in fade-in zoom-in duration-500">
-              <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center mb-6">
-                <CheckCircle2 className="w-8 h-8 text-accent" />
-              </div>
-              <h4 className="text-text-primary font-bold text-lg text-center mb-2">Authenticated</h4>
-              <p className="text-accent text-sm text-center font-mono">Master key derived locally</p>
-            </div>
-          )}
-
+      </button>
+      <div
+        className={`grid transition-all duration-300 ease-in-out ${
+          isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="px-6 md:px-8 pb-6 pt-1">
+            <p className="text-text-secondary text-sm md:text-base leading-relaxed">
+              {item.answer}
+            </p>
+          </div>
         </div>
       </div>
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes scanline {
-          0% { transform: translateY(0); }
-          100% { transform: translateY(80px); }
-        }
-        @keyframes scan {
-          0% { clip-path: inset(0 0 100% 0); }
-          100% { clip-path: inset(0 0 0 0); }
-        }
-      `}} />
     </div>
   );
 };
 
 const EnterpriseSecurity = () => {
-  const containerRef = useRef(null);
+  const [openId, setOpenId] = useState(null);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('fade-in-visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.1 });
-
-    const cards = containerRef.current?.querySelectorAll('.animate-on-scroll');
-    cards?.forEach((c) => observer.observe(c));
-    return () => observer.disconnect();
-  }, []);
-
-  const features = [
-    {
-      icon: Fingerprint,
-      title: 'WebAuthn & FIDO2',
-      desc: 'Hardware-backed biometric passkeys replace vulnerable passwords entirely.'
-    },
-    {
-      icon: History,
-      title: 'Immutable Audit Logs',
-      desc: 'Every action is cryptographically signed and appended to a WORM log.'
-    },
-    {
-      icon: Binary,
-      title: 'Anti-Replay Architecture',
-      desc: 'Cryptographic nonces and strict timestamping prevent replay attacks.'
-    },
-    {
-      icon: ShieldAlert,
-      title: 'Automated Threat Detection',
-      desc: 'Real-time anomaly detection blocks suspicious access patterns instantly.'
-    },
-  ];
+  const handleToggle = (id) => {
+    setOpenId((prev) => (prev === id ? null : id));
+  };
 
   return (
-    <section
-      id="security"
-      ref={containerRef}
-      className="py-32 px-8 bg-void border-y border-border/40 relative overflow-hidden"
-    >
-      {/* Subtle noise texture */}
-      <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none" />
+    <section className="py-24 md:py-32 px-4 bg-void border-y border-border/40 w-full relative overflow-hidden flex items-center justify-center">
+      {/* Subtle radial gradient background effect - adapts to theme if possible, otherwise subtle enough for both */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-surface/20 via-transparent to-transparent pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-16 items-center">
-
-        {/* Left: Text + Cards */}
-        <div>
-          <div className="inline-flex items-center px-3 py-1 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-mono uppercase tracking-widest mb-6 animate-on-scroll">
-            <ShieldAlert className="w-3.5 h-3.5 mr-2" />
-            Cybersecurity Posture
-          </div>
-
-          <h2 className="text-3xl md:text-5xl font-bold text-text-primary mb-6 animate-on-scroll" style={{ transitionDelay: '80ms' }}>
-            Defensive by Design
+      <div className="w-full max-w-4xl mx-auto relative z-10">
+        <div className="mb-14 text-center">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium text-text-primary mb-5 tracking-tight">
+            Security & Architecture
           </h2>
-
-          <p className="text-lg text-text-secondary mb-10 leading-relaxed font-sans animate-on-scroll" style={{ transitionDelay: '160ms' }}>
-            We operate under an assumed-breach mindset. Every layer is designed to limit blast radius and protect data even if the underlying infrastructure is compromised.
+          <p className="text-text-secondary text-base md:text-lg max-w-2xl mx-auto">
+            Everything you need to know about our zero-knowledge architecture and how we protect your data.
           </p>
-
-          <div className="grid sm:grid-cols-2 gap-5">
-            {features.map((f, i) => (
-              <div
-                key={i}
-                className="animate-on-scroll bg-surface/40 border border-border/50 p-6 rounded-2xl hover:border-red-500/30 hover:bg-surface-raised/40 transition-all duration-300 group"
-                style={{ transitionDelay: `${(i + 3) * 80}ms` }}
-              >
-                <f.icon className="w-5 h-5 text-red-400 mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-text-primary font-bold mb-2 font-sans">{f.title}</h3>
-                <p className="text-sm text-text-secondary font-sans leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
-          </div>
         </div>
 
-        {/* Right: Security Details Block */}
-        <div className="relative flex flex-col items-center justify-center animate-on-scroll w-full" style={{ transitionDelay: '200ms' }}>
-          <PasskeyAnimation />
+        <div className="rounded-xl border border-border/60 bg-surface/40 backdrop-blur-md overflow-hidden">
+          {faqData.map((item) => (
+            <FAQAccordionItem
+              key={item.id}
+              item={item}
+              isOpen={openId === item.id}
+              onClick={() => handleToggle(item.id)}
+            />
+          ))}
         </div>
       </div>
     </section>
