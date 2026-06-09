@@ -27,6 +27,7 @@ export const useAuthStore = create(
       logout: () => {
         _memoryToken = null;  // ✅ cleared from memory
         set({ user: null, isAuthenticated: false, isInitializing: false });
+        localStorage.removeItem('zancrypt-auth-state');
       },
 
       restoreToken: (token) => {
@@ -42,7 +43,6 @@ export const useAuthStore = create(
       // Only user + isAuthenticated persisted — token and isInitializing excluded
       partialize: (state) => ({ 
         user: state.user, 
-        isAuthenticated: state.isAuthenticated 
       }),
     }
   )

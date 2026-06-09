@@ -100,10 +100,9 @@ api.interceptors.response.use(
  * are ignored so the user is NOT logged out on transient failures.
  */
 export async function silentRefresh() {
-  const { isAuthenticated, restoreToken, setInitialized } = useAuthStore.getState();
+  const { user, restoreToken, setInitialized, logout } = useAuthStore.getState();
 
-  // Not logged in — nothing to restore
-  if (!isAuthenticated) {
+  if (!user) {
     setInitialized();
     return;
   }
@@ -116,12 +115,10 @@ export async function silentRefresh() {
     );
     // Refresh succeeded — update token in localStorage and memory
     restoreToken(data.access_token);
-  } catch {
-    // Refresh failed (expired cookie, sleeping backend, network error, etc.)
-    // DO NOT logout here. The access token in localStorage may still be valid.
-    // If it is expired, the 401 interceptor will catch it on the next real API
-    // call and attempt another refresh — only logging out if that also fails.
-    // Calling logout() here was causing unnecessary redirect-to-login on page refresh.
+  } catch(error) {
+    if(error.response?.status === 401 || error.response?.status === 403){
+      logout();
+    }
   } finally {
     // Always unblock ProtectedRoute regardless of outcome
     setInitialized();
