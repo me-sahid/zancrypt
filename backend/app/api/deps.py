@@ -28,10 +28,10 @@ async def get_current_user(token: str = Depends(OAuth2PasswordBearer(tokenUrl="/
         owner_id: str = payload.get("sub")
         if owner_id is None:
             raise credentials_exception
-        token_data = TokenData(owner_id=owner_id)
+        token_data = TokenData(user_id=owner_id)
     except JWTError:
         raise credentials_exception
-    user = await UserRepository(session).get_by_id(int(token_data.owner_id))
+    user = await UserRepository(session).get_by_id(int(token_data.user_id))
     if not user:
         raise credentials_exception
     return user
