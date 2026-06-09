@@ -25,13 +25,13 @@ async def get_current_user(token: str = Depends(OAuth2PasswordBearer(tokenUrl="/
     )
     try:
         payload = decode_access_token(token)
-        user_id: str = payload.get("sub")
-        if user_id is None:
+        owner_id: str = payload.get("sub")
+        if owner_id is None:
             raise credentials_exception
-        token_data = TokenData(user_id=user_id)
+        token_data = TokenData(owner_id=owner_id)
     except JWTError:
         raise credentials_exception
-    user = await UserRepository(session).get_by_id(int(token_data.user_id))
+    user = await UserRepository(session).get_by_id(int(token_data.owner_id))
     if not user:
         raise credentials_exception
     return user
@@ -168,7 +168,7 @@ async def get_current_user_from_api_key(
     request.state.api_key = api_key
 
     user_repo = UserRepository(session)
-    user = await user_repo.get_by_id(api_key.user_id)
+    user = await user_repo.get_by_id(api_key.owner_id)
     
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User inactive")

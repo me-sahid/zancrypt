@@ -1,7 +1,7 @@
 import { useAuthStore } from '../store/useStore';
 
 export function getAuthHeader() {
-  const token = useAuthStore.getState().token;  // reads _memoryToken ✅
+  const token = useAuthStore.getState().token;  // reads _memoryToken 
   if (!token) {
     return {};
   }

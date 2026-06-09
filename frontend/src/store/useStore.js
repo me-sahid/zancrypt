@@ -15,23 +15,23 @@ export const useAuthStore = create(
 
       // Getter reads from memory, never localStorage
       get token() {
-        return _memoryToken;  // ✅ memory only
+        return _memoryToken;  // memory only
       },
 
       setAuth: (user, token) => {
-        _memoryToken = token ?? null;  // ✅ stored in memory
+        _memoryToken = token ?? null;  //stored in memory
         // localStorage never touched for token
         set({ user, isAuthenticated: true, isInitializing: false });
       },
 
       logout: () => {
-        _memoryToken = null;  // ✅ cleared from memory
+        _memoryToken = null;  //cleared from memory
         set({ user: null, isAuthenticated: false, isInitializing: false });
         localStorage.removeItem('zancrypt-auth-state');
       },
 
       restoreToken: (token) => {
-        _memoryToken = token ?? null;  // ✅ memory only
+        _memoryToken = token ?? null;  //memory only
         set({ isAuthenticated: true, isInitializing: false });
       },
 
