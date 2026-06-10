@@ -16,6 +16,7 @@ import { useSimulationEngine } from '../../hooks/useSimulationEngine';
 import MetricCard from '../../components/dashboard/MetricCard';
 import NodeStatusGrid from '../../components/dashboard/NodeStatusGrid';
 import { fileService, adminService } from '../../services/vaultServices';
+import DashboardSkeleton from '../../components/skeletons/DashboardSkeleton';
 
 const Dashboard = () => {
   useSimulationEngine();
@@ -23,6 +24,7 @@ const Dashboard = () => {
   const { metrics, nodes, files, setFiles, setNodes, updateMetrics } = useDashboardStore();
   const { user } = useAuthStore();
   const { t } = useLanguageStore();
+  const [isLoading, setIsLoading] = React.useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -81,6 +83,8 @@ const Dashboard = () => {
         }
       } catch (error) {
         console.error('Failed to fetch initial stats:', error);
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     };
     fetchStats();
@@ -117,6 +121,10 @@ const Dashboard = () => {
   
   const storageInfo = formatTotalStorage(displayStorage);
   const liveNodesCount = nodes ? nodes.filter(n => n.health === 'Healthy').length : 0;
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div className="space-y-6 md:space-y-8 pb-10">

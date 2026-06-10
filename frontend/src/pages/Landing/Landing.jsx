@@ -5,6 +5,7 @@ import PricingSection from './components/PricingSection';
 import FeaturesGrid from './components/FeaturesGrid';
 import EnterpriseSecurity from './components/EnterpriseSecurity';
 import CTASection from './components/CTASection';
+import LandingPageSkeleton from '../../components/skeletons/LandingPageSkeleton';
 
 const Footer = lazy(() => import('./components/Footer'));
 
@@ -50,32 +51,26 @@ const Landing = () => {
   return (
     <div ref={containerRef} className="min-h-screen bg-void text-text-primary selection:bg-accent/20 selection:text-accent font-sans overflow-x-hidden scroll-smooth">
       <Navbar />
-      <HeroSection isLoading={isLoading} />
-
-
-
-      {/* FEATURES section */}
-      <section id="features">
-        <FeaturesGrid isLoading={isLoading} />
-      </section>
-
-      {/* PRICING section */}
-      <section id="pricing">
-        <PricingSection />
-      </section>
-
-      {/* SECURITY section */}
-      <section id="security">
-        <EnterpriseSecurity />
-      </section>
-
-
-      {/* CTA section */}
-      <CTASection />
-
-      <Suspense fallback={<div className="h-40 flex items-center justify-center font-mono text-text-muted text-xs uppercase tracking-widest">Loading...</div>}>
-        <Footer />
-      </Suspense>
+      {isLoading ? (
+        <LandingPageSkeleton />
+      ) : (
+        <div className="animate-in fade-in duration-300">
+          <HeroSection />
+          <section id="features">
+            <FeaturesGrid />
+          </section>
+          <section id="pricing">
+            <PricingSection />
+          </section>
+          <section id="security">
+            <EnterpriseSecurity />
+          </section>
+          <CTASection />
+          <Suspense fallback={<div className="h-40 flex items-center justify-center font-mono text-text-muted text-xs uppercase tracking-widest">Loading...</div>}>
+            <Footer />
+          </Suspense>
+        </div>
+      )}
     </div>
   );
 };

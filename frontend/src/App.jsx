@@ -12,6 +12,11 @@ import { useAuthStore } from './store/useStore';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { pageContent } from './pages/Static/pageContent';
 
+import FileManagerSkeleton from './components/skeletons/FileManagerSkeleton';
+import PricingPageSkeleton from './components/skeletons/PricingPageSkeleton';
+import SettingsPageSkeleton from './components/skeletons/SettingsPageSkeleton';
+
+
 // Lazy loading other pages
 const Login = lazy(() => import('./pages/Auth/Login'));
 const Register = lazy(() => import('./pages/Auth/Register'));
@@ -62,7 +67,7 @@ function App() {
           <Route path="/share/:token" element={<SharedFile />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/pricing" element={<Suspense fallback={<PricingPageSkeleton />}><Pricing /></Suspense>} />
           <Route path="/architecture" element={<Architecture />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
@@ -79,7 +84,7 @@ function App() {
           <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/api-keys" element={<ApiKeys />} />
-            <Route path="/vault" element={<Files />} />
+            <Route path="/vault" element={<Suspense fallback={<FileManagerSkeleton />}><Files /></Suspense>} />
             <Route path="/bin" element={<RecycleBin />} />
             <Route path="/shares" element={<SharesPage />} />
             <Route path="/uploads" element={<Upload />} />
@@ -88,8 +93,8 @@ function App() {
             <Route path="/monitoring" element={<Monitoring />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/audit" element={<Audit />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Suspense fallback={<SettingsPageSkeleton />}><Settings /></Suspense>} />
+            <Route path="/profile" element={<Suspense fallback={<SettingsPageSkeleton />}><Profile /></Suspense>} />
           </Route>
 
           {/* 404 & Redirects */}

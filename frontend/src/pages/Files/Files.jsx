@@ -21,6 +21,7 @@ import { deriveKey, decryptData } from '../../utils/crypto';
 import CipherText from '../../components/crypto/CipherText';
 import SecureInput from '../../components/ui/SecureInput';
 import { useLanguageStore } from '../../store/useLanguageStore';
+import FileManagerSkeleton from '../../components/skeletons/FileManagerSkeleton';
 
 // Category Sniffer
 const getFileCategory = (filename) => {
@@ -567,6 +568,10 @@ const Files = () => {
     }
   };
 
+  if (isLoading && files.length === 0 && folders.length === 0) {
+    return <FileManagerSkeleton />;
+  }
+
   return (
     <div className="space-y-6 pb-20">
       {/* Header */}
@@ -708,9 +713,8 @@ const Files = () => {
 
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="py-16 text-center">
-                      <Loader2 className="w-8 h-8 text-accent animate-spin mx-auto mb-2" />
-                      <span className="text-xs uppercase tracking-widest text-text-muted">Fetching from Shards...</span>
+                    <td colSpan={6} className="py-16 text-center text-text-muted text-xs uppercase tracking-widest">
+                      Refreshing Vault...
                     </td>
                   </tr>
                 ) : filteredFiles.length > 0 ? (
