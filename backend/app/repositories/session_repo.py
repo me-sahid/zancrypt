@@ -16,11 +16,12 @@ class SessionRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def create_session(self, user_id: int) -> str:
+    async def create_session(self, user_id: int, previous_token: str = None) -> str:
         raw_token = secrets.token_urlsafe(64)
         db_session = Session(
             user_id=user_id,
             refresh_token_hash=_hash_token(raw_token),
+            previous_token_hash=_hash_token(previous_token) if previous_token else None,  # ← store hash of old token
             expires_at=datetime.utcnow() + timedelta(days=7),
             revoked=False,
         )
@@ -31,11 +32,27 @@ class SessionRepository:
 
     async def get_by_token(self, raw_token: str) -> Session | None:
         token_hash = _hash_token(raw_token)
+
+        # Check active token first
         result = await self.session.execute(
             select(Session).where(
                 Session.refresh_token_hash == token_hash,
                 Session.revoked == False,
                 Session.expires_at > datetime.utcnow(),
+            )
+        )
+        session = result.scalar_one_or_none()
+        if session:
+            return session
+
+        # Check if this token was recently rotated (within 30 seconds)
+        # Handles mobile rapid-refresh race condition where browser sends the old
+        # cookie before the new one is set
+        result = await self.session.execute(
+            select(Session).where(
+                Session.previous_token_hash == token_hash,
+                Session.revoked == False,
+                Session.created_at > datetime.utcnow() - timedelta(seconds=30),
             )
         )
         return result.scalar_one_or_none()

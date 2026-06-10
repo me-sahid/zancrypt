@@ -11,6 +11,7 @@ class Session(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     refresh_token_hash = Column(String(255), nullable=False)
+    previous_token_hash = Column(String(255), nullable=True) 
     user_agent = Column(String(512), nullable=True)
     ip_address = Column(String(45), nullable=True)
     expires_at = Column(DateTime, nullable=False)

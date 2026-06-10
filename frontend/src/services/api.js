@@ -99,7 +99,20 @@ api.interceptors.response.use(
  * the refresh token (401/403). Network errors or backend unavailability
  * are ignored so the user is NOT logged out on transient failures.
  */
+let _silentRefreshPromise = null;
+
 export async function silentRefresh() {
+  // If already running — return same promise, don't start another
+  if (_silentRefreshPromise) return _silentRefreshPromise;
+
+  _silentRefreshPromise = _runSilentRefresh().finally(() => {
+    _silentRefreshPromise = null;
+  });
+
+  return _silentRefreshPromise;
+}
+
+async function _runSilentRefresh() {
   const { user, restoreToken, setInitialized, logout } = useAuthStore.getState();
 
   if (!user) {

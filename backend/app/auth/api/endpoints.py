@@ -352,7 +352,7 @@ async def refresh_token(
 
     await session_repo.delete_session(old_token)
     new_access_token = create_access_token(subject=str(user_session.user_id))
-    new_refresh_token = await session_repo.create_session(user_session.user_id)
+    new_refresh_token = await session_repo.create_session(user_session.user_id, previous_token=old_token)  # ← pass old token for 30s grace window
 
     response.set_cookie(
         key="refresh_token",
