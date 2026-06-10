@@ -8,12 +8,12 @@ export default {
     extend: {
       colors: {
         primary: {
-          bg: '#0B1120',
-          accent: '#3B82F6',
+          bg: 'var(--color-void)',
+          accent: 'var(--color-accent)',
         },
         surface: {
-          secondary: '#111827',
-          elevated: '#1E293B',
+          secondary: 'var(--color-surface-raised)',
+          elevated: 'var(--color-surface-elevated)',
         },
         security: '#06B6D4',
         status: {
@@ -22,11 +22,11 @@ export default {
           danger: '#EF4444',
         },
         border: {
-          DEFAULT: 'rgba(255,255,255,0.06)'
+          DEFAULT: 'var(--color-border)'
         },
         text: {
-          primary: '#F8FAFC',
-          secondary: '#94A3B8',
+          primary: 'var(--color-text-primary)',
+          secondary: 'var(--color-text-secondary)',
         }
       },
       fontFamily: {

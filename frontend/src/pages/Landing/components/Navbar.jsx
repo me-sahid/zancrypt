@@ -406,13 +406,21 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* ── Mobile Menu Toggle ── */}
-        <button
-          className="lg:hidden h-9 w-9 flex items-center justify-center text-text-primary hover:bg-surface-raised transition-colors rounded-lg border border-border"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
-          {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        {/* ── Mobile Menu Controls ── */}
+        <div className="lg:hidden flex items-center gap-3">
+          <button
+            onClick={toggleTheme}
+            className="h-9 w-9 flex items-center justify-center text-text-secondary hover:bg-surface-raised transition-colors rounded-lg border border-border"
+          >
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+          <button
+            className="h-9 w-9 flex items-center justify-center text-text-primary hover:bg-surface-raised transition-colors rounded-lg border border-border"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
       {/* ── Mobile Menu ── */}
