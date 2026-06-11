@@ -21,12 +21,6 @@ const Register = () => {
   const navigate = useNavigate();
   const { isAuthenticated, setAuth } = useAuthStore();
 
-  useEffect(() => {
-    if (isAuthenticated && status === 'idle') {
-      navigate('/vault', { replace: true });
-    }
-  }, [isAuthenticated, navigate, status]);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));

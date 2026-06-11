@@ -19,12 +19,6 @@ const Login = () => {
   const navigate = useNavigate();
   const { isAuthenticated, setAuth } = useAuthStore();
 
-  useEffect(() => {
-    if (isAuthenticated && status === 'idle') {
-      navigate('/vault', { replace: true });
-    }
-  }, [isAuthenticated, navigate, status]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (status !== 'idle') return;
