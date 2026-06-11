@@ -119,8 +119,8 @@ const Navbar = () => {
   ];
 
   const userMenuItems = [
-    { to: '/dashboard', icon: LayoutDashboard, label: t('nav', 'dashboard') },
     { to: '/vault',     icon: Lock,            label: t('nav', 'privateVault') },
+    { to: '/dashboard', icon: LayoutDashboard, label: t('nav', 'dashboard') },
     { to: '/nodes',     icon: Cloud,           label: t('nav', 'multiCloud') },
     { to: '/security',  icon: Key,             label: t('nav', 'secCreds') },
     { to: '/audit',     icon: FileText,        label: t('nav', 'audit') },
@@ -515,11 +515,11 @@ const Navbar = () => {
                     <span className="font-sans text-xs font-medium text-text-primary">{user?.full_name || user?.username || 'User'}</span>
                   </div>
                   <Link
-                    to="/dashboard"
+                    to="/vault"
                     className="w-full py-2.5 bg-accent text-void font-sans text-xs font-semibold rounded-lg text-center hover:bg-accent/90 transition-all"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    {t('nav', 'dashboard')}
+                    Open Vault
                   </Link>
                   <button
                     onClick={() => { logout(); setIsMobileMenuOpen(false); }}

@@ -46,10 +46,10 @@ const NotFound = () => {
 
         <div className="pt-12">
           <Link 
-            to="/dashboard"
+            to="/vault"
             className="inline-block px-10 py-4 bg-white/5 border border-white/10 rounded-2xl text-text-primary font-sans text-lg font-medium hover:bg-white/10 hover:border-white/20 transition-all duration-300 shadow-lg"
           >
-            Return to Dashboard
+            Return to Vault
           </Link>
         </div>
       </motion.div>
