@@ -7,7 +7,7 @@ const ApiKeys = lazy(() => import('./pages/Dashboard/ApiKeys'));
 import { NetworkProvider } from './providers/NetworkProvider';
 import OfflineScreen from './components/network/OfflineScreen';
 import DegradedBanner from './components/network/DegradedBanner';
-import { Toaster } from 'react-hot-toast';
+
 import { useAuthStore } from './store/useStore';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { pageContent } from './pages/Static/pageContent';
@@ -103,20 +103,6 @@ function App() {
         </Routes>
       </Suspense>
 
-      <Toaster 
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: '#0F172A',
-            color: '#F8FAFC',
-            border: '1px solid rgba(255,255,255,0.06)',
-            fontSize: '12px',
-            fontWeight: '600',
-            borderRadius: '12px',
-            padding: '12px 16px',
-          },
-        }}
-      />
     </NetworkProvider>
   );
 }

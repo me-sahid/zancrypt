@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { Lock, Mail, AlertCircle, ScanFace, Check } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+
 import Button from '../../components/ui/Button';
 import SecureInput from '../../components/ui/SecureInput';
 import { useAuthStore } from '../../store/useStore';
@@ -20,10 +20,10 @@ const Login = () => {
   const { isAuthenticated, setAuth } = useAuthStore();
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard', { replace: true });
+    if (isAuthenticated && status === 'idle') {
+      navigate('/vault', { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, status]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,17 +32,12 @@ const Login = () => {
     if (!showFallback) {
       try {
         setStatus('loading');
-        toast.loading("Preparing Authentication...", { id: 'auth-toast' });
 
         const res = await api.post('/auth/login/start', { email });
         const { options, session_id } = res.data;
 
-        toast.loading("Waiting for biometric...", { id: 'auth-toast' });
-
         // ✅ pass options directly — backend already returns { publicKey: {...} }
         const assertion = await authenticatePasskey(options);
-
-        toast.loading("Verifying...", { id: 'auth-toast' });
 
         const verifyResponse = await api.post('/auth/login/verify', {
           session_id,
@@ -51,10 +46,9 @@ const Login = () => {
 
         const { access_token, user } = verifyResponse.data;
         setAuth(user, access_token);
-        toast.success('Access granted.', { id: 'auth-toast' });
         setStatus('success');
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate('/vault');
         }, 1500);
 
       } catch (error) {
@@ -62,9 +56,7 @@ const Login = () => {
         console.error('Auth error:', error.name, error.message);
         if (error.name === 'NotAllowedError') {
           setShowFallback(true);
-          toast.error('Biometric cancelled. Use Access Key.', { id: 'auth-toast' });
         } else {
-          toast.error(error.response?.data?.detail || error.message || 'Authentication failed.', { id: 'auth-toast' });
           setShowFallback(true);
         }
       }
@@ -73,21 +65,18 @@ const Login = () => {
       // Access Key fallback
       try {
         setStatus('loading');
-        toast.loading("Authenticating...", { id: 'auth-toast' });
         const response = await api.post('/auth/login/fallback', {
           email,
           access_key: accessKey,
         });
         const { access_token, user } = response.data;
         setAuth(user, access_token);
-        toast.success('Access granted.', { id: 'auth-toast' });
         setStatus('success');
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate('/vault');
         }, 1500);
       } catch (error) {
         setStatus('idle');
-        toast.error(error.response?.data?.detail || 'Invalid Access Key.', { id: 'auth-toast' });
       }
     }
   };

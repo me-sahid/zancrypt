@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Shield, User, Fingerprint, Check } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+
 import Button from '../../components/ui/Button';
 import SecureInput from '../../components/ui/SecureInput';
 import { useAuthStore } from '../../store/useStore';
@@ -22,10 +22,10 @@ const Register = () => {
   const { isAuthenticated, setAuth } = useAuthStore();
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard', { replace: true });
+    if (isAuthenticated && status === 'idle') {
+      navigate('/vault', { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, status]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,12 +36,10 @@ const Register = () => {
     e.preventDefault();
 
     if (!isWebAuthnSupported()) {
-      toast.error('WebAuthn not supported. Please use a modern browser.', { duration: 6000 });
       return;
     }
 
     if (formData.accessKey !== formData.confirmAccessKey) {
-      toast.error("Access keys do not match");
       return;
     }
 
@@ -50,21 +48,17 @@ const Register = () => {
     try {
       const masterSalt = generateSalt();
 
-      toast.loading("Initializing secure identity...", { id: 'auth-toast' });
       const startResponse = await api.post('/auth/register/start', {
         email: formData.email,
         full_name: formData.fullName
       });
 
       const { options, session_id } = startResponse.data;
-
-      toast.loading("Awaiting biometric confirmation...", { id: 'auth-toast' });
       
       // Fix — wrap options in publicKey if not already wrapped
       const passkeyOptions = options.publicKey ? options : { publicKey: options };
       const credential = await registerPasskey(passkeyOptions);
 
-      toast.loading("Finalizing cryptographic setup...", { id: 'auth-toast' });
       const verifyResponse = await api.post('/auth/register/verify', {
         session_id,
         response: credential,
@@ -76,21 +70,12 @@ const Register = () => {
       const { access_token, user } = verifyResponse.data;
       setAuth(user, access_token);
 
-      toast.success('Identity established.', { id: 'auth-toast' });
       setStatus('success');
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/vault');
       }, 1500);
     } catch (error) {
       setStatus('idle');
-      let errorMsg = error.response?.data?.detail || error.message || 'Identity protocol failed';
-      if (
-        errorMsg.includes("navigator.credentials") ||
-        errorMsg.includes("undefined is not an object (evaluating 'navigator.credentials.create')")
-      ) {
-        errorMsg = "Passkeys require HTTPS/Localhost. Local IP detected.";
-      }
-      toast.error(`${errorMsg}`, { id: 'auth-toast' });
     }
   };
 
