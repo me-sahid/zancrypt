@@ -44,33 +44,37 @@ if (sessionStorage.getItem('zancrypt-reload-on-chunk-fail')) {
   }, 2000);
 }
 
-// Global error display for debugging headless environments
+// Detect stale chunk errors (window error events)
 window.addEventListener('error', (event) => {
-  // Handle dynamic module load failures gracefully by reloading to sync latest server assets
   if (event.message && (
     event.message.includes('Importing a module script failed') || 
     event.message.includes('Loading chunk') || 
-    event.message.includes('dynamically imported module')
+    event.message.includes('dynamically imported module') ||
+    event.message.includes('Failed to fetch')
   )) {
     const hasReloaded = sessionStorage.getItem('zancrypt-reload-on-chunk-fail');
     if (!hasReloaded) {
       sessionStorage.setItem('zancrypt-reload-on-chunk-fail', 'true');
       window.location.reload();
-      return;
     }
   }
+});
 
-  const root = document.getElementById('root');
-  if (root) {
-    root.innerHTML = `
-      <div style="padding: 20px; background: #1a0b16; color: #ff4a7d; font-family: monospace; border: 2px solid #ff4a7d; border-radius: 8px; margin: 20px; box-shadow: 0 0 20px rgba(255, 74, 125, 0.2);">
-        <h1 style="margin-top: 0; font-size: 20px;">⚠️ Zancrypt Runtime Error Catcher</h1>
-        <p><strong>Message:</strong> ${event.message}</p>
-        <p><strong>Source:</strong> ${event.filename}:${event.lineno}:${event.colno}</p>
-        <p><strong>Stack Trace:</strong></p>
-        <pre style="background: #0d040a; padding: 10px; border-radius: 4px; overflow-x: auto; color: #a19ba0; font-size: 12px; white-space: pre-wrap; word-break: break-all;">${event.error ? event.error.stack : 'No stack trace available'}</pre>
-      </div>
-    `;
+// Detect stale chunk errors (unhandled promise rejections from dynamic imports)
+window.addEventListener('unhandledrejection', (event) => {
+  const msg = event.reason?.message || '';
+  if (
+    msg.includes('dynamically imported module') ||
+    msg.includes('Failed to fetch') ||
+    msg.includes('Loading chunk') ||
+    msg.includes('Importing a module script failed')
+  ) {
+    const hasReloaded = sessionStorage.getItem('zancrypt-reload-on-chunk-fail');
+    if (!hasReloaded) {
+      event.preventDefault();
+      sessionStorage.setItem('zancrypt-reload-on-chunk-fail', 'true');
+      window.location.reload();
+    }
   }
 });
 
@@ -88,22 +92,34 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     console.error("ErrorBoundary caught an error", error, errorInfo);
     
-    // Automatically reload the application if a lazy-loaded chunk fails due to a stale client manifest after deployment
-    if (error.message && (
+    // Silently reload on stale chunk errors — no crash UI shown
+    const isChunkError = error.message && (
       error.message.includes('Importing a module script failed') || 
       error.message.includes('Failed to fetch dynamically imported module') ||
+      error.message.includes('Failed to fetch') ||
       error.message.includes('Loading chunk')
-    )) {
+    );
+    if (isChunkError) {
       const hasReloaded = sessionStorage.getItem('zancrypt-reload-on-chunk-fail');
       if (!hasReloaded) {
         sessionStorage.setItem('zancrypt-reload-on-chunk-fail', 'true');
         window.location.reload();
+        return;
       }
     }
   }
 
   render() {
     if (this.state.hasError) {
+      // For chunk errors: show blank screen while reload is in flight
+      const isChunkError = this.state.error?.message && (
+        this.state.error.message.includes('dynamically imported module') ||
+        this.state.error.message.includes('Failed to fetch') ||
+        this.state.error.message.includes('Loading chunk')
+      );
+      if (isChunkError) {
+        return <div style={{ background: '#0a0a0f', minHeight: '100vh' }} />;
+      }
       return (
         <div style={{ padding: '20px', background: '#1a0b16', color: '#ff4a7d', fontFamily: 'monospace', border: '2px solid #ff4a7d', borderRadius: '8px', margin: '20px', boxShadow: '0 0 20px rgba(255, 74, 125, 0.2)' }}>
           <h1 style={{ marginTop: 0, fontSize: '20px' }}>⚠️ Zancrypt React Mount Crash</h1>

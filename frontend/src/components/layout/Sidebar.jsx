@@ -18,8 +18,8 @@ import { useDashboardStore } from '../../store/useDashboardStore';
 import CipherText from '../crypto/CipherText';
 
 const menuItems = [
-  { icon: Database, label: 'My Vault', path: '/vault' },
   { icon: LayoutDashboard, label: 'Overview', path: '/dashboard' },
+  { icon: Database, label: 'My Vault', path: '/vault' },
   { icon: UploadCloud, label: 'Add Files', path: '/uploads' },
   { icon: Share2, label: 'Shared Links', path: '/shares' },
   { icon: Key, label: 'API Keys', path: '/dashboard/api-keys' },
