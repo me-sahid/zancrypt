@@ -20,9 +20,9 @@
   --color-primary-accent: var(--color-accent);
   --color-primary-bg: var(--color-void);
 
-  --font-display: 'Inter', system-ui, sans-serif;
+  --font-display: 'DM Sans', 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'DM Sans', 'Inter', system-ui, sans-serif;
 
   --skeleton-base: #1a1a1a;
   --skeleton-highlight: #2a2a2a;
@@ -59,18 +59,18 @@ html.light body::after, html.light body::before {
 @layer base {
   body {
     @apply bg-void text-text-primary font-sans antialiased overflow-x-hidden;
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 400 !important;
     font-size: 12px;
   }
 
   * {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 400 !important;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 600 !important;
   }
 
@@ -82,22 +82,22 @@ html.light body::after, html.light body::before {
   h6 { font-size: 14px; font-weight: 600 !important; }
 
   p, span, a, button, input, textarea, select, label, div {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 400 !important;
   }
 
   button, [role="button"] {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 500 !important;
   }
 
   strong, b, .font-bold, .font-semibold, .font-extrabold {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 700 !important;
   }
 
   em, i, .italic {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-style: italic;
     font-weight: 400 !important;
   }
@@ -143,19 +143,19 @@ html.light body::after, html.light body::before {
     backface-visibility: hidden;
   }
 
-  /* Inter font utilities */
+  /* DM Sans font utilities */
   .font-sans {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 400 !important;
   }
 
   .font-display {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 600 !important;
   }
 
   .font-serif {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 400 !important;
   }
 
@@ -165,47 +165,47 @@ html.light body::after, html.light body::before {
   }
 
   .font-black {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 900 !important;
   }
 
   .font-bold {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 700 !important;
   }
 
   .font-extrabold {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 800 !important;
   }
 
   .font-semibold {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 600 !important;
   }
 
   .font-medium {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 500 !important;
   }
 
   .font-normal {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 400 !important;
   }
 
   .font-light {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 300 !important;
   }
 
   .font-extralight {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 200 !important;
   }
 
   .font-thin {
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 100 !important;
   }
 }

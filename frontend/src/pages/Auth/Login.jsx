@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Lock, Mail, AlertCircle, ScanFace } from 'lucide-react';
+import { Lock, Mail, AlertCircle, ScanFace, Check } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Button from '../../components/ui/Button';
 import SecureInput from '../../components/ui/SecureInput';
@@ -12,7 +12,7 @@ import { authenticatePasskey } from '../../utils/webauthn';
 const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 const Login = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [status, setStatus] = useState('idle'); // 'idle' | 'loading' | 'success'
   const [email, setEmail] = useState('');
   const [accessKey, setAccessKey] = useState('');
   const [showFallback, setShowFallback] = useState(false);
@@ -27,11 +27,11 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isLoading) return;
+    if (status !== 'idle') return;
 
     if (!showFallback) {
       try {
-        setIsLoading(true);
+        setStatus('loading');
         toast.loading("Preparing Authentication...", { id: 'auth-toast' });
 
         const res = await api.post('/auth/login/start', { email });
@@ -52,9 +52,13 @@ const Login = () => {
         const { access_token, user } = verifyResponse.data;
         setAuth(user, access_token);
         toast.success('Access granted.', { id: 'auth-toast' });
-        navigate('/dashboard');
+        setStatus('success');
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1500);
 
       } catch (error) {
+        setStatus('idle');
         console.error('Auth error:', error.name, error.message);
         if (error.name === 'NotAllowedError') {
           setShowFallback(true);
@@ -63,14 +67,12 @@ const Login = () => {
           toast.error(error.response?.data?.detail || error.message || 'Authentication failed.', { id: 'auth-toast' });
           setShowFallback(true);
         }
-      } finally {
-        setIsLoading(false);
       }
 
     } else {
       // Access Key fallback
       try {
-        setIsLoading(true);
+        setStatus('loading');
         toast.loading("Authenticating...", { id: 'auth-toast' });
         const response = await api.post('/auth/login/fallback', {
           email,
@@ -79,11 +81,13 @@ const Login = () => {
         const { access_token, user } = response.data;
         setAuth(user, access_token);
         toast.success('Access granted.', { id: 'auth-toast' });
-        navigate('/dashboard');
+        setStatus('success');
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1500);
       } catch (error) {
+        setStatus('idle');
         toast.error(error.response?.data?.detail || 'Invalid Access Key.', { id: 'auth-toast' });
-      } finally {
-        setIsLoading(false);
       }
     }
   };
@@ -91,12 +95,16 @@ const Login = () => {
   return (
     <div className="min-h-[100dvh] flex items-center justify-center bg-void overflow-y-auto p-4 sm:p-6 md:p-8">
       <div className="w-full max-w-lg bg-surface border border-border shadow-2xl rounded-xl p-6 sm:p-8 md:p-10 flex flex-col justify-center relative z-10 my-auto">
-        <Link to="/" className="flex items-center space-x-2 group mb-8 justify-center">
-          <div className="w-7 h-7 bg-accent rounded-sm flex items-center justify-center">
-            <Lock className="w-3.5 h-3.5 text-void" />
+        <Link to="/" className="flex items-center justify-center gap-2.5 group mb-8">
+          <div className="w-5 h-5 sm:w-[22px] sm:h-[22px] rounded-md border border-border flex items-center justify-center p-[2px] shrink-0">
+            <img
+              src="/favi/zancr.png"
+              alt="Zancrypt Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
-          <span className="font-display italic text-[18px] text-text-primary group-hover:text-accent transition-colors">
-            Zancrypt
+          <span className="font-display font-bold text-[15px] sm:text-[16px] tracking-[0.15em] uppercase text-text-primary group-hover:text-accent transition-colors">
+            ZANCRYPT
           </span>
         </Link>
 
@@ -159,10 +167,66 @@ const Login = () => {
             <Button
               type="submit"
               variant="primary"
-              className="w-full h-12"
-              isLoading={isLoading}
+              className="w-full h-12 overflow-hidden"
+              disabled={status !== 'idle'}
             >
-              Login
+              <div className="flex items-center justify-center gap-2">
+                <motion.span
+                  animate={{ x: status === 'success' ? 14 : 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                >
+                  [
+                </motion.span>
+
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {status === 'idle' && (
+                    <motion.span
+                      key="idle"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -15 }}
+                      transition={{ duration: 0.2 }}
+                      className="whitespace-nowrap"
+                    >
+                      Authenticate
+                    </motion.span>
+                  )}
+                  {status === 'loading' && (
+                    <motion.div
+                      key="loading"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -15 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex items-center gap-2 whitespace-nowrap"
+                    >
+                      <svg className="h-4 w-4 animate-spin text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Authenticating
+                    </motion.div>
+                  )}
+                  {status === 'success' && (
+                    <motion.div
+                      key="success"
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
+                      className="flex items-center justify-center"
+                    >
+                      <Check className="w-5 h-5 text-current" strokeWidth={3} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <motion.span
+                  animate={{ x: status === 'success' ? -14 : 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                >
+                  ]
+                </motion.span>
+              </div>
             </Button>
 
             {showFallback && (

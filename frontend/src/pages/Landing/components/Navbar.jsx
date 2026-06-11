@@ -18,7 +18,6 @@ import {
   Sun,
   Moon,
   Layers,
-  Users,
   BarChart,
   Plug,
   Code,
@@ -171,13 +170,13 @@ const Navbar = () => {
                   <div className="p-3 grid grid-cols-1 gap-2">
                     <Link to="/vault" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
                       <div className="shrink-0 p-2.5 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <img src="/zk-shield-lock.png" alt="Secure Vault" className="w-5 h-5 object-contain" />
+                        <img src={isDark ? '/icons/zk-sheild-lock-dark.png' : '/zk-shield-lock.png'} alt="Secure Vault" className="w-5 h-5 object-contain" />
                       </div>
                       <p className="font-sans font-normal text-base text-text-primary transition-colors">Secure Vault</p>
                     </Link>
                     <Link to="/api" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
                       <div className="shrink-0 p-2.5 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <img src="/Code-Bracket.png" alt="Developer API" className="w-5 h-5 object-contain" />
+                        <img src={isDark ? '/icons/Code-Bracket-dark.png' : '/Code-Bracket.png'} alt="Developer API" className="w-5 h-5 object-contain" />
                       </div>
                       <p className="font-sans font-normal text-base text-text-primary transition-colors">Developer API</p>
                     </Link>
@@ -215,13 +214,13 @@ const Navbar = () => {
                   <div className="p-3 grid grid-cols-1 gap-2">
                     <a href="#" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
                       <div className="shrink-0 p-2.5 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <Users className="w-5 h-5 text-text-primary" />
+                        <i className="ri-group-line text-xl text-text-primary" />
                       </div>
                       <p className="font-sans font-normal text-base text-text-primary transition-colors">About Us</p>
                     </a>
                     <a href="#" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
                       <div className="shrink-0 p-2.5 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
-                        <HelpCircle className="w-5 h-5 text-text-primary" />
+                        <i className="ri-question-line text-xl text-text-primary" />
                       </div>
                       <p className="font-sans font-normal text-base text-text-primary transition-colors">Contact Support</p>
                     </a>
@@ -391,14 +390,14 @@ const Navbar = () => {
             <div className="flex items-center gap-3">
               <Link
                 to="/login"
-                className="h-10 px-5 flex items-center border border-border hover:border-border-active bg-surface-raised/40 hover:bg-surface-raised text-text-primary font-sans text-sm font-semibold rounded-lg transition-all"
+                className="h-10 px-4 flex items-center text-text-secondary hover:text-text-primary font-sans text-sm font-medium transition-colors"
               >
                 Sign In
               </Link>
 
               <Link
                 to="/register"
-                className="h-10 px-5 flex items-center bg-accent hover:bg-accent/90 text-void font-sans text-sm font-semibold rounded-lg transition-all shadow-lg shadow-accent/20"
+                className="h-10 px-5 flex items-center bg-accent hover:bg-accent/90 text-void font-sans text-sm font-medium rounded-lg transition-all shadow-lg shadow-accent/20"
               >
                 Get Started
               </Link>
@@ -453,11 +452,11 @@ const Navbar = () => {
                       className="overflow-hidden pl-3 mt-2 space-y-2"
                     >
                       <Link to="/vault" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <img src="/zk-shield-lock.png" alt="Secure Vault" className="w-4 h-4 object-contain" />
+                        <img src={isDark ? '/icons/zk-sheild-lock-dark.png' : '/zk-shield-lock.png'} alt="Secure Vault" className="w-4 h-4 object-contain" />
                         <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Secure Vault</span>
                       </Link>
                       <Link to="/api" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <img src="/Code-Bracket.png" alt="Developer API" className="w-4 h-4 object-contain" />
+                        <img src={isDark ? '/icons/Code-Bracket-dark.png' : '/Code-Bracket.png'} alt="Developer API" className="w-4 h-4 object-contain" />
                         <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Developer API</span>
                       </Link>
                     </motion.div>
@@ -483,11 +482,11 @@ const Navbar = () => {
                       className="overflow-hidden pl-3 mt-2 space-y-2"
                     >
                       <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <Users className="w-4 h-4 text-text-secondary" />
+                        <i className="ri-group-line text-base text-text-secondary group-hover:text-text-primary transition-colors" />
                         <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">About Us</span>
                       </a>
                       <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <HelpCircle className="w-4 h-4 text-text-secondary" />
+                        <i className="ri-question-line text-base text-text-secondary group-hover:text-text-primary transition-colors" />
                         <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Contact Support</span>
                       </a>
                     </motion.div>

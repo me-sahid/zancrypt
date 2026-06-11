@@ -1,12 +1,15 @@
 import React, { useEffect, useRef } from 'react';
 import { 
-  Network, Copy, ServerCrash, 
-  Activity, Fingerprint, LineChart, Lock,
+  Network,
+  Fingerprint, LineChart, Lock,
   ShieldCheck, Server, Zap
 } from 'lucide-react';
+import { useThemeStore } from '../../../store/useThemeStore';
 
 const FeaturesGrid = ({ isLoading }) => {
   const containerRef = useRef(null);
+  const { theme } = useThemeStore();
+  const isDark = theme === 'dark';
 
   const features = [
     { 
@@ -22,19 +25,19 @@ const FeaturesGrid = ({ isLoading }) => {
       badge: 'Network'
     },
     { 
-      icon: Copy, 
+      riClass: 'ri-file-copy-line',
       title: 'Shard Replication', 
       desc: 'Self-healing redundancy. Each encrypted shard is replicated across independent availability zones automatically.',
       badge: 'Resilience'
     },
     { 
-      icon: ServerCrash, 
+      riClass: 'ri-database-2-line',
       title: 'Multi-Provider Redundancy', 
       desc: 'Shards distributed across Backblaze B2, Supabase, and Storj — three independent storage networks across different global regions.',
       badge: 'Infrastructure'
     },
     { 
-      icon: Activity, 
+      riClass: 'ri-pulse-ai-line',
       title: 'Fault Tolerance', 
       desc: 'High availability architecture. The system remains 100% operational even during complete cloud provider outages.',
       badge: 'Uptime'
@@ -129,7 +132,7 @@ const FeaturesGrid = ({ isLoading }) => {
                 <div className="absolute bottom-3 right-3 w-2 h-2 border-b border-r border-border/40 group-hover:border-accent/40 transition-colors" />
 
                 <div>
-                  {/* Card Header (Icon & Badge) */}
+                  {/* Card Header (Icon only) */}
                   <div className="flex items-center justify-between mb-8">
                     <div className={`${
                       isLarge ? 'w-16 h-16 rounded-2xl bg-accent/10 border border-accent/30' : 'w-12 h-12 rounded-xl bg-surface-raised border border-border/50'
@@ -138,17 +141,17 @@ const FeaturesGrid = ({ isLoading }) => {
                         <img 
                           src={feature.imgSrc} 
                           alt={feature.title} 
-                          className={`${isLarge ? 'w-8 h-8' : 'w-5 h-5'} object-contain filter invert brightness-0 opacity-90 group-hover:opacity-100 transition-all`} 
+                          className={`${isLarge ? 'w-8 h-8' : 'w-5 h-5'} object-contain opacity-90 group-hover:opacity-100 transition-all ${isDark ? 'brightness-0 invert' : 'brightness-0'}`} 
+                          style={{ filter: isDark ? 'brightness(0) invert(1)' : 'brightness(0)' }}
                         />
+                      ) : feature.riClass ? (
+                        <i className={`${feature.riClass} ${isLarge ? 'text-3xl text-accent' : 'text-xl text-text-secondary group-hover:text-accent'} transition-colors`} />
                       ) : (
                         <feature.icon className={`${
                           isLarge ? 'w-8 h-8 text-accent' : 'w-5 h-5 text-text-secondary group-hover:text-accent'
                         } transition-colors`} />
                       )}
                     </div>
-                    <span className="font-mono text-[9px] uppercase tracking-widest text-text-muted bg-surface/80 border border-border/30 px-2 py-0.5 rounded-full">
-                      {feature.badge}
-                    </span>
                   </div>
 
                   {/* Card Body */}
@@ -165,13 +168,13 @@ const FeaturesGrid = ({ isLoading }) => {
                 </div>
 
                 {isLarge && (
-                  <div className="mt-8 pt-8 border-t border-border/20 flex flex-wrap items-center gap-6 text-xs font-mono text-text-muted">
-                    <span className="flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-accent" />
+                  <div className="mt-8 pt-8 border-t border-border/20 flex flex-wrap items-center gap-8">
+                    <span className="flex items-center gap-3 text-sm font-mono text-text-secondary">
+                      <ShieldCheck className="w-5 h-5 text-accent shrink-0" />
                       Client-Side AES-256-GCM
                     </span>
-                    <span className="flex items-center gap-2">
-                      <Server className="w-4 h-4 text-accent" />
+                    <span className="flex items-center gap-3 text-sm font-mono text-text-secondary">
+                      <Server className="w-5 h-5 text-accent shrink-0" />
                       Zero Server Key Storage
                     </span>
                   </div>
