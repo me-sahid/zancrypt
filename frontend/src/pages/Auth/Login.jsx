@@ -155,7 +155,7 @@ const Login = () => {
             >
               <div className="flex items-center justify-center gap-2">
                 <motion.span
-                  animate={{ x: status === 'success' ? 14 : 0 }}
+                  animate={{ x: status === 'success' ? 8 : 0 }}
                   transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 >
                   [
@@ -204,7 +204,7 @@ const Login = () => {
                 </AnimatePresence>
 
                 <motion.span
-                  animate={{ x: status === 'success' ? -14 : 0 }}
+                  animate={{ x: status === 'success' ? -8 : 0 }}
                   transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 >
                   ]
