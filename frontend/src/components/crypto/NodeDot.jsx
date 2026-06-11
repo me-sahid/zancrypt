@@ -21,9 +21,6 @@ const NodeDot = ({ status = 'online', className = '' }) => {
   return (
     <div className={`relative inline-flex items-center justify-center ${className}`}>
       <span className={`w-2 h-2 rounded-full ${getColors()} transition-colors duration-300`}></span>
-      {(status.toLowerCase() === 'online' || status.toLowerCase() === 'healthy' || status.toLowerCase() === 'success') && (
-        <span className="absolute w-2 h-2 rounded-full bg-node-active animate-ping opacity-75 duration-1000"></span>
-      )}
     </div>
   );
 };
