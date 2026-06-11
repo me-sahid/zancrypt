@@ -21,7 +21,7 @@
   --color-primary-bg: var(--color-void);
 
   --font-display: 'DM Sans', 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-mono: 'DM Sans', 'Inter', system-ui, sans-serif;
   --font-sans: 'DM Sans', 'Inter', system-ui, sans-serif;
 
   --skeleton-base: #1a1a1a;
@@ -103,7 +103,7 @@ html.light body::after, html.light body::before {
   }
 
   code, pre, .font-mono, .monospace {
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 400 !important;
   }
 
@@ -160,7 +160,7 @@ html.light body::after, html.light body::before {
   }
 
   .font-mono {
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 400 !important;
   }
 
