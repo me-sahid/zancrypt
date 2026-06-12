@@ -30,7 +30,7 @@ const Login = () => {
         const res = await api.post('/auth/login/start', { email });
         const { options, session_id } = res.data;
 
-        // ✅ pass options directly — backend already returns { publicKey: {...} }
+        // pass options directly — backend already returns { publicKey: {...} }
         const assertion = await authenticatePasskey(options);
 
         const verifyResponse = await api.post('/auth/login/verify', {

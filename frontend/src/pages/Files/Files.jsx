@@ -7,7 +7,7 @@ import {
   Eye, Calendar, FileVideo, FileImage, FileText,
   Loader2, ArrowUp, ArrowDown, ArrowUpDown, Info,
   Copy, FolderOpen, ClipboardPaste, Folder, Scissors, FolderPlus, CornerLeftUp,
-  LayoutGrid, List
+  LayoutGrid, List, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../../components/ui/Button';
@@ -97,6 +97,29 @@ const hexToBytes = (hex) => {
   const bytes = new Uint8Array(len / 2);
   for (let i = 0; i < len; i += 2) {
     bytes[i >> 1] = parseInt(hex.substring(i, i + 2), 16);
+  }
+  return bytes;
+};
+
+const assembleShardsAsync = async (shards) => {
+  let totalLength = 0;
+  for (const s of shards) {
+    if (s.data) totalLength += s.data.length / 2;
+  }
+  const bytes = new Uint8Array(totalLength);
+  let offset = 0;
+  for (let j = 0; j < shards.length; j++) {
+    const hex = shards[j].data;
+    if (hex) {
+      const len = hex.length;
+      for (let i = 0; i < len; i += 2) {
+        bytes[offset++] = parseInt(hex.substring(i, i + 2), 16);
+      }
+    }
+    // Yield to main thread every few shards to prevent freezing
+    if (j % 5 === 0) {
+      await new Promise(r => setTimeout(r, 0));
+    }
   }
   return bytes;
 };
@@ -436,8 +459,7 @@ const Files = () => {
       const res = await fileService.downloadFile(file.id);
       if (res.data && Array.isArray(res.data)) {
         const sortedShards = res.data;
-        const fullHex = sortedShards.map(s => s.data).join('');
-        const bytes = hexToBytes(fullHex);
+        const bytes = await assembleShardsAsync(sortedShards);
         
         const filename = decryptedNames[file.id] || file.encrypted_filename || file.filename || 'decrypted_file';
         const mimeType = getMimeType(filename);
@@ -465,8 +487,7 @@ const Files = () => {
       const res = await fileService.downloadFile(file.id);
       if (res.data && Array.isArray(res.data)) {
         const sortedShards = res.data;
-        const fullHex = sortedShards.map(s => s.data).join('');
-        const bytes = hexToBytes(fullHex);
+        const bytes = await assembleShardsAsync(sortedShards);
         
         let filename = decryptedNames[file.id];
         if (!filename && file.encrypted_filename) {
@@ -759,7 +780,7 @@ const Files = () => {
                         <td className="py-4 px-6 hidden sm:table-cell text-sm text-text-muted">
                           {file.upload_time ? new Date(file.upload_time).toLocaleDateString() : 'Unknown'}
                         </td>
-                        <td className="py-4 px-6 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+                        <td className="py-4 px-6 text-right opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                           <div className="flex items-center justify-end space-x-2">
                             <button onClick={(e) => { e.stopPropagation(); handlePreview(file); }} className="p-2 hover:bg-surface-raised hover:text-accent text-text-muted rounded transition-colors" title="Preview"><Eye className="w-4 h-4" /></button>
                             <button onClick={(e) => { e.stopPropagation(); setShareFilesTarget(file); setIsShareModalOpen(true); }} className="p-2 hover:bg-surface-raised hover:text-accent text-text-muted rounded transition-colors" title="Share"><Share2 className="w-4 h-4" /></button>
@@ -873,18 +894,40 @@ const Files = () => {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-surface border border-border w-full max-w-4xl h-[80vh] flex flex-col shadow-2xl relative z-10"
+            className={`bg-surface border border-border w-full ${previewData.fileType === 'video' ? 'max-w-[95vw] h-[95vh]' : previewData.fileType === 'pdf' ? 'max-w-6xl h-[90vh]' : 'max-w-4xl h-[80vh]'} flex flex-col shadow-2xl relative z-10 group overflow-hidden`}
           >
-            <div className="flex items-center justify-between p-4 border-b border-border bg-void">
-              <div className="flex items-center space-x-3">
-                <File className="w-5 h-5 text-accent" />
-                <h3 className="font-mono text-sm text-text-primary uppercase tracking-widest">{previewData.filename}</h3>
+            {/* Sleek Floating Toolbar */}
+            <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between bg-gradient-to-b from-void/90 to-transparent z-50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
+              <div className="flex items-center space-x-3 bg-void/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
+                <File className="w-4 h-4 text-accent" />
+                <h3 className="font-mono text-xs text-text-primary uppercase tracking-widest truncate max-w-[200px] sm:max-w-sm">{previewData.filename}</h3>
               </div>
-              <button onClick={() => setPreviewData(null)} className="text-text-muted hover:text-text-primary font-mono text-sm uppercase tracking-widest">
-                [ Close ]
-              </button>
+              <div className="flex items-center space-x-2">
+                <button 
+                  onClick={() => {
+                    const a = document.createElement('a');
+                    a.href = previewData.objectUrl;
+                    a.download = previewData.filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                  }} 
+                  className="bg-void/80 backdrop-blur-md p-2.5 rounded-full border border-white/10 text-text-muted hover:text-accent hover:border-accent/50 transition-all shadow-lg"
+                  title="Download"
+                >
+                  <Download className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={() => setPreviewData(null)} 
+                  className="bg-void/80 backdrop-blur-md p-2.5 rounded-full border border-white/10 text-text-muted hover:text-danger hover:border-danger/50 transition-all shadow-lg"
+                  title="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-             <div className="flex-1 bg-void p-4 overflow-auto flex items-center justify-center w-full h-full">
+            
+             <div className="flex-1 bg-void p-4 overflow-auto flex items-center justify-center w-full h-full relative">
               {previewData.fileType === 'image' ? (
                 <img src={previewData.objectUrl} alt="Preview" className="max-w-full max-h-full object-contain rounded-lg shadow-lg" />
               ) : previewData.fileType === 'video' ? (

@@ -11,7 +11,7 @@ import { isWebAuthnSupported, registerPasskey } from '../../utils/webauthn';
 import { generateSalt } from '../../utils/crypto';
 
 const Register = () => {
-  const [status, setStatus] = useState('idle'); // 'idle' | 'loading' | 'success'
+  const [status, setStatus] = useState('idle'); // 'idle' , 'loading' , 'success'
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
