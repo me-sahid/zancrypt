@@ -15,7 +15,7 @@ import { pageContent } from './pages/Static/pageContent';
 import FileManagerSkeleton from './components/skeletons/FileManagerSkeleton';
 import PricingPageSkeleton from './components/skeletons/PricingPageSkeleton';
 import SettingsPageSkeleton from './components/skeletons/SettingsPageSkeleton';
-
+import GlobalUploadManager from './components/layout/GlobalUploadManager';
 
 // Lazy loading other pages
 const Login = lazy(() => import('./pages/Auth/Login'));
@@ -102,7 +102,7 @@ function App() {
           <Route path="*" element={<Navigate to="/404" replace />} />
         </Routes>
       </Suspense>
-
+      <GlobalUploadManager />
     </NetworkProvider>
   );
 }

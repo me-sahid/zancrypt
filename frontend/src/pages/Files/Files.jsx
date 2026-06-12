@@ -133,6 +133,7 @@ const Files = () => {
   const { t } = useLanguageStore();
   const [isLoading, setIsLoading] = useState(false);
   const [previewData, setPreviewData] = useState(null);
+  const [previewLoadingTarget, setPreviewLoadingTarget] = useState(null);
   const [selectedIds, setSelectedIds] = useState({});
   const [sortField, setSortField] = useState('uploaded_at');
   const [sortDirection, setSortDirection] = useState('desc');
@@ -483,6 +484,7 @@ const Files = () => {
 
   const handlePreview = async (file) => {
     toast.loading('Assembling preview...', { id: 'preview-toast' });
+    setPreviewLoadingTarget(file);
     try {
       const res = await fileService.downloadFile(file.id);
       if (res.data && Array.isArray(res.data)) {
@@ -542,10 +544,12 @@ const Files = () => {
         }
         
         setPreviewData({ file, mimeType, fileType: category, filename, textContent, objectUrl });
+        setPreviewLoadingTarget(null);
         toast.success('Preview ready', { id: 'preview-toast' });
       }
     } catch (error) {
       toast.error('Preview failed', { id: 'preview-toast' });
+      setPreviewLoadingTarget(null);
     }
   };
 
@@ -888,37 +892,41 @@ const Files = () => {
       </div>
 
       {/* Preview Modal */}
-      {previewData && createPortal(
+      {(previewData || previewLoadingTarget) && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div onClick={() => setPreviewData(null)} className="absolute inset-0 bg-void/90 backdrop-blur-md cursor-pointer" />
+          <div onClick={() => { setPreviewData(null); setPreviewLoadingTarget(null); }} className="absolute inset-0 bg-void/90 backdrop-blur-md cursor-pointer" />
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className={`bg-surface border border-border w-full ${previewData.fileType === 'video' ? 'max-w-[95vw] h-[95vh]' : previewData.fileType === 'pdf' ? 'max-w-6xl h-[90vh]' : 'max-w-4xl h-[80vh]'} flex flex-col shadow-2xl relative z-10 group overflow-hidden`}
+            className={`bg-surface border border-border w-full ${previewData ? (previewData.fileType === 'video' ? 'max-w-[95vw] h-[95vh]' : previewData.fileType === 'pdf' ? 'max-w-6xl h-[90vh]' : 'max-w-4xl h-[80vh]') : 'max-w-4xl h-[80vh]'} flex flex-col shadow-2xl relative z-10 group overflow-hidden`}
           >
             {/* Sleek Floating Toolbar */}
             <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between bg-gradient-to-b from-void/90 to-transparent z-50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
               <div className="flex items-center space-x-3 bg-void/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
                 <File className="w-4 h-4 text-accent" />
-                <h3 className="font-mono text-xs text-text-primary uppercase tracking-widest truncate max-w-[200px] sm:max-w-sm">{previewData.filename}</h3>
+                <h3 className="font-mono text-xs text-text-primary uppercase tracking-widest truncate max-w-[200px] sm:max-w-sm">
+                  {previewData ? previewData.filename : (decryptedNames[previewLoadingTarget.id] || previewLoadingTarget.encrypted_filename || 'Loading...')}
+                </h3>
               </div>
               <div className="flex items-center space-x-2">
+                {previewData && (
+                  <button 
+                    onClick={() => {
+                      const a = document.createElement('a');
+                      a.href = previewData.objectUrl;
+                      a.download = previewData.filename;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                    }} 
+                    className="bg-void/80 backdrop-blur-md p-2.5 rounded-full border border-white/10 text-text-muted hover:text-accent hover:border-accent/50 transition-all shadow-lg"
+                    title="Download"
+                  >
+                    <Download className="w-4 h-4" />
+                  </button>
+                )}
                 <button 
-                  onClick={() => {
-                    const a = document.createElement('a');
-                    a.href = previewData.objectUrl;
-                    a.download = previewData.filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                  }} 
-                  className="bg-void/80 backdrop-blur-md p-2.5 rounded-full border border-white/10 text-text-muted hover:text-accent hover:border-accent/50 transition-all shadow-lg"
-                  title="Download"
-                >
-                  <Download className="w-4 h-4" />
-                </button>
-                <button 
-                  onClick={() => setPreviewData(null)} 
+                  onClick={() => { setPreviewData(null); setPreviewLoadingTarget(null); }} 
                   className="bg-void/80 backdrop-blur-md p-2.5 rounded-full border border-white/10 text-text-muted hover:text-danger hover:border-danger/50 transition-all shadow-lg"
                   title="Close"
                 >
@@ -928,7 +936,18 @@ const Files = () => {
             </div>
             
              <div className="flex-1 bg-void p-4 overflow-auto flex items-center justify-center w-full h-full relative">
-              {previewData.fileType === 'image' ? (
+               {!previewData ? (
+                 <div className="flex flex-col items-center justify-center space-y-6">
+                   <div className="relative w-20 h-20 flex items-center justify-center">
+                     <Loader2 className="w-10 h-10 text-accent animate-spin" />
+                     <motion.div animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }} className="absolute inset-0 border-2 border-dashed border-accent/30 rounded-full" />
+                   </div>
+                   <div className="text-center">
+                     <h3 className="text-lg font-bold text-text-primary tracking-tight">Decrypting & Assembling</h3>
+                     <p className="text-sm text-text-muted font-mono mt-2 uppercase tracking-widest">Piecing together shards from the network...</p>
+                   </div>
+                 </div>
+               ) : previewData.fileType === 'image' ? (
                 <img src={previewData.objectUrl} alt="Preview" className="max-w-full max-h-full object-contain rounded-lg shadow-lg" />
               ) : previewData.fileType === 'video' ? (
                 <video src={previewData.objectUrl} controls className="max-w-full max-h-full rounded-lg shadow-lg" autoPlay />
