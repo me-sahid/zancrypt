@@ -23,23 +23,23 @@ const GlobalUploadManager = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="mb-4 w-80 bg-[#0c0f1d] border border-white/10 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl flex flex-col max-h-[60vh]"
+            className="mb-4 w-80 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl flex flex-col max-h-[60vh]"
           >
-            <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between sticky top-0 z-10">
+            <div className="p-4 border-b border-border bg-surface-elevated flex items-center justify-between sticky top-0 z-10">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
                   <UploadCloud className="w-4 h-4 text-accent" />
                 </div>
                 <div>
-                  <h4 className="font-mono text-sm text-text-primary tracking-widest uppercase">Uploading</h4>
-                  <p className="text-[10px] text-text-muted font-mono uppercase">
+                  <h4 className="font-sans text-sm font-bold text-text-primary tracking-widest uppercase">Uploading</h4>
+                  <p className="text-[10px] text-text-muted font-sans font-medium uppercase">
                     {completedUploads.length} of {uploadQueue.length} complete
                   </p>
                 </div>
               </div>
               <button 
                 onClick={() => setMinimized(true)}
-                className="p-1.5 hover:bg-white/10 rounded-lg text-text-muted transition-colors"
+                className="p-1.5 hover:bg-surface-raised rounded-lg text-text-muted transition-colors"
               >
                 <ChevronDown className="w-4 h-4" />
               </button>
@@ -47,8 +47,8 @@ const GlobalUploadManager = () => {
 
             <div className="flex-1 overflow-y-auto p-2 space-y-2">
               {uploadQueue.map(file => (
-                <div key={file.id} className="p-3 rounded-xl bg-white/5 border border-white/5 flex items-center space-x-4">
-                  <div className="w-12 h-12 rounded-lg bg-[#0f1425] border border-white/5 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                <div key={file.id} className="p-3 rounded-xl bg-surface-elevated border border-border flex items-center space-x-4">
+                  <div className="w-12 h-12 rounded-lg bg-surface-raised border border-border overflow-hidden flex-shrink-0 flex items-center justify-center">
                     {file.thumbnailDataUrl ? (
                       <img src={file.thumbnailDataUrl} alt={file.name} className="w-full h-full object-cover" />
                     ) : (
@@ -59,14 +59,14 @@ const GlobalUploadManager = () => {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-text-primary truncate">{file.name}</p>
                     <div className="flex items-center justify-between mt-1">
-                      <p className="text-[10px] text-text-muted font-mono">{file.size}</p>
+                      <p className="text-[10px] text-text-muted font-sans font-medium">{file.size}</p>
                       {file.status === 'uploading' && (
-                        <p className="text-[10px] text-accent font-mono font-bold">{file.progress}%</p>
+                        <p className="text-[10px] text-accent font-sans font-bold">{file.progress}%</p>
                       )}
                     </div>
                     
                     {file.status === 'uploading' && (
-                      <div className="mt-2 h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                      <div className="mt-2 h-1 w-full bg-surface-raised rounded-full overflow-hidden">
                         <motion.div 
                           className="h-full bg-accent"
                           initial={{ width: 0 }}
@@ -78,7 +78,9 @@ const GlobalUploadManager = () => {
                   
                   <div className="flex-shrink-0">
                     {file.status === 'completed' ? (
-                      <CheckCircle2 className="w-5 h-5 text-status-success" />
+                      <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 200 }}>
+                        <CheckCircle2 className="w-5 h-5 text-status-success" />
+                      </motion.div>
                     ) : (
                       <button 
                         onClick={() => removeFile(file.id)}
@@ -118,7 +120,7 @@ const GlobalUploadManager = () => {
         ) : (
           <CheckCircle2 className="w-5 h-5" />
         )}
-        <span className="font-mono text-xs font-bold uppercase tracking-wider">
+        <span className="font-sans text-xs font-bold uppercase tracking-wider">
           {activeUploads.length > 0 ? `${activeUploads.length} Uploading` : 'Uploads Complete'}
         </span>
         {isMinimized ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}

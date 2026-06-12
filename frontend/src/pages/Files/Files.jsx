@@ -7,7 +7,7 @@ import {
   Eye, Calendar, FileVideo, FileImage, FileText,
   Loader2, ArrowUp, ArrowDown, ArrowUpDown, Info,
   Copy, FolderOpen, ClipboardPaste, Folder, Scissors, FolderPlus, CornerLeftUp,
-  LayoutGrid, List, X
+  LayoutGrid, List, X, MoreVertical
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../../components/ui/Button';
@@ -612,9 +612,7 @@ const Files = () => {
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')} className="flex-1 md:flex-none p-3 border border-border text-text-primary hover:bg-surface-raised transition-colors flex items-center justify-center min-w-[3rem]">
-            {viewMode === 'list' ? <LayoutGrid className="w-4 h-4" /> : <List className="w-4 h-4" />}
-          </button>
+
           {clipboard.files.length > 0 && (
             <button onClick={handlePaste} className="flex-1 md:flex-none px-4 md:px-6 py-3 border border-border text-text-primary font-mono text-[10px] md:text-xs uppercase tracking-widest hover:bg-surface-raised transition-colors flex items-center justify-center whitespace-nowrap">
               <ClipboardPaste className="w-4 h-4 md:mr-2" /> <span className="hidden sm:inline">{t('vault', 'paste')}</span> ({clipboard.files.length})
@@ -855,28 +853,49 @@ const Files = () => {
                       if (e.button === 0 && !e.ctrlKey) handlePreview(file);
                     }}
                     onContextMenu={(e) => handleContextMenu(e, file)}
-                    className={`border border-border bg-void rounded-xl p-4 flex flex-col items-center hover:border-accent/50 hover:bg-surface-raised transition-all cursor-pointer aspect-square shadow-lg relative group ${selectedIds[file.id] ? 'ring-2 ring-accent border-accent' : ''}`}
+                    className={`border border-border bg-void rounded-xl overflow-hidden hover:border-accent/50 hover:bg-surface-raised transition-all cursor-pointer aspect-square shadow-lg relative group flex flex-col ${selectedIds[file.id] ? 'ring-2 ring-accent border-accent' : ''}`}
                   >
                     <input
                       type="checkbox"
                       checked={!!selectedIds[file.id]}
                       onChange={() => setSelectedIds(prev => ({ ...prev, [file.id]: !prev[file.id] }))}
                       onClick={(e) => e.stopPropagation()}
-                      className="absolute top-3 left-3 accent-accent cursor-pointer w-4 h-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-3 left-3 accent-accent cursor-pointer w-4 h-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
                       style={{ opacity: selectedIds[file.id] ? 1 : undefined }}
                     />
-                    <div className="w-16 h-16 mb-4 relative rounded-lg overflow-hidden shadow-inner flex items-center justify-center bg-surface-raised group-hover:scale-105 transition-transform">
-                      <FileThumbnail file={file} decryptedName={displayName} className="w-full h-full object-cover" />
-                      <div className="absolute top-1 right-1 p-1 rounded bg-void/90 border border-border/50 backdrop-blur-md">
+                    
+                    {/* Top 70% Thumbnail */}
+                    <div className="h-[70%] w-full relative bg-surface-raised overflow-hidden">
+                      <div className="w-full h-full group-hover:scale-105 transition-transform duration-300">
+                        <FileThumbnail file={file} decryptedName={displayName} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="absolute top-2 right-2 p-1.5 rounded-md bg-void/90 border border-border/50 backdrop-blur-md z-10">
                         <Lock className={`w-3 h-3 ${isDecrypted ? 'text-accent' : 'text-text-muted'}`} />
                       </div>
                     </div>
-                    <p className={`truncate text-xs font-semibold tracking-wide w-full text-center px-2 ${isDecrypted ? 'text-text-primary' : 'text-text-muted opacity-50'}`}>
-                      {isDecrypted ? displayName : <CipherText text={displayName} duration={2000} />}
-                    </p>
-                    <p className="text-[10px] text-text-muted mt-2 uppercase tracking-widest">
-                      {file.file_size ? (file.file_size / 1024).toFixed(1) + ' KB' : '0 KB'}
-                    </p>
+
+                    {/* Bottom 30% Details */}
+                    <div className="h-[30%] w-full p-3 flex items-center justify-between bg-void border-t border-border">
+                      <div className="flex-1 min-w-0 pr-2 flex flex-col justify-center">
+                        <p className={`truncate text-xs font-semibold tracking-wide ${isDecrypted ? 'text-text-primary' : 'text-text-muted opacity-50'}`}>
+                          {isDecrypted ? displayName : <CipherText text={displayName} duration={2000} />}
+                        </p>
+                        <p className="text-[10px] text-text-muted mt-1 uppercase tracking-widest">
+                          {file.file_size ? (file.file_size / 1024).toFixed(1) + ' KB' : '0 KB'}
+                        </p>
+                      </div>
+                      
+                      {/* Three Dots Button */}
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleContextMenu(e, file);
+                        }}
+                        className="p-1.5 text-text-muted hover:text-text-primary hover:bg-surface-raised rounded transition-colors flex-shrink-0"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 );
               })
@@ -898,10 +917,11 @@ const Files = () => {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className={`bg-surface border border-border w-full ${previewData ? (previewData.fileType === 'video' ? 'max-w-[95vw] h-[95vh]' : previewData.fileType === 'pdf' ? 'max-w-6xl h-[90vh]' : 'max-w-4xl h-[80vh]') : 'max-w-4xl h-[80vh]'} flex flex-col shadow-2xl relative z-10 group overflow-hidden`}
+            className={`bg-surface border border-border w-full ${previewData ? (previewData.fileType === 'video' ? 'max-w-[95vw] h-[95vh]' : previewData.fileType === 'pdf' ? 'max-w-6xl h-[90vh]' : 'max-w-4xl h-[80vh]') : 'max-w-5xl h-[80vh]'} flex flex-col shadow-2xl relative z-10 group overflow-hidden`}
           >
             {/* Sleek Floating Toolbar */}
-            <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between bg-gradient-to-b from-void/90 to-transparent z-50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
+            {previewData && (
+              <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between bg-gradient-to-b from-void/90 to-transparent z-50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
               <div className="flex items-center space-x-3 bg-void/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
                 <File className="w-4 h-4 text-accent" />
                 <h3 className="font-mono text-xs text-text-primary uppercase tracking-widest truncate max-w-[200px] sm:max-w-sm">
@@ -934,18 +954,12 @@ const Files = () => {
                 </button>
               </div>
             </div>
+            )}
             
              <div className="flex-1 bg-void p-4 overflow-auto flex items-center justify-center w-full h-full relative">
                {!previewData ? (
-                 <div className="flex flex-col items-center justify-center space-y-6">
-                   <div className="relative w-20 h-20 flex items-center justify-center">
-                     <Loader2 className="w-10 h-10 text-accent animate-spin" />
-                     <motion.div animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }} className="absolute inset-0 border-2 border-dashed border-accent/30 rounded-full" />
-                   </div>
-                   <div className="text-center">
-                     <h3 className="text-lg font-bold text-text-primary tracking-tight">Decrypting & Assembling</h3>
-                     <p className="text-sm text-text-muted font-mono mt-2 uppercase tracking-widest">Piecing together shards from the network...</p>
-                   </div>
+                 <div className="flex flex-col items-center justify-center h-full w-full">
+                   <Loader2 className="w-16 h-16 text-accent animate-spin" strokeWidth={2.5} />
                  </div>
                ) : previewData.fileType === 'image' ? (
                 <img src={previewData.objectUrl} alt="Preview" className="max-w-full max-h-full object-contain rounded-lg shadow-lg" />
