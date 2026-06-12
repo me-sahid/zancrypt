@@ -12,54 +12,50 @@ from app.models.node_registry import NodeRegistry
 from app.models.shard_registry import ShardRegistry
 
 router = APIRouter()
-
-CACHE_TTL = 30  # seconds
-
-def _get_redis():
-    from app.core.config import settings
-    import redis
-    return redis.from_url(settings.REDIS_URL)
-
+CACHE_TTL = 30
 
 @router.get("/stats")
 async def get_dashboard_stats(
-    current_user = Depends(get_current_user_or_api_key),
+    current_user=Depends(get_current_user_or_api_key),
     session: AsyncSession = Depends(get_async_session)
 ) -> dict:
+
+    # Use async Redis — per request, per user
     cache_key = f"dashboard_stats:{current_user.id}"
-    
-    # 1. Check Redis cache
+    redis_client = None
+
     try:
-        cached = _get_redis().get(cache_key)
+        import redis.asyncio as aioredis
+        from app.core.config import settings
+        redis_client = aioredis.from_url(settings.REDIS_URL)
+        cached = await redis_client.get(cache_key)
         if cached:
             return json.loads(cached)
     except Exception:
-        pass  # Redis unavailable — fall through to DB query
+        pass
 
-    # 2. Query database for real-time stats
-    
-    # Total Storage (Sum of sizes of non-deleted files belonging to the user)
+    # Total storage — current user only
     total_storage_res = await session.execute(
         select(func.sum(File.file_size))
         .where(File.owner_id == current_user.id, File.is_deleted == False)
     )
     total_storage_bytes = int(total_storage_res.scalar() or 0)
 
-    # Stored Files (Count of non-deleted files belonging to the user)
+    # Stored files — current user only
     stored_files_res = await session.execute(
         select(func.count(File.id))
         .where(File.owner_id == current_user.id, File.is_deleted == False)
     )
     stored_files = stored_files_res.scalar() or 0
 
-    # Active Nodes (Count of healthy nodes in registry)
+    # Active nodes
     active_nodes_res = await session.execute(
         select(func.count(NodeRegistry.id))
         .where(NodeRegistry.healthy == True)
     )
     active_nodes = active_nodes_res.scalar() or 0
 
-    # Security Score (Valid shard hash ratio or 100 if no shards exist)
+    # Security score
     total_shards_res = await session.execute(
         select(func.count(ShardRegistry.shard_id))
         .join(File, ShardRegistry.file_id == File.id)
@@ -82,17 +78,21 @@ async def get_dashboard_stats(
         valid_shards = valid_shards_res.scalar() or 0
         security_score = round((valid_shards / total_shards) * 100)
 
-    # 3. Save to Redis and return response
     stats_data = {
         "total_storage_bytes": total_storage_bytes,
         "stored_files": stored_files,
         "active_nodes": active_nodes,
         "security_score": security_score
     }
-    try:
-        _get_redis().setex(cache_key, CACHE_TTL, json.dumps(stats_data))
-    except Exception:
-        pass  # Redis unavailable — return fresh data without caching
-    
-    return stats_data
 
+    #Cache with async client
+    try:
+        if redis_client:
+            await redis_client.setex(cache_key, CACHE_TTL, json.dumps(stats_data))
+    except Exception:
+        pass
+    finally:
+        if redis_client:
+            await redis_client.aclose()
+
+    return stats_data
