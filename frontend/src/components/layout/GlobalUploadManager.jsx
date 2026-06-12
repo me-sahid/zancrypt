@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronDown, ChevronUp, CheckCircle2, UploadCloud, File } from 'lucide-react';
 import { useUploadStore } from '../../store/useUploadStore';
+import { RiUpload2Line } from 'react-icons/ri';
 
 const GlobalUploadManager = () => {
   const { uploadQueue, isMinimized, setMinimized, removeFile } = useUploadStore();
@@ -100,7 +101,7 @@ const GlobalUploadManager = () => {
       <motion.button
         layout
         onClick={() => setMinimized(!isMinimized)}
-        className="h-14 px-5 bg-accent hover:bg-accent/90 text-white rounded-full shadow-lg shadow-accent/20 flex items-center space-x-3 transition-colors border border-accent/50"
+        className="h-14 px-5 bg-surface hover:bg-surface-elevated text-text-primary rounded-full shadow-lg shadow-black/20 flex items-center space-x-3 transition-colors border border-border"
       >
         {activeUploads.length > 0 ? (
           <div className="relative w-6 h-6 flex items-center justify-center">
@@ -118,7 +119,7 @@ const GlobalUploadManager = () => {
             </svg>
           </div>
         ) : (
-          <CheckCircle2 className="w-5 h-5" />
+          <RiUpload2Line className="w-5 h-5 text-accent" />
         )}
         <span className="font-sans text-xs font-bold uppercase tracking-wider">
           {activeUploads.length > 0 ? `${activeUploads.length} Uploading` : 'Uploads Complete'}

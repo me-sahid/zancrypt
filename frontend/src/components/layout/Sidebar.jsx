@@ -57,8 +57,8 @@ const Sidebar = () => {
     >
       {/* Logo Section */}
       <Link to="/" className="flex items-center h-16 px-6 border-b border-border hover:bg-surface-raised transition-colors">
-        <div className="flex items-center justify-center w-7 h-7 rounded-sm bg-accent">
-          <Lock className="w-3.5 h-3.5 text-void" strokeWidth={2.5} />
+        <div className="flex items-center justify-center w-7 h-7 rounded-sm overflow-hidden">
+          <img src="/favi/zancr.png" alt="Zancrypt Logo" className="w-full h-full object-cover" />
         </div>
         <AnimatePresence>
           {(!isCollapsed || isMobileView) && (
@@ -68,8 +68,8 @@ const Sidebar = () => {
               exit={{ opacity: 0, x: -10 }}
               className="ml-3"
             >
-              <h2 className="text-[20px] font-bold text-text-primary tracking-tight leading-none">
-                Zan<span className="text-accent">crypt</span>
+              <h2 className="text-[20px] font-bold text-text-primary tracking-tight leading-none uppercase">
+                ZAN<span className="text-accent">CRYPT</span>
               </h2>
             </motion.div>
           )}

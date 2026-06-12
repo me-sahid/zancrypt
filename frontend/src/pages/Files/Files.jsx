@@ -9,6 +9,7 @@ import {
   Copy, FolderOpen, ClipboardPaste, Folder, Scissors, FolderPlus, CornerLeftUp,
   LayoutGrid, List, X, MoreVertical
 } from 'lucide-react';
+import { RiSafeLine } from 'react-icons/ri';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../../components/ui/Button';
 import ShareModal from '../../components/ShareModal';
@@ -455,30 +456,23 @@ const Files = () => {
   }, [contextMenu.visible, closeContextMenu]);
 
   const handleDownload = async (file) => {
-    toast.loading('Decrypting shards...', { id: 'download-toast' });
+    toast.loading('Downloading...', { id: 'download-toast' });
     try {
       const res = await fileService.downloadFile(file.id);
-      if (res.data && Array.isArray(res.data)) {
-        const sortedShards = res.data;
-        const bytes = await assembleShardsAsync(sortedShards);
-        
-        const filename = decryptedNames[file.id] || file.encrypted_filename || file.filename || 'decrypted_file';
-        const mimeType = getMimeType(filename);
-        const blob = new Blob([bytes], { type: mimeType });
-        const url = window.URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        
-        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-        toast.success('Decryption complete!', { id: 'download-toast' });
-      }
+      const filename = decryptedNames[file.id] || file.encrypted_filename || file.filename || 'decrypted_file';
+      const mimeType = getMimeType(filename);
+      const blob = new Blob([res.data], { type: mimeType });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+      toast.success('Download complete!', { id: 'download-toast' });
     } catch (error) {
-      toast.error('Decryption failed', { id: 'download-toast' });
+      toast.error('Download failed', { id: 'download-toast' });
     }
   };
 
@@ -487,67 +481,61 @@ const Files = () => {
     setPreviewLoadingTarget(file);
     try {
       const res = await fileService.downloadFile(file.id);
-      if (res.data && Array.isArray(res.data)) {
-        const sortedShards = res.data;
-        const bytes = await assembleShardsAsync(sortedShards);
-        
-        let filename = decryptedNames[file.id];
-        if (!filename && file.encrypted_filename) {
+      const rawData = res.data;
+      
+      let filename = decryptedNames[file.id];
+      if (!filename && file.encrypted_filename) {
+        try {
+          const key = await deriveKey('simulated-master-password', 'simulated-salt');
+          if (file.encrypted_filename.includes(':')) {
+            const [iv, ciphertext] = file.encrypted_filename.split(':');
+            const decrypted = await decryptData(key, ciphertext, iv);
+            filename = typeof decrypted === 'string' ? decrypted : decrypted.filename || file.filename;
+          } else {
+            filename = file.encrypted_filename;
+          }
+        } catch (err) {
           try {
-            const key = await deriveKey('simulated-master-password', 'simulated-salt');
-            if (file.encrypted_filename.includes(':')) {
-              const [iv, ciphertext] = file.encrypted_filename.split(':');
-              const decrypted = await decryptData(key, ciphertext, iv);
-              filename = typeof decrypted === 'string' ? decrypted : decrypted.filename || file.filename;
-            } else {
-              filename = file.encrypted_filename;
-            }
-          } catch (err) {
-            try {
-              const cipher = file.encrypted_filename.split(':')[1];
-              filename = atob(cipher);
-            } catch {
-              filename = file.filename || file.name || "Unknown File";
-            }
+            const cipher = file.encrypted_filename.split(':')[1];
+            filename = atob(cipher);
+          } catch {
+            filename = file.filename || file.name || 'Unknown File';
           }
         }
-        
-        if (!filename) filename = file.encrypted_filename || file.filename || 'unknown';
-        const mimeType = getMimeType(filename);
-        const category = getFileCategory(filename);
-        
-        let textContent = null;
-        let objectUrl = null;
-        
-        if (category === 'text') {
-          textContent = new TextDecoder().decode(bytes);
-        } else {
-          let blob = new Blob([bytes], { type: mimeType });
-          
-          const ext = filename.split('.').pop().toLowerCase();
-          if (ext === 'heic' || ext === 'heif') {
-            try {
-              const heicToModule = await import('heic-to');
-              const heicTo = heicToModule.heicTo;
-              const converted = await heicTo({
-                blob,
-                type: 'image/jpeg',
-                quality: 0.8
-              });
-              blob = Array.isArray(converted) ? converted[0] : converted;
-            } catch (heicErr) {
-              console.error('Failed to convert HEIC in preview:', heicErr);
-            }
-          }
-          
-          objectUrl = window.URL.createObjectURL(blob);
-        }
-        
-        setPreviewData({ file, mimeType, fileType: category, filename, textContent, objectUrl });
-        setPreviewLoadingTarget(null);
-        toast.success('Preview ready', { id: 'preview-toast' });
       }
+      
+      if (!filename) filename = file.encrypted_filename || file.filename || 'unknown';
+      const mimeType = getMimeType(filename);
+      const category = getFileCategory(filename);
+      
+      let textContent = null;
+      let objectUrl = null;
+      
+      if (category === 'text') {
+        textContent = new TextDecoder().decode(rawData);
+      } else {
+        let blob = new Blob([rawData], { type: mimeType });
+        
+        const ext = filename.split('.').pop().toLowerCase();
+        if (ext === 'heic' || ext === 'heif') {
+          try {
+            const heicToModule = await import('heic-to');
+            const heicTo = heicToModule.heicTo;
+            const converted = await heicTo({ blob, type: 'image/jpeg', quality: 0.8 });
+            blob = Array.isArray(converted) ? converted[0] : converted;
+          } catch (heicErr) {
+            console.error('Failed to convert HEIC in preview:', heicErr);
+          }
+        }
+        
+        objectUrl = window.URL.createObjectURL(blob);
+      }
+      
+      setPreviewData({ file, mimeType, fileType: category, filename, textContent, objectUrl });
+      setPreviewLoadingTarget(null);
+      toast.success('Preview ready', { id: 'preview-toast' });
     } catch (error) {
+      console.error('Preview failed:', error);
       toast.error('Preview failed', { id: 'preview-toast' });
       setPreviewLoadingTarget(null);
     }
@@ -603,15 +591,15 @@ const Files = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-4 md:pb-6">
         <div>
           <h1 className="font-mono text-2xl text-text-primary tracking-widest uppercase flex items-center">
-            <Database className="w-6 h-6 mr-3 text-accent" />
+            <RiSafeLine className="w-6 h-6 mr-3 text-text-primary" />
             {t('vault', 'title')}
           </h1>
-          <p className="text-text-muted mt-2 font-mono text-xs uppercase tracking-widest">
-            {isDecrypting ? t('vault', 'decryptingIndex') : t('vault', 'encryptedMatrix')}
-          </p>
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
+          <button onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')} className="flex-none p-3 border border-border text-text-primary hover:bg-surface-raised transition-colors flex items-center justify-center">
+            {viewMode === 'list' ? <LayoutGrid className="w-4 h-4" /> : <List className="w-4 h-4" />}
+          </button>
 
           {clipboard.files.length > 0 && (
             <button onClick={handlePaste} className="flex-1 md:flex-none px-4 md:px-6 py-3 border border-border text-text-primary font-mono text-[10px] md:text-xs uppercase tracking-widest hover:bg-surface-raised transition-colors flex items-center justify-center whitespace-nowrap">
@@ -627,21 +615,10 @@ const Files = () => {
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="flex flex-col sm:flex-row items-center gap-4 bg-surface border border-border p-4">
-        <div className="relative w-full sm:flex-1">
-          <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
-          <input 
-            placeholder={t('vault', 'search')} 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-void border border-border focus:border-accent text-text-primary font-mono text-sm py-4 pl-12 pr-4 outline-none transition-colors"
-          />
-        </div>
-      </div>
+
 
       {/* Vault Table */}
-      <div className="bg-surface border border-border overflow-hidden">
+      <div className="overflow-hidden">
         {viewMode === 'list' ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -803,7 +780,7 @@ const Files = () => {
             </table>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 font-mono">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-1">
             {currentFolderId && (
               <div 
                 onClick={() => setCurrentFolderId(null)}
@@ -849,52 +826,50 @@ const Files = () => {
                 return (
                   <div 
                     key={file.id}
-                    onClick={(e) => {
-                      if (e.button === 0 && !e.ctrlKey) handlePreview(file);
-                    }}
                     onContextMenu={(e) => handleContextMenu(e, file)}
-                    className={`border border-border bg-void rounded-xl overflow-hidden hover:border-accent/50 hover:bg-surface-raised transition-all cursor-pointer aspect-square shadow-lg relative group flex flex-col ${selectedIds[file.id] ? 'ring-2 ring-accent border-accent' : ''}`}
+                    className={`border border-border bg-surface rounded-xl overflow-hidden hover:border-accent/50 transition-all cursor-pointer shadow-md relative group flex flex-col ${selectedIds[file.id] ? 'ring-2 ring-accent border-accent' : ''}`}
+                    style={{ aspectRatio: '3/4' }}
                   >
                     <input
                       type="checkbox"
                       checked={!!selectedIds[file.id]}
                       onChange={() => setSelectedIds(prev => ({ ...prev, [file.id]: !prev[file.id] }))}
                       onClick={(e) => e.stopPropagation()}
-                      className="absolute top-3 left-3 accent-accent cursor-pointer w-4 h-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-10 left-3 accent-accent cursor-pointer w-4 h-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
                       style={{ opacity: selectedIds[file.id] ? 1 : undefined }}
                     />
-                    
-                    {/* Top 70% Thumbnail */}
-                    <div className="h-[70%] w-full relative bg-surface-raised overflow-hidden">
-                      <div className="w-full h-full group-hover:scale-105 transition-transform duration-300">
+
+                    {/* Top name bar — matches screenshot style */}
+                    <div className="flex items-center justify-between px-3 py-2 bg-surface border-b border-border flex-shrink-0">
+                      <p className={`truncate text-[11px] font-semibold ${isDecrypted ? 'text-text-primary' : 'text-text-muted opacity-60'}`}>
+                        {isDecrypted ? displayName : <CipherText text={displayName} duration={2000} />}
+                      </p>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleContextMenu(e, file); }}
+                        className="flex-shrink-0 ml-1 p-1 text-text-muted hover:text-text-primary rounded transition-colors"
+                      >
+                        <MoreVertical className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Main thumbnail — fills the rest */}
+                    <div
+                      className="flex-1 w-full relative bg-surface-raised overflow-hidden"
+                      onClick={(e) => { if (e.button === 0 && !e.ctrlKey) handlePreview(file); }}
+                    >
+                      <div className="w-full h-full group-hover:scale-[1.02] transition-transform duration-300">
                         <FileThumbnail file={file} decryptedName={displayName} className="w-full h-full object-cover" />
                       </div>
-                      <div className="absolute top-2 right-2 p-1.5 rounded-md bg-void/90 border border-border/50 backdrop-blur-md z-10">
-                        <Lock className={`w-3 h-3 ${isDecrypted ? 'text-accent' : 'text-text-muted'}`} />
+                      <div className="absolute top-2 right-2 p-1 rounded bg-void/80 border border-border/40 backdrop-blur-sm z-10">
+                        <Lock className={`w-2.5 h-2.5 ${isDecrypted ? 'text-accent' : 'text-text-muted'}`} />
                       </div>
                     </div>
 
-                    {/* Bottom 30% Details */}
-                    <div className="h-[30%] w-full p-3 flex items-center justify-between bg-void border-t border-border">
-                      <div className="flex-1 min-w-0 pr-2 flex flex-col justify-center">
-                        <p className={`truncate text-xs font-semibold tracking-wide ${isDecrypted ? 'text-text-primary' : 'text-text-muted opacity-50'}`}>
-                          {isDecrypted ? displayName : <CipherText text={displayName} duration={2000} />}
-                        </p>
-                        <p className="text-[10px] text-text-muted mt-1 uppercase tracking-widest">
-                          {file.file_size ? (file.file_size / 1024).toFixed(1) + ' KB' : '0 KB'}
-                        </p>
-                      </div>
-                      
-                      {/* Three Dots Button */}
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleContextMenu(e, file);
-                        }}
-                        className="p-1.5 text-text-muted hover:text-text-primary hover:bg-surface-raised rounded transition-colors flex-shrink-0"
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
+                    {/* Bottom size strip */}
+                    <div className="px-3 py-1.5 border-t border-border bg-surface flex-shrink-0">
+                      <p className="text-[9px] text-text-muted uppercase tracking-widest">
+                        {file.file_size ? (file.file_size / 1024).toFixed(1) + ' KB' : '0 KB'}
+                      </p>
                     </div>
                   </div>
                 );

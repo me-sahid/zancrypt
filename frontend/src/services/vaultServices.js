@@ -16,7 +16,7 @@ export const fileService = {
     return api.get(url);
   },
   uploadFile: (formData, config = {}) => api.post('/files/upload', formData, config),
-  downloadFile: (id) => api.get(`/files/download/${id}`), // Changed to default as we reassemble hex
+  downloadFile: (id) => api.get(`/files/download/${id}`, { responseType: 'arraybuffer' }),
   deleteFile: (id) => api.delete(`/files/${id}`),
   listBinFiles: () => api.get('/files/bin'),
   restoreFile: (id) => api.post(`/files/${id}/restore`),
