@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { extractMetadataAndThumbnail } from '../utils/uploadHelpers';
 import { fileService, adminService } from '../services/vaultServices';
 import { useDashboardStore } from './useDashboardStore';
+import { useAuthStore } from './useStore';
+import { deriveKey } from '../utils/crypto';
 import { toast } from 'react-hot-toast';
 
 function encodeWithWorker(fileBuffer) {
@@ -16,7 +18,55 @@ function encodeWithWorker(fileBuffer) {
   });
 }
 
+// Encrypt a raw ArrayBuffer with AES-256-GCM.
+// Returns a new ArrayBuffer with the 12-byte IV prepended so decryption can recover it.
+async function encryptFileBuffer(fileBuffer, key) {
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await window.crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    fileBuffer
+  );
+  const result = new Uint8Array(12 + encrypted.byteLength);
+  result.set(iv, 0);
+  result.set(new Uint8Array(encrypted), 12);
+  return result.buffer;
+}
+
+// Compute a real SHA-256 hex digest of an ArrayBuffer.
+async function computeHash(buffer) {
+  const hashBuffer = await window.crypto.subtle.digest('SHA-256', buffer);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 async function uploadSingleFile(fileObj, onProgress) {
+  // 1. Retrieve authenticated user's key material
+  const user = useAuthStore.getState().user;
+  if (!user?.master_key_salt) {
+    throw new Error('Encryption key not available — please log in again');
+  }
+
+  // 2. Read the raw file bytes
+  const fileBuffer = await fileObj.rawFile.arrayBuffer();
+
+  // 3. Derive AES-256-GCM key from email + salt via PBKDF2 (100k iterations)
+  const encKey = await deriveKey(user.email, user.master_key_salt);
+
+  // 4. Encrypt the entire file BEFORE sharding — server never sees plaintext
+  const encryptedBuffer = await encryptFileBuffer(fileBuffer, encKey);
+
+  // 5. Compute a real SHA-256 integrity hash of the encrypted data
+  const integrityHash = await computeHash(encryptedBuffer);
+
+  // 6. Shard the ENCRYPTED buffer
+  const CHUNK_SIZE = 10 * 1024 * 1024; // 10 MB
+  const encBytes = new Uint8Array(encryptedBuffer);
+  const numShards = Math.ceil(encBytes.length / CHUNK_SIZE);
+  const manifestShards = [];
+
+  // 7. Extract thumbnail / build metadata (uses original file info, not encrypted)
   let thumbnail = fileObj.thumbnailDataUrl;
   if (!thumbnail) {
     const meta = await extractMetadataAndThumbnail(fileObj.rawFile);
@@ -28,26 +78,15 @@ async function uploadSingleFile(fileObj, onProgress) {
     resolution: fileObj.resolution || null,
     format: fileObj.format || fileObj.name.split('.').pop().toLowerCase(),
     original_creation_date: new Date(fileObj.rawFile.lastModified).toISOString(),
-    original_size: fileObj.rawFile.size,
+    original_size: fileObj.rawFile.size, // original unencrypted size for display
   };
 
-  const CHUNK_SIZE = 10 * 1024 * 1024;
-  const numShards = Math.ceil(fileObj.rawFile.size / CHUNK_SIZE);
-  const manifestShards = [];
-  const shardBlobs = [];
-
-  for (let i = 0; i < numShards; i++) {
-    const chunk = fileObj.rawFile.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
-    const partName = `part_${i}`;
-    manifestShards.push(partName);
-    shardBlobs.push({ name: partName, blob: chunk });
-  }
-
+  // 8. Build FormData with encrypted shards
   const formData = new FormData();
   formData.append('encrypted_filename', fileObj.name);
   formData.append('encrypted_metadata', JSON.stringify(metadataObj));
-  formData.append('file_size', String(fileObj.rawFile.size));
-  formData.append('integrity_hash', 'sha256-placeholder');
+  formData.append('file_size', String(encBytes.length)); // encrypted size on disk
+  formData.append('integrity_hash', integrityHash);      // real SHA-256 of ciphertext
   formData.append('manifest', JSON.stringify({ shards: manifestShards }));
 
   if (thumbnail) formData.append('thumbnail', thumbnail);
@@ -55,9 +94,15 @@ async function uploadSingleFile(fileObj, onProgress) {
   const currentFolderId = useDashboardStore.getState().currentFolderId;
   if (currentFolderId) formData.append('folder_id', currentFolderId);
 
-  for (const { name, blob } of shardBlobs) {
-    formData.append('shards', blob, name);
+  for (let i = 0; i < numShards; i++) {
+    const chunk = encBytes.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+    const partName = `part_${i}`;
+    manifestShards.push(partName);
+    formData.append('shards', new Blob([chunk]), partName);
   }
+
+  // Patch manifest after we know all shard names
+  formData.set('manifest', JSON.stringify({ shards: manifestShards }));
 
   await fileService.uploadFile(formData, {
     onUploadProgress: (e) => {

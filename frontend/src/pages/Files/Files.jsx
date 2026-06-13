@@ -16,6 +16,7 @@ import ShareModal from '../../components/ShareModal';
 import FileInfoModal from '../../components/vault/FileInfoModal';
 import { useDashboardStore } from '../../store/useDashboardStore';
 import { fileService, folderService } from '../../services/vaultServices';
+import { useAuthStore } from '../../store/useStore';
 import { toast } from 'react-hot-toast';
 import FileThumbnail from '../../components/vault/FileThumbnail';
 import { deriveKey, decryptData } from '../../utils/crypto';
@@ -192,9 +193,10 @@ const Files = () => {
       setIsDecrypting(true);
       
       try {
-        // Derive the user's master key (simulated here with token/user data)
-        // In a real app, this salt and password would come from the WebAuthn flow or user input
-        const key = await deriveKey('simulated-master-password', 'simulated-salt');
+        // Derive the user's master key from real credentials (email + master_key_salt)
+        const { user } = useAuthStore.getState();
+        if (!user?.master_key_salt) { setIsDecrypting(false); return; }
+        const key = await deriveKey(user.email, user.master_key_salt);
         
         const newDecryptedNames = { ...decryptedNames };
         
@@ -456,12 +458,29 @@ const Files = () => {
   }, [contextMenu.visible, closeContextMenu]);
 
   const handleDownload = async (file) => {
-    toast.loading('Downloading...', { id: 'download-toast' });
+    toast.loading('Downloading & decrypting...', { id: 'download-toast' });
     try {
       const res = await fileService.downloadFile(file.id);
+      const encryptedBuffer = res.data; // ArrayBuffer of IV + ciphertext
+
+      // Derive the same key used during upload
+      const { user } = useAuthStore.getState();
+      if (!user?.master_key_salt) throw new Error('Encryption key not available');
+      const encKey = await deriveKey(user.email, user.master_key_salt);
+
+      // Extract 12-byte IV prepended during upload, then decrypt
+      const encBytes = new Uint8Array(encryptedBuffer);
+      const iv = encBytes.slice(0, 12);
+      const ciphertext = encBytes.slice(12);
+      const decryptedBuffer = await window.crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv },
+        encKey,
+        ciphertext
+      );
+
       const filename = decryptedNames[file.id] || file.encrypted_filename || file.filename || 'decrypted_file';
       const mimeType = getMimeType(filename);
-      const blob = new Blob([res.data], { type: mimeType });
+      const blob = new Blob([decryptedBuffer], { type: mimeType });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -472,16 +491,30 @@ const Files = () => {
       setTimeout(() => window.URL.revokeObjectURL(url), 1000);
       toast.success('Download complete!', { id: 'download-toast' });
     } catch (error) {
+      console.error('Download failed:', error);
       toast.error('Download failed', { id: 'download-toast' });
     }
   };
 
   const handlePreview = async (file) => {
-    toast.loading('Assembling preview...', { id: 'preview-toast' });
+    toast.loading('Decrypting preview...', { id: 'preview-toast' });
     setPreviewLoadingTarget(file);
     try {
       const res = await fileService.downloadFile(file.id);
-      const rawData = res.data;
+      const encryptedBuffer = res.data; // ArrayBuffer of IV + ciphertext
+
+      // Derive the same key used during upload and decrypt
+      const { user } = useAuthStore.getState();
+      if (!user?.master_key_salt) throw new Error('Encryption key not available');
+      const encKey = await deriveKey(user.email, user.master_key_salt);
+      const encBytes = new Uint8Array(encryptedBuffer);
+      const iv = encBytes.slice(0, 12);
+      const ciphertext = encBytes.slice(12);
+      const rawData = await window.crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv },
+        encKey,
+        ciphertext
+      );
       
       let filename = decryptedNames[file.id];
       if (!filename && file.encrypted_filename) {
