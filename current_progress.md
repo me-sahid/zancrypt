@@ -64,7 +64,7 @@ This document tracks all completed features, active developments, and pending sy
 ---
 
 ## 🔄 Last Sync Telemetry
-- **Last Sync**: 2026-06-12 18:50:52 UTC
+- **Last Sync**: 2026-06-12 19:03:34 UTC
 - **Active Branch**: `main`
-- **Latest Commit**: `1bfb787 - Added(UI): Make the files icon big, fixed theme matching to the uploading pop up, fixed video preview error (me-sahid)`
+- **Latest Commit**: `53d232a - Fixed dashboard showing whole app storage usage instead of the current user usage (me-sahid)`
 - **Sync Action**: Git Push Triggered
