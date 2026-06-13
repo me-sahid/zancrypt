@@ -160,7 +160,8 @@ async def register_verify(
             "username": user.username,
             "full_name": user.full_name,
             "role": user.role,
-            "region": user.region
+            "region": user.region,
+            "master_key_salt": user.master_key_salt
         }
     )
 
@@ -377,6 +378,7 @@ async def refresh_token(
             "full_name": user.full_name,
             "role": user.role,
             "region": user.region,
+            "master_key_salt": user.master_key_salt,
         }
     )
 

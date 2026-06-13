@@ -45,6 +45,7 @@ async function uploadSingleFile(fileObj, onProgress) {
   // 1. Retrieve authenticated user's key material
   const user = useAuthStore.getState().user;
   if (!user?.master_key_salt) {
+    toast.error('Session missing encryption key — please log out and log back in');
     throw new Error('Encryption key not available — please log in again');
   }
 
