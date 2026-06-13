@@ -92,8 +92,7 @@ async function uploadSingleFile(fileObj, onProgress) {
 
   if (thumbnail) formData.append('thumbnail', thumbnail);
 
-  const currentFolderId = useDashboardStore.getState().currentFolderId;
-  if (currentFolderId) formData.append('folder_id', currentFolderId);
+  if (fileObj.folderId) formData.append('folder_id', fileObj.folderId);
 
   for (let i = 0; i < numShards; i++) {
     const chunk = encBytes.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
@@ -167,6 +166,7 @@ export const useUploadStore = create((set, get) => ({
       thumbnailDataUrl: null,
       resolution: null,
       format: null,
+      folderId: useDashboardStore.getState().currentFolderId,
     }));
 
     set(s => ({ uploadQueue: [...s.uploadQueue, ...newFiles] }));

@@ -860,8 +860,7 @@ const Files = () => {
                   <div 
                     key={file.id}
                     onContextMenu={(e) => handleContextMenu(e, file)}
-                    className={`border border-border bg-surface rounded-xl overflow-hidden hover:border-accent/50 transition-all cursor-pointer shadow-md relative group flex flex-col ${selectedIds[file.id] ? 'ring-2 ring-accent border-accent' : ''}`}
-                    style={{ aspectRatio: '3/4' }}
+                    className={`border border-border bg-surface rounded-xl overflow-hidden hover:border-accent/50 transition-all cursor-pointer shadow-md relative group flex flex-col aspect-square ${selectedIds[file.id] ? 'ring-2 ring-accent border-accent' : ''}`}
                   >
                     <input
                       type="checkbox"
@@ -1124,7 +1123,7 @@ const Files = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.1 }}
-            className="fixed pointer-events-auto bg-[#0c0f1d] border border-border shadow-2xl py-1 min-w-[200px] flex flex-col font-mono text-xs text-text-secondary rounded-lg overflow-hidden backdrop-blur-xl"
+            className="fixed pointer-events-auto bg-surface border border-border shadow-2xl py-1 min-w-[200px] flex flex-col font-mono text-xs text-text-primary rounded-lg overflow-hidden backdrop-blur-xl"
             style={{ 
               top: contextMenu.y, 
               left: contextMenu.x 
@@ -1146,7 +1145,7 @@ const Files = () => {
             <button onClick={() => { openInfoModal(); closeContextMenu(); }} className="flex items-center w-full px-4 py-2.5 hover:bg-surface-raised hover:text-accent transition-colors text-left">
               <Info className="w-4 h-4 mr-3" /> File Information
             </button>
-            <div className="my-1 border-t border-white/5 w-full" />
+            <div className="my-1 border-t border-border w-full" />
             <button onClick={() => { handleCopy(); closeContextMenu(); }} className="flex items-center w-full px-4 py-2.5 hover:bg-surface-raised hover:text-accent transition-colors text-left">
               <Copy className="w-4 h-4 mr-3" /> Copy
             </button>
@@ -1158,7 +1157,7 @@ const Files = () => {
                 <ClipboardPaste className="w-4 h-4 mr-3" /> Paste
               </button>
             )}
-            <div className="my-1 border-t border-white/5 w-full" />
+            <div className="my-1 border-t border-border w-full" />
             <button onClick={() => { handleMultiDelete(); closeContextMenu(); }} className="flex items-center w-full px-4 py-2.5 hover:bg-danger/10 text-danger transition-colors text-left">
               <Trash2 className="w-4 h-4 mr-3" /> Move to Bin
             </button>

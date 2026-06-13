@@ -62,7 +62,9 @@ const getMimeType = (filename) => {
     'tiff': 'image/tiff',
     'tif': 'image/tiff',
     'bmp': 'image/bmp',
-    'ico': 'image/x-icon'
+    'ico': 'image/x-icon',
+    // Documents
+    'pdf': 'application/pdf'
   };
   return mimeTypes[ext] || 'video/mp4';
 };
@@ -231,7 +233,7 @@ const FileThumbnail = ({ file, className, decryptedName }) => {
 
     let objectUrl = null;
 
-    if (category === 'image' || category === 'video') {
+    if (category === 'image' || category === 'video' || category === 'pdf') {
       const fetchRealMedia = async () => {
         setIsLoading(true);
         try {
@@ -335,6 +337,20 @@ const FileThumbnail = ({ file, className, decryptedName }) => {
             </svg>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (category === 'pdf' && !isStaticImage) {
+    return (
+      <div className={`${className} relative overflow-hidden bg-white flex items-center justify-center rounded-md pointer-events-none`}>
+        <iframe 
+          src={`${thumbnailUrl}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`}
+          className="w-full h-full border-none pointer-events-none" 
+          tabIndex="-1"
+          title={filename}
+        />
+        <div className="absolute inset-0 z-10 bg-transparent"></div>
       </div>
     );
   }
