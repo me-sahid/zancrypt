@@ -25,6 +25,7 @@ from passlib.hash import bcrypt
 from app.models.user import UserRole
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from app.api.deps import get_current_user
 
 logger = logging.getLogger(__name__)
 limiter = Limiter(key_func=get_remote_address)
@@ -337,7 +338,6 @@ async def login_fallback(
         }
     )
 
-from app.api.deps import get_current_user
 
 ALLOWED_ORIGINS = [
     "https://zancrypt.in",
