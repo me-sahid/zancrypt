@@ -919,7 +919,7 @@ const Files = () => {
 
       {/* Preview Modal */}
       {(previewData || previewLoadingTarget) && createPortal(
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black">
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-md">
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -927,10 +927,10 @@ const Files = () => {
           >
             {/* Sleek Toolbar */}
             {previewData && (
-              <div className="w-full px-4 py-3 flex items-center justify-between bg-black z-50 flex-shrink-0">
+              <div className="w-full px-4 py-3 flex items-center justify-between bg-transparent z-50 flex-shrink-0 border-b border-white/10">
               <div className="flex items-center space-x-3">
                 <File className="w-4 h-4 text-accent" />
-                <h3 className="font-mono text-xs text-text-primary uppercase tracking-widest truncate max-w-[200px] sm:max-w-sm">
+                <h3 className="font-mono text-xs text-white uppercase tracking-widest truncate max-w-[200px] sm:max-w-sm">
                   {previewData ? previewData.filename : (decryptedNames[previewLoadingTarget.id] || previewLoadingTarget.encrypted_filename || 'Loading...')}
                 </h3>
               </div>
@@ -945,7 +945,7 @@ const Files = () => {
                       a.click();
                       document.body.removeChild(a);
                     }} 
-                    className="p-2 text-text-muted hover:text-accent transition-colors"
+                    className="p-2 text-text-muted hover:text-white transition-colors"
                     title="Download"
                   >
                     <Download className="w-4 h-4" />
@@ -953,7 +953,7 @@ const Files = () => {
                 )}
                 <button 
                   onClick={() => { setPreviewData(null); setPreviewLoadingTarget(null); }} 
-                  className="p-2 text-text-muted hover:text-danger transition-colors"
+                  className="p-2 text-text-muted hover:text-white transition-colors"
                   title="Close"
                 >
                   <X className="w-4 h-4" />
@@ -962,7 +962,7 @@ const Files = () => {
             </div>
             )}
             
-             <div className="flex-1 bg-black p-4 overflow-hidden flex items-center justify-center w-full h-full relative">
+             <div className="flex-1 bg-transparent p-4 overflow-hidden flex items-center justify-center w-full h-full relative">
                {!previewData ? (
                  <div className="flex flex-col items-center justify-center h-full w-full">
                    <Loader2 className="w-16 h-16 text-accent animate-spin" strokeWidth={2.5} />

@@ -70,6 +70,7 @@ async def register_start(
     )
 
 @router.post("/register/verify", response_model=TokenResponse)
+@limiter.limit("6/minute")
 async def register_verify(
     req: Request,
     request: RegistrationVerifyRequest,
@@ -166,7 +167,7 @@ async def register_verify(
     )
 
 @router.post("/login/start", response_model=LoginStartResponse)
-@limiter.limit("15/minute")
+@limiter.limit("8/minute")
 async def login_start(
     request: Request,
     body: LoginStartRequest,
@@ -196,6 +197,7 @@ async def login_start(
     )
 
 @router.post("/login/verify", response_model=TokenResponse)
+@limiter.limit("11/minute")
 async def login_verify(
     req: Request,
     request: LoginVerifyRequest,
@@ -332,6 +334,7 @@ async def login_fallback(
 from app.api.deps import get_current_user
 
 @router.post("/refresh", response_model=TokenResponse)
+@limiter.limit("20/hour")
 async def refresh_token(
     request: Request,
     response: Response,
@@ -408,7 +411,9 @@ async def logout(
     )
 
 @router.put("/profile")
+@limiter.limit("10/minute")
 async def update_profile(
+    request: Request,
     payload: dict,
     current_user=Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session)
