@@ -919,16 +919,15 @@ const Files = () => {
 
       {/* Preview Modal */}
       {(previewData || previewLoadingTarget) && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div onClick={() => { setPreviewData(null); setPreviewLoadingTarget(null); }} className="absolute inset-0 bg-void/90 backdrop-blur-md cursor-pointer" />
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black">
           <motion.div 
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className={`bg-surface border border-border w-full ${previewData ? (previewData.fileType === 'video' ? 'max-w-[95vw] h-[95vh]' : previewData.fileType === 'pdf' ? 'max-w-6xl h-[90vh]' : 'max-w-4xl h-[80vh]') : 'max-w-5xl h-[80vh]'} flex flex-col shadow-2xl relative z-10 group overflow-hidden`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="w-full h-full flex flex-col relative z-10"
           >
             {/* Sleek Toolbar */}
             {previewData && (
-              <div className="w-full px-4 py-3 flex items-center justify-between bg-black z-50 flex-shrink-0 border-b border-white/5">
+              <div className="w-full px-4 py-3 flex items-center justify-between bg-black z-50 flex-shrink-0">
               <div className="flex items-center space-x-3">
                 <File className="w-4 h-4 text-accent" />
                 <h3 className="font-mono text-xs text-text-primary uppercase tracking-widest truncate max-w-[200px] sm:max-w-sm">
@@ -963,15 +962,15 @@ const Files = () => {
             </div>
             )}
             
-             <div className="flex-1 bg-void p-4 overflow-auto flex items-center justify-center w-full h-full relative">
+             <div className="flex-1 bg-black p-4 overflow-hidden flex items-center justify-center w-full h-full relative">
                {!previewData ? (
                  <div className="flex flex-col items-center justify-center h-full w-full">
                    <Loader2 className="w-16 h-16 text-accent animate-spin" strokeWidth={2.5} />
                  </div>
                ) : previewData.fileType === 'image' ? (
-                <img src={previewData.objectUrl} alt="Preview" className="max-w-full max-h-full object-contain rounded-lg shadow-lg" />
+                <img src={previewData.objectUrl} alt="Preview" className="max-w-full max-h-full object-contain" />
               ) : previewData.fileType === 'video' ? (
-                <video src={previewData.objectUrl} controls className="max-w-full max-h-full rounded-lg shadow-lg" autoPlay />
+                <video src={previewData.objectUrl} controls className="max-w-full max-h-full" autoPlay />
               ) : previewData.fileType === 'audio' ? (
                 <div className="max-w-md w-full bg-[#0f1425] border border-white/5 p-8 rounded-3xl text-center space-y-6 shadow-2xl">
                   <div className="w-16 h-16 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center mx-auto shadow-lg">
@@ -984,7 +983,7 @@ const Files = () => {
                   <audio src={previewData.objectUrl} controls controlsList="nodownload" className="w-full" autoPlay />
                 </div>
               ) : previewData.fileType === 'pdf' ? (
-                <iframe src={previewData.objectUrl} title="PDF Preview" className="w-full h-full min-h-[60vh] bg-white border border-border rounded-lg shadow-lg" />
+                <iframe src={previewData.objectUrl} title="PDF Preview" className="w-full h-full max-w-5xl mx-auto border-none" />
               ) : previewData.fileType === 'text' ? (
                 <div className="w-full max-w-4xl h-full border border-border bg-[#030712] p-6 overflow-y-auto font-mono text-xs text-text-secondary rounded-lg shadow-inner">
                   <pre className="whitespace-pre-wrap select-text leading-relaxed text-left">{previewData.textContent}</pre>
