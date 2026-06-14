@@ -926,10 +926,10 @@ const Files = () => {
             animate={{ scale: 1, opacity: 1 }}
             className={`bg-surface border border-border w-full ${previewData ? (previewData.fileType === 'video' ? 'max-w-[95vw] h-[95vh]' : previewData.fileType === 'pdf' ? 'max-w-6xl h-[90vh]' : 'max-w-4xl h-[80vh]') : 'max-w-5xl h-[80vh]'} flex flex-col shadow-2xl relative z-10 group overflow-hidden`}
           >
-            {/* Sleek Floating Toolbar */}
+            {/* Sleek Toolbar */}
             {previewData && (
-              <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between bg-gradient-to-b from-void/90 to-transparent z-50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
-              <div className="flex items-center space-x-3 bg-void/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
+              <div className="w-full px-4 py-3 flex items-center justify-between bg-black z-50 flex-shrink-0 border-b border-white/5">
+              <div className="flex items-center space-x-3">
                 <File className="w-4 h-4 text-accent" />
                 <h3 className="font-mono text-xs text-text-primary uppercase tracking-widest truncate max-w-[200px] sm:max-w-sm">
                   {previewData ? previewData.filename : (decryptedNames[previewLoadingTarget.id] || previewLoadingTarget.encrypted_filename || 'Loading...')}
@@ -946,7 +946,7 @@ const Files = () => {
                       a.click();
                       document.body.removeChild(a);
                     }} 
-                    className="bg-void/80 backdrop-blur-md p-2.5 rounded-full border border-white/10 text-text-muted hover:text-accent hover:border-accent/50 transition-all shadow-lg"
+                    className="p-2 text-text-muted hover:text-accent transition-colors"
                     title="Download"
                   >
                     <Download className="w-4 h-4" />
@@ -954,7 +954,7 @@ const Files = () => {
                 )}
                 <button 
                   onClick={() => { setPreviewData(null); setPreviewLoadingTarget(null); }} 
-                  className="bg-void/80 backdrop-blur-md p-2.5 rounded-full border border-white/10 text-text-muted hover:text-danger hover:border-danger/50 transition-all shadow-lg"
+                  className="p-2 text-text-muted hover:text-danger transition-colors"
                   title="Close"
                 >
                   <X className="w-4 h-4" />

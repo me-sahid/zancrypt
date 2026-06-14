@@ -74,8 +74,8 @@ const getPlaceholderThumbnail = (filename) => {
   const category = getFileCategory(filename);
   
   const canvas = document.createElement('canvas');
-  canvas.width = 160;
-  canvas.height = 160;
+  canvas.width = 512;
+  canvas.height = 512;
   const ctx = canvas.getContext('2d');
   
   // 1. Determine gradient colors based on category/extension
@@ -111,97 +111,97 @@ const getPlaceholderThumbnail = (filename) => {
   }
 
   // 2. Draw gradient background
-  const grad = ctx.createLinearGradient(0, 0, 160, 160);
+  const grad = ctx.createLinearGradient(0, 0, 512, 512);
   grad.addColorStop(0, colorStart);
   grad.addColorStop(1, colorEnd);
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 160, 160);
+  ctx.fillRect(0, 0, 512, 512);
 
   // 3. Draw a modern glowing grid pattern
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
-  ctx.lineWidth = 1;
-  const gridSpacing = 20;
-  for (let x = 0; x < 160; x += gridSpacing) {
+  ctx.lineWidth = 3.2;
+  const gridSpacing = 64;
+  for (let x = 0; x < 512; x += gridSpacing) {
     ctx.beginPath();
     ctx.moveTo(x, 0);
-    ctx.lineTo(x, 160);
+    ctx.lineTo(x, 512);
     ctx.stroke();
   }
-  for (let y = 0; y < 160; y += gridSpacing) {
+  for (let y = 0; y < 512; y += gridSpacing) {
     ctx.beginPath();
     ctx.moveTo(0, y);
-    ctx.lineTo(160, y);
+    ctx.lineTo(512, y);
     ctx.stroke();
   }
 
   // 4. Draw glowing inner border
   ctx.strokeStyle = accentColor;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 6.4;
   ctx.globalAlpha = 0.25;
-  ctx.strokeRect(4, 4, 152, 152);
+  ctx.strokeRect(12.8, 12.8, 486.4, 486.4);
   ctx.globalAlpha = 1.0;
 
   // 5. Draw clean vector-like icon in the center
   ctx.fillStyle = accentColor;
   ctx.strokeStyle = accentColor;
-  ctx.lineWidth = 3.5;
+  ctx.lineWidth = 11.2;
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
 
   if (category === 'video') {
     // Draw Play Button Icon
     ctx.beginPath();
-    ctx.moveTo(70, 52);
-    ctx.lineTo(96, 68);
-    ctx.lineTo(70, 84);
+    ctx.moveTo(224, 166.4);
+    ctx.lineTo(307.2, 217.6);
+    ctx.lineTo(224, 268.8);
     ctx.closePath();
     ctx.fill();
   } else if (category === 'image') {
     // Draw double mountain landscape
     ctx.beginPath();
-    ctx.rect(58, 48, 44, 34);
+    ctx.rect(185.6, 153.6, 140.8, 108.8);
     ctx.stroke();
     // Sun
     ctx.beginPath();
-    ctx.arc(88, 58, 4, 0, Math.PI * 2);
+    ctx.arc(281.6, 185.6, 12.8, 0, Math.PI * 2);
     ctx.fill();
     // Mountains
     ctx.beginPath();
-    ctx.moveTo(62, 78);
-    ctx.lineTo(74, 64);
-    ctx.lineTo(82, 72);
-    ctx.lineTo(92, 58);
-    ctx.lineTo(98, 78);
+    ctx.moveTo(198.4, 249.6);
+    ctx.lineTo(236.8, 204.8);
+    ctx.lineTo(262.4, 230.4);
+    ctx.lineTo(294.4, 185.6);
+    ctx.lineTo(313.6, 249.6);
     ctx.stroke();
   } else {
     // Draw Document Shape
     ctx.beginPath();
-    ctx.moveTo(62, 48);
-    ctx.lineTo(86, 48);
-    ctx.lineTo(98, 60);
-    ctx.lineTo(98, 88);
-    ctx.lineTo(62, 88);
+    ctx.moveTo(198.4, 153.6);
+    ctx.lineTo(275.2, 153.6);
+    ctx.lineTo(313.6, 192);
+    ctx.lineTo(313.6, 281.6);
+    ctx.lineTo(198.4, 281.6);
     ctx.closePath();
     ctx.stroke();
     // folded corner line
     ctx.beginPath();
-    ctx.moveTo(86, 48);
-    ctx.lineTo(86, 60);
-    ctx.lineTo(98, 60);
+    ctx.moveTo(275.2, 153.6);
+    ctx.lineTo(275.2, 192);
+    ctx.lineTo(313.6, 192);
     ctx.stroke();
   }
 
   // 6. Draw clean extension badge
   ctx.fillStyle = 'rgba(7, 9, 19, 0.85)';
   ctx.beginPath();
-  ctx.roundRect(40, 112, 80, 22, 6);
+  ctx.roundRect(128, 358.4, 256, 70.4, 19.2);
   ctx.fill();
   
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 9px Inter, system-ui, sans-serif';
+  ctx.font = 'bold 28.8px Inter, system-ui, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(extLabel, 80, 123);
+  ctx.fillText(extLabel, 256, 393.6);
 
   return canvas.toDataURL('image/jpeg', 0.85);
 };
@@ -284,13 +284,12 @@ const FileThumbnail = ({ file, className, decryptedName }) => {
     };
   }, [file.id, filename, category, file.thumbnail]);
 
-  // Fallback to beautiful neon card if we don't have a thumbnail or if there was an error loading it
   if (hasError || !thumbnailUrl) {
     return (
       <img 
         src={generatedPlaceholder} 
         alt={filename} 
-        className={`${className} object-cover rounded-md`}
+        className={`${className} object-contain rounded-md bg-void/50`}
       />
     );
   }
@@ -326,7 +325,7 @@ const FileThumbnail = ({ file, className, decryptedName }) => {
         <img 
           src={thumbnailUrl} 
           alt={filename} 
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain bg-void/50"
           onError={() => setHasError(true)}
         />
         {/* Sleek video overlay */}
@@ -360,7 +359,7 @@ const FileThumbnail = ({ file, className, decryptedName }) => {
     <img 
       src={thumbnailUrl} 
       alt={filename} 
-      className={`${className} object-cover rounded-md`}
+      className={`${className} object-contain rounded-md bg-void/50`}
       onError={() => setHasError(true)} // Graceful fallback if format isn't supported by browser (e.g. HEIC on Chrome)
     />
   );
