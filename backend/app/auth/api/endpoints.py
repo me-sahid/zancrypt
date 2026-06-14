@@ -72,18 +72,18 @@ async def register_start(
 @router.post("/register/verify", response_model=TokenResponse)
 @limiter.limit("6/minute")
 async def register_verify(
-    req: Request,
-    request: RegistrationVerifyRequest,
+    request: Request,
+    body: RegistrationVerifyRequest,
     response: Response,
     session: AsyncSession = Depends(get_async_session)
 ):
-    auth_session = session_service.get_auth_session(request.session_id)
+    auth_session = session_service.get_auth_session(body.session_id)
     if not auth_session:
         raise HTTPException(status_code=400, detail="Invalid or expired session")
 
     try:
         auth_data = webauthn_service.verify_registration_response(
-            request.response,
+            body.response,
             auth_session["state"]
         )
     except HTTPException:
@@ -93,12 +93,11 @@ async def register_verify(
         raise HTTPException(status_code=400, detail="Passkey verification failed. Please try again.")
 
     try:
-        from passlib.hash import bcrypt
         user_repo = UserRepository(session)
         import hashlib
         import bcrypt as bcrypt_lib
 
-        hashed_access_key = hashlib.sha256(request.access_key.encode()).hexdigest()
+        hashed_access_key = hashlib.sha256(body.access_key.encode()).hexdigest()
         salt = bcrypt_lib.gensalt()
         identity_verifier = bcrypt_lib.hashpw(hashed_access_key.encode(), salt).decode()
 
@@ -107,9 +106,9 @@ async def register_verify(
             username=auth_session["email"],
             full_name=auth_session["full_name"],
             region=auth_session["region"],
-            master_key_salt=request.master_key_salt,
+            master_key_salt=body.master_key_salt,
             identity_verifier=identity_verifier,
-            encrypted_recovery_metadata=request.encrypted_recovery_metadata,
+            encrypted_recovery_metadata=body.encrypted_recovery_metadata,
             role=UserRole.user,
             is_active=True
         )
@@ -122,7 +121,7 @@ async def register_verify(
             credential_id=auth_data.credential_id,
             public_key=auth_data.credential_public_key,
             sign_count=auth_data.sign_count,
-            transports=["internal"],  
+            transports=["internal"],
         )
         session.add(credential)
         await session.commit()
@@ -133,7 +132,7 @@ async def register_verify(
         logger.error("Atomic registration failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to finalize identity setup")
 
-    session_service.delete_auth_session(request.session_id)
+    session_service.delete_auth_session(body.session_id)
 
     from app.security.jwt import create_access_token
     from app.repositories.session_repo import SessionRepository
@@ -199,25 +198,24 @@ async def login_start(
 @router.post("/login/verify", response_model=TokenResponse)
 @limiter.limit("11/minute")
 async def login_verify(
-    req: Request,
-    request: LoginVerifyRequest,
+    request: Request,
+    body: LoginVerifyRequest,
     response: Response,
     session: AsyncSession = Depends(get_async_session)
 ):
-    auth_session = session_service.get_auth_session(request.session_id)
+    auth_session = session_service.get_auth_session(body.session_id)
     if not auth_session:
         raise HTTPException(status_code=400, detail="Invalid or expired session")
 
     try:
         credential_repo = WebAuthnRepository(session)
-        user_id = int(auth_session["user_id"])  
+        user_id = int(auth_session["user_id"])
         credentials = await credential_repo.get_by_user_id(user_id)
 
         if not credentials:
             raise HTTPException(status_code=400, detail="No passkeys found")
 
-        from webauthn.helpers import base64url_to_bytes
-        used_credential_id = base64url_to_bytes(request.response["id"])
+        used_credential_id = base64url_to_bytes(body.response["id"])
 
         target_credential = None
         for c in credentials:
@@ -230,7 +228,7 @@ async def login_verify(
             raise HTTPException(status_code=400, detail="Credential not recognized")
 
         auth_data, new_counter = webauthn_service.verify_authentication_response(
-            request.response,
+            body.response,
             auth_session["state"],
             credentials
         )
@@ -242,7 +240,7 @@ async def login_verify(
 
         access_token = create_access_token(subject=str(user_id))
         session_repo = SessionRepository(session)
-        refresh_token = await session_repo.create_session(user_id) 
+        refresh_token = await session_repo.create_session(user_id)
 
         user_repo = UserRepository(session)
         user = await user_repo.get_by_id(user_id)
@@ -252,8 +250,7 @@ async def login_verify(
             value=refresh_token,
             httponly=True,
             secure=True,
-            samesite="lax",
-            domain=".zancrypt.in",
+            samesite="none",
             max_age=7 * 24 * 60 * 60,
         )
 
@@ -271,6 +268,12 @@ async def login_verify(
                 "master_key_salt": user.master_key_salt
             }
         )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Login verification failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=400, detail="Authentication failed. Please try again.")
 
     except HTTPException:
         raise
