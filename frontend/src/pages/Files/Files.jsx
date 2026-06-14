@@ -9,7 +9,7 @@ import {
   Copy, FolderOpen, ClipboardPaste, Folder, Scissors, FolderPlus, CornerLeftUp,
   LayoutGrid, List, X, MoreVertical
 } from 'lucide-react';
-import { RiSafeLine } from 'react-icons/ri';
+import { RiSafeLine, RiUpload2Line } from 'react-icons/ri';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../../components/ui/Button';
 import ShareModal from '../../components/ShareModal';
@@ -804,8 +804,17 @@ const Files = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-16 text-center text-text-muted text-xs uppercase tracking-widest">
-                      No files found in Vault
+                    <td colSpan={6} className="py-24 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-6">
+                        <p className="text-2xl text-text-muted font-normal">No files found in Vault</p>
+                        <Link 
+                          to="/uploads" 
+                          className="flex items-center space-x-3 px-8 py-4 bg-accent hover:bg-accent/90 text-void rounded-xl shadow-lg hover:shadow-accent/20 hover:-translate-y-1 transition-all duration-300"
+                        >
+                          <RiUpload2Line className="w-6 h-6" />
+                          <span className="text-lg font-medium">Upload file</span>
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -908,8 +917,15 @@ const Files = () => {
               })
             ) : (
               !currentFolderId && folders?.length === 0 && (
-                <div className="col-span-full py-16 flex flex-col items-center justify-center text-text-muted text-xs uppercase tracking-widest">
-                  No files found in Vault
+                <div className="col-span-full py-24 flex flex-col items-center justify-center space-y-6">
+                  <p className="text-2xl text-text-muted font-normal">No files found in Vault</p>
+                  <Link 
+                    to="/uploads" 
+                    className="flex items-center space-x-3 px-8 py-4 bg-accent hover:bg-accent/90 text-void rounded-xl shadow-lg hover:shadow-accent/20 hover:-translate-y-1 transition-all duration-300"
+                  >
+                    <RiUpload2Line className="w-6 h-6" />
+                    <span className="text-lg font-medium">Upload file</span>
+                  </Link>
                 </div>
               )
             )}
