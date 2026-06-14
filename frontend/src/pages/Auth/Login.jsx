@@ -39,6 +39,12 @@ const Login = () => {
         });
 
         const { access_token, user } = verifyResponse.data;
+        
+        const keyMatRes = await api.get('/auth/key-material', {
+          headers: { Authorization: `Bearer ${access_token}` }
+        });
+        window.__keyMaterial = keyMatRes.data.master_key_salt;
+
         setAuth(user, access_token);
         setStatus('success');
         setTimeout(() => {
@@ -64,6 +70,12 @@ const Login = () => {
           access_key: accessKey,
         });
         const { access_token, user } = response.data;
+
+        const keyMatRes = await api.get('/auth/key-material', {
+          headers: { Authorization: `Bearer ${access_token}` }
+        });
+        window.__keyMaterial = keyMatRes.data.master_key_salt;
+
         setAuth(user, access_token);
         setStatus('success');
         setTimeout(() => {

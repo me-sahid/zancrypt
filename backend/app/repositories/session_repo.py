@@ -45,17 +45,35 @@ class SessionRepository:
         if session:
             return session
 
-        # Check if this token was recently rotated (within 30 seconds)
+        import logging
+        logger = logging.getLogger(__name__)
+
+        # Check if this token was recently rotated (within 5 seconds)
         # Handles mobile rapid-refresh race condition where browser sends the old
         # cookie before the new one is set
         result = await self.session.execute(
             select(Session).where(
                 Session.previous_token_hash == token_hash,
-                Session.revoked == False,
-                Session.created_at > datetime.utcnow() - timedelta(seconds=30),
+                Session.revoked == False
             )
         )
-        return result.scalar_one_or_none()
+        rotated_session = result.scalar_one_or_none()
+        
+        if rotated_session:
+            # Check if it falls within the tight 5-second grace period
+            if rotated_session.created_at > datetime.utcnow() - timedelta(seconds=5):
+                logger.warning(f"Grace-period refresh token reuse for user {rotated_session.user_id}. Allowing.")
+                return rotated_session
+            else:
+                # TOKEN THEFT DETECTED
+                # The old token was used outside the safe network race-condition window.
+                logger.critical(
+                    f"TOKEN THEFT DETECTED! Old refresh token reused. Revoking all sessions for user {rotated_session.user_id}."
+                )
+                await self.revoke_all_by_user(rotated_session.user_id)
+                return None
+
+        return None
 
     async def delete_session(self, raw_token: str) -> None:
         token_hash = _hash_token(raw_token)

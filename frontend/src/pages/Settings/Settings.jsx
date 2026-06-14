@@ -182,7 +182,7 @@ const Settings = () => {
                       <Key className="w-5 h-5 text-accent" />
                       <div className="text-xs font-mono">
                         <p className="text-text-primary uppercase tracking-widest mb-1">Identity Verifier Salt</p>
-                        <p className="text-text-muted">{user?.master_key_salt || 'N/A'}</p>
+                        <p className="text-text-muted">{window.__keyMaterial || 'N/A'}</p>
                       </div>
                     </div>
                   </div>

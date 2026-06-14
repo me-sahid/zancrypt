@@ -113,27 +113,33 @@ export async function silentRefresh() {
 }
 
 async function _runSilentRefresh() {
-  const { user, restoreToken, setInitialized, logout } = useAuthStore.getState();
-
-  if (!user) {
-    setInitialized();
-    return;
-  }
-
+  const { restoreToken, setInitialized, logout } = useAuthStore.getState()
+  
   try {
     const { data } = await axios.post(
       `${import.meta.env.VITE_API_URL || ''}/auth/refresh`,
       {},
       { withCredentials: true }
-    );
-    // ← pass both token AND user from refresh response
-    restoreToken(data.access_token, data.user ?? null);
-  } catch (error) {
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      logout();
+    )
+    restoreToken(data.access_token, data.user ?? null)
+
+    try {
+      const keyMatRes = await api.get('/auth/key-material', {
+        headers: { Authorization: `Bearer ${data.access_token}` }
+      });
+      window.__keyMaterial = keyMatRes.data.master_key_salt;
+    } catch (e) {
+      console.error("Failed to fetch key material during refresh", e);
     }
+  } catch (error) {
+    // Only logout on explicit server rejection
+    // NOT on network errors or server downtime
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      logout()
+    }
+    // Network error = preserve auth state, user stays logged in
   } finally {
-    setInitialized();
+    setInitialized()
   }
 }
 

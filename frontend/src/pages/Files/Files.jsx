@@ -193,10 +193,10 @@ const Files = () => {
       setIsDecrypting(true);
       
       try {
-        // Derive the user's master key from real credentials (email + master_key_salt)
+        // Derive the user's master key from real credentials
         const { user } = useAuthStore.getState();
-        if (!user?.master_key_salt) { setIsDecrypting(false); return; }
-        const key = await deriveKey(user.email, user.master_key_salt);
+        if (!window.__keyMaterial) { setIsDecrypting(false); return; }
+        const key = await deriveKey(user.email, window.__keyMaterial);
         
         const newDecryptedNames = { ...decryptedNames };
         
@@ -465,8 +465,8 @@ const Files = () => {
 
       // Derive the same key used during upload
       const { user } = useAuthStore.getState();
-      if (!user?.master_key_salt) throw new Error('Encryption key not available');
-      const encKey = await deriveKey(user.email, user.master_key_salt);
+      if (!window.__keyMaterial) throw new Error('Encryption key not available');
+      const encKey = await deriveKey(user.email, window.__keyMaterial);
 
       // Extract 12-byte IV prepended during upload, then decrypt
       const encBytes = new Uint8Array(encryptedBuffer);
@@ -505,8 +505,8 @@ const Files = () => {
 
       // Derive the same key used during upload and decrypt
       const { user } = useAuthStore.getState();
-      if (!user?.master_key_salt) throw new Error('Encryption key not available');
-      const encKey = await deriveKey(user.email, user.master_key_salt);
+      if (!window.__keyMaterial) throw new Error('Encryption key not available');
+      const encKey = await deriveKey(user.email, window.__keyMaterial);
       const encBytes = new Uint8Array(encryptedBuffer);
       const iv = encBytes.slice(0, 12);
       const ciphertext = encBytes.slice(12);

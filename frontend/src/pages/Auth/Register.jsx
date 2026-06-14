@@ -62,6 +62,12 @@ const Register = () => {
       });
 
       const { access_token, user } = verifyResponse.data;
+
+      const keyMatRes = await api.get('/auth/key-material', {
+        headers: { Authorization: `Bearer ${access_token}` }
+      });
+      window.__keyMaterial = keyMatRes.data.master_key_salt;
+
       setAuth(user, access_token);
 
       setStatus('success');

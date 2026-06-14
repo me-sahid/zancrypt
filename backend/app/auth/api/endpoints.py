@@ -161,9 +161,14 @@ async def register_verify(
             "full_name": user.full_name,
             "role": user.role,
             "region": user.region,
-            "master_key_salt": user.master_key_salt
         }
     )
+
+@router.get("/key-material")
+async def get_key_material(
+    current_user: User = Depends(get_current_user)
+):
+    return {"master_key_salt": current_user.master_key_salt}
 
 @router.post("/login/start", response_model=LoginStartResponse)
 @limiter.limit("8/minute")
@@ -265,7 +270,6 @@ async def login_verify(
                 "full_name": user.full_name,
                 "role": user.role,
                 "region": user.region,
-                "master_key_salt": user.master_key_salt
             }
         )
 
@@ -330,11 +334,16 @@ async def login_fallback(
             "full_name": user.full_name,
             "role": user.role,
             "region": user.region,
-            "master_key_salt": user.master_key_salt
         }
     )
 
 from app.api.deps import get_current_user
+
+ALLOWED_ORIGINS = [
+    "https://zancrypt.in",
+    "https://www.zancrypt.in",
+    "https://zancrypt-front.pages.dev",
+]
 
 @router.post("/refresh", response_model=TokenResponse)
 @limiter.limit("20/hour")
@@ -346,6 +355,13 @@ async def refresh_token(
     old_token = request.cookies.get("refresh_token")
     if not old_token:
         raise HTTPException(status_code=401, detail="Refresh token missing")
+
+    origin = request.headers.get("origin") or request.headers.get("referer", "")
+    if not any(origin.startswith(allowed) for allowed in ALLOWED_ORIGINS):
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid origin"
+        )
 
     from app.repositories.session_repo import SessionRepository
     from app.repositories.user_repo import UserRepository
@@ -384,7 +400,6 @@ async def refresh_token(
             "full_name": user.full_name,
             "role": user.role,
             "region": user.region,
-            "master_key_salt": user.master_key_salt,
         }
     )
 
@@ -409,8 +424,9 @@ async def logout(
         key="refresh_token",
         httponly=True,
         secure=True,
-        samesite="lax",          
-        domain=".zancrypt.in",   
+        samesite="none",          
+        domain=".zancrypt.in",
+        path = '/',   
     )
 
 @router.put("/profile")
@@ -440,5 +456,4 @@ async def update_profile(
         "full_name": current_user.full_name,
         "role": current_user.role,
         "region": current_user.region,
-        "master_key_salt": current_user.master_key_salt
     }
