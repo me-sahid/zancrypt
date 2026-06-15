@@ -16,6 +16,7 @@ import FileManagerSkeleton from './components/skeletons/FileManagerSkeleton';
 import PricingPageSkeleton from './components/skeletons/PricingPageSkeleton';
 import SettingsPageSkeleton from './components/skeletons/SettingsPageSkeleton';
 import GlobalUploadManager from './components/layout/GlobalUploadManager';
+import StorageLimitModal from './components/StorageLimitModal';
 
 // Lazy loading other pages
 const Login = lazy(() => import('./pages/Auth/Login'));
@@ -103,6 +104,7 @@ function App() {
         </Routes>
       </Suspense>
       <GlobalUploadManager />
+      <StorageLimitModal />
     </NetworkProvider>
   );
 }

@@ -52,6 +52,7 @@ api.interceptors.response.use(
         return new Promise((resolve, reject) => {
           _pendingQueue.push({ resolve, reject });
         }).then((token) => {
+          originalRequest._retry = true;
           originalRequest.headers.Authorization = `Bearer ${token}`;
           return api(originalRequest);
         }).catch((err) => Promise.reject(err));

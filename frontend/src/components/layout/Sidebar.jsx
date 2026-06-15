@@ -142,13 +142,13 @@ const Sidebar = () => {
                   return `${mb.toFixed(1)} MB`;
                 }
                 return `${gb.toFixed(2)} GB`;
-              })()} / 5 GB
+              })()} / 1 GB
             </span>
           </div>
           <div className="w-full h-1 bg-surface-raised rounded-none overflow-hidden border border-white/5">
             <div 
               className="h-full bg-accent transition-all duration-500 shadow-[0_0_10px_rgba(var(--color-accent),0.5)]"
-              style={{ width: `${Math.min(100, Math.max(0.5, ((Math.max(metrics?.totalStorage || 0, (files || []).reduce((acc, f) => acc + (f.file_size || 0), 0))) / (5 * 1024 * 1024 * 1024)) * 100))}%` }}
+              style={{ width: `${Math.min(100, Math.max(0.5, ((Math.max(metrics?.totalStorage || 0, (files || []).reduce((acc, f) => acc + (f.file_size || 0), 0))) / (1 * 1024 * 1024 * 1024)) * 100))}%` }}
             />
           </div>
         </div>

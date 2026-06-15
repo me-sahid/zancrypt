@@ -152,7 +152,9 @@ export const useUploadStore = create((set, get) => ({
   uploadQueue: [],
   isUploading: false,
   isMinimized: false,
+  showStorageLimitModal: false,
 
+  setShowStorageLimitModal: (v) => set({ showStorageLimitModal: v }),
   setMinimized: (v) => set({ isMinimized: v }),
 
   addFiles: async (filesArray) => {
@@ -218,7 +220,11 @@ export const useUploadStore = create((set, get) => ({
 
       } catch (error) {
         console.error('Upload failed:', error);
-        toast.error(error.response?.data?.detail || `Failed to store ${fileObj.name}`);
+        if (error.response?.status === 400 && error.response?.data?.detail?.toLowerCase().includes('quota exceeded')) {
+          set({ showStorageLimitModal: true });
+        } else {
+          toast.error(error.response?.data?.detail || `Failed to store ${fileObj.name}`);
+        }
         set(s => ({
           uploadQueue: s.uploadQueue.map(f =>
             f.id === fileObj.id ? { ...f, status: 'failed' } : f
