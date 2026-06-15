@@ -91,15 +91,6 @@ api.interceptors.response.use(
   }
 );
 
-/**
- * Call this once on app startup (e.g., in main.jsx) to silently restore
- * an in-memory token from the httpOnly refresh cookie if the user was
- * previously logged in. The access token itself is never stored on disk.
- *
- * IMPORTANT: Only clears auth state when the server explicitly rejects
- * the refresh token (401/403). Network errors or backend unavailability
- * are ignored so the user is NOT logged out on transient failures.
- */
 let _silentRefreshPromise = null;
 
 export async function silentRefresh() {

@@ -142,6 +142,8 @@ const Files = () => {
   const [decryptedNames, setDecryptedNames] = useState({});
   const [isDecrypting, setIsDecrypting] = useState(false);
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'grid'
+  const [folderPath, setFolderPath] = useState([]);
+
   
   // Context Menu State
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, file: null });
@@ -249,6 +251,32 @@ const Files = () => {
     } catch (error) {
       toast.error('Failed to destroy file');
     }
+  };
+
+  const handleNavigateInto = (folder) => {
+    setFolderPath(prev => [...prev, { id: folder.id, name: folder.encrypted_name }]);
+    setCurrentFolderId(folder.id);
+  };
+
+  const handleNavigateUp = () => {
+    setFolderPath(prev => {
+      const newPath = prev.slice(0, -1);
+      setCurrentFolderId(newPath.length > 0 ? newPath[newPath.length - 1].id : null);
+      return newPath;
+    });
+  };
+
+  const handleNavigateToBreadcrumb = (index) => {
+    setFolderPath(prev => {
+      const newPath = prev.slice(0, index + 1);
+      setCurrentFolderId(newPath[newPath.length - 1].id);
+      return newPath;
+    });
+  };
+
+  const handleNavigateToRoot = () => {
+    setFolderPath([]);
+    setCurrentFolderId(null);
   };
 
   const getSelectedItemsArray = () => {
@@ -623,10 +651,26 @@ const Files = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-4 md:pb-6">
         <div>
-          <h1 className="font-mono text-2xl text-text-primary tracking-widest uppercase flex items-center">
-            <RiSafeLine className="w-6 h-6 mr-3 text-text-primary" />
-            {t('vault', 'title')}
-          </h1>
+          <div className="font-mono text-xl sm:text-2xl text-text-primary tracking-widest uppercase flex items-center flex-wrap gap-2">
+            <RiSafeLine className="w-5 h-5 sm:w-6 sm:h-6 text-text-primary" />
+            <span 
+              onClick={handleNavigateToRoot} 
+              className={`cursor-pointer hover:text-accent transition-colors ${folderPath.length === 0 ? 'font-bold' : 'text-text-muted'}`}
+            >
+              {t('vault', 'title')}
+            </span>
+            {folderPath.map((folder, index) => (
+              <React.Fragment key={folder.id}>
+                <span className="text-text-muted">&gt;</span>
+                <span 
+                  onClick={() => handleNavigateToBreadcrumb(index)}
+                  className={`cursor-pointer hover:text-accent transition-colors truncate max-w-[100px] sm:max-w-[200px] ${index === folderPath.length - 1 ? 'font-bold text-text-primary' : 'text-text-muted'}`}
+                >
+                  {folder.name}
+                </span>
+              </React.Fragment>
+            ))}
+          </div>
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
@@ -689,7 +733,7 @@ const Files = () => {
               <tbody className="divide-y divide-border font-mono text-sm text-text-secondary">
                 {currentFolderId && (
                   <tr 
-                    onClick={() => setCurrentFolderId(null)}
+                    onClick={handleNavigateUp}
                     className="hover:bg-surface-raised transition-colors cursor-pointer"
                   >
                     <td className="py-4 px-6 w-12 text-center"></td>
@@ -708,7 +752,7 @@ const Files = () => {
                 {folders && folders.map((folder) => (
                   <tr 
                     key={`folder-${folder.id}`} 
-                    onDoubleClick={() => setCurrentFolderId(folder.id)}
+                    onDoubleClick={() => handleNavigateInto(folder)}
                     onContextMenu={(e) => handleContextMenu(e, { ...folder, isFolder: true })}
                     className={`group hover:bg-surface-raised transition-colors cursor-pointer ${selectedIds[`folder_${folder.id}`] ? 'bg-accent/5' : ''}`}
                   >
@@ -802,7 +846,7 @@ const Files = () => {
                       </tr>
                     );
                   })
-                ) : (
+                ) : (!currentFolderId && (!folders || folders.length === 0)) ? (
                   <tr>
                     <td colSpan={6} className="py-24 text-center">
                       <div className="flex flex-col items-center justify-center space-y-6">
@@ -817,7 +861,7 @@ const Files = () => {
                       </div>
                     </td>
                   </tr>
-                )}
+                ) : null}
               </tbody>
             </table>
           </div>
@@ -825,7 +869,7 @@ const Files = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-1">
             {currentFolderId && (
               <div 
-                onClick={() => setCurrentFolderId(null)}
+                onClick={handleNavigateUp}
                 className="border border-border bg-void rounded-xl p-4 flex flex-col items-center justify-center hover:border-accent/50 hover:bg-surface-raised transition-all cursor-pointer aspect-square shadow-lg"
               >
                 <CornerLeftUp className="w-10 h-10 text-text-muted mb-3" />
@@ -836,7 +880,7 @@ const Files = () => {
             {folders && folders.map((folder) => (
               <div 
                 key={`folder-${folder.id}`}
-                onDoubleClick={() => setCurrentFolderId(folder.id)}
+                onDoubleClick={() => handleNavigateInto(folder)}
                 onContextMenu={(e) => handleContextMenu(e, { ...folder, isFolder: true })}
                 className={`border border-border bg-void rounded-xl p-4 flex flex-col items-center justify-center hover:border-accent/50 hover:bg-surface-raised transition-all cursor-pointer aspect-square shadow-lg relative group ${selectedIds[`folder_${folder.id}`] ? 'ring-2 ring-accent border-accent' : ''}`}
               >
