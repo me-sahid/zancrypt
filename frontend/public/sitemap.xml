@@ -4,20 +4,30 @@
     <loc>https://zancrypt.in/</loc>
     <priority>1.0</priority>
     <changefreq>weekly</changefreq>
+    <lastmod>2026-06-13</lastmod>
+  </url>
+  <url>
+    <loc>https://zancrypt.in/architecture</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+    <lastmod>2026-06-13</lastmod>
   </url>
   <url>
     <loc>https://zancrypt.in/register</loc>
-    <priority>0.8</priority>
-    <changefreq>monthly</changefreq>
-  </url>
-  <url>
-    <loc>https://zancrypt.in/login</loc>
-    <priority>0.8</priority>
-    <changefreq>monthly</changefreq>
-  </url>
-  <url>
-    <loc>https://zancrypt.in/pricing</loc>
     <priority>0.7</priority>
     <changefreq>monthly</changefreq>
+    <lastmod>2026-06-13</lastmod>
+  </url>
+  <url>
+    <loc>https://zancrypt.in/privacy-policy</loc>
+    <priority>0.4</priority>
+    <changefreq>yearly</changefreq>
+    <lastmod>2026-06-09</lastmod>
+  </url>
+  <url>
+    <loc>https://zancrypt.in/terms-of-use</loc>
+    <priority>0.4</priority>
+    <changefreq>yearly</changefreq>
+    <lastmod>2026-06-09</lastmod>
   </url>
 </urlset>
