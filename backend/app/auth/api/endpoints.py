@@ -149,6 +149,7 @@ async def register_verify(
         secure=True,
         samesite="none",
         max_age=7 * 24 * 60 * 60,
+        path="/",
     )
 
     return TokenResponse(
@@ -258,6 +259,7 @@ async def login_verify(
             secure=True,
             samesite="none",
             max_age=7 * 24 * 60 * 60,
+            path="/",
         )
 
         return TokenResponse(
@@ -322,6 +324,7 @@ async def login_fallback(
         secure=True,
         samesite="none",
         max_age=7 * 24 * 60 * 60,
+        path="/",
     )
 
     return TokenResponse(
@@ -384,6 +387,7 @@ async def refresh_token(
         secure=True,
         samesite="none",
         max_age=7 * 24 * 60 * 60,
+        path="/",
     )
 
     user_repo = UserRepository(session)
@@ -424,9 +428,9 @@ async def logout(
         key="refresh_token",
         httponly=True,
         secure=True,
-        samesite="none",          
+        samesite="none",
         domain=".zancrypt.in",
-        path = '/',   
+        path="/",
     )
 
 @router.put("/profile")
