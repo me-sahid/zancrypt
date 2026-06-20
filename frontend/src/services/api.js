@@ -105,6 +105,13 @@ export async function silentRefresh() {
 }
 
 async function _runSilentRefresh() {
+  // If the user explicitly logged out this session, do not silently re-authenticate
+  // them via a surviving httpOnly cookie.
+  if (sessionStorage.getItem('zancrypt-logged-out')) {
+    useAuthStore.getState().setInitialized();
+    return;
+  }
+
   const { restoreToken, setInitialized, logout } = useAuthStore.getState()
   
   try {
@@ -113,6 +120,9 @@ async function _runSilentRefresh() {
       {},
       { withCredentials: true }
     )
+    // Clear the logged-out flag on a successful token restore (e.g. user
+    // opened a fresh login in the same tab)
+    sessionStorage.removeItem('zancrypt-logged-out');
     restoreToken(data.access_token, data.user ?? null)
 
     try {

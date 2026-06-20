@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuthStore } from '../../store/useStore';
 import { useDashboardStore } from '../../store/useDashboardStore';
 import { useNavigate, Link } from 'react-router-dom';
+import api from '../../services/api';
 import { 
   Search, 
   Bell, 
@@ -37,12 +38,17 @@ const TopNav = () => {
 
   const handleLogout = async () => {
     try {
+      // Call backend first — revokes DB session and deletes the httpOnly cookie.
+      // Without this the refresh_token cookie survives and silentRefresh on the
+      // next page load will re-authenticate the user automatically.
+      await api.post('/auth/logout');
+    } catch (_err) {
+      // Ignore network errors — proceed with local cleanup regardless
+    } finally {
       useDashboardStore.getState().reset();
       logout();
       toast.success('Securely logged out');
       navigate('/login');
-    } catch (error) {
-      toast.error('Logout failed');
     }
   };
 
