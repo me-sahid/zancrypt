@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('Profile');
-  const { user, setAuth, token, logout } = useAuthStore();
+  const { user, setAuth, token, logout, keyMaterial } = useAuthStore();
   const settings = useSettingsStore();
   
   const [fullName, setFullName] = useState(user?.full_name || '');
@@ -182,7 +182,7 @@ const Settings = () => {
                       <Key className="w-5 h-5 text-accent" />
                       <div className="text-xs font-mono">
                         <p className="text-text-primary uppercase tracking-widest mb-1">Identity Verifier Salt</p>
-                        <p className="text-text-muted">{window.__keyMaterial || 'N/A'}</p>
+                        <p className="text-text-muted">{keyMaterial || 'N/A'}</p>
                       </div>
                     </div>
                   </div>

@@ -129,7 +129,7 @@ async function _runSilentRefresh() {
       const keyMatRes = await api.get('/auth/key-material', {
         headers: { Authorization: `Bearer ${data.access_token}` }
       });
-      window.__keyMaterial = keyMatRes.data.master_key_salt;
+      useAuthStore.getState().setKeyMaterial(keyMatRes.data.master_key_salt);
     } catch (e) {
       console.error("Failed to fetch key material during refresh", e);
     }

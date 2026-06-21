@@ -142,12 +142,14 @@ async def register_verify(
     session_repo = SessionRepository(session)
     refresh_token = await session_repo.create_session(user.id)
 
+    is_prod = settings.ENVIRONMENT == "production"
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
         secure=True,
         samesite="none",
+        domain=".zancrypt.in" if is_prod else None,
         max_age=7 * 24 * 60 * 60,
         path="/",
     )
@@ -252,12 +254,14 @@ async def login_verify(
         user_repo = UserRepository(session)
         user = await user_repo.get_by_id(user_id)
 
+        is_prod = settings.ENVIRONMENT == "production"
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,
             httponly=True,
             secure=True,
             samesite="none",
+            domain=".zancrypt.in" if is_prod else None,
             max_age=7 * 24 * 60 * 60,
             path="/",
         )
@@ -317,12 +321,14 @@ async def login_fallback(
     session_repo = SessionRepository(session)
     refresh_token = await session_repo.create_session(user.id)
 
+    is_prod = settings.ENVIRONMENT == "production"
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
         secure=True,
         samesite="none",
+        domain=".zancrypt.in" if is_prod else None,
         max_age=7 * 24 * 60 * 60,
         path="/",
     )
@@ -342,11 +348,7 @@ async def login_fallback(
     )
 
 
-ALLOWED_ORIGINS = [
-    "https://zancrypt.in",
-    "https://www.zancrypt.in",
-    "https://zancrypt-front.pages.dev",
-]
+ALLOWED_ORIGINS = settings.CORS_ORIGINS
 
 @router.post("/refresh", response_model=TokenResponse)
 @limiter.limit("20/hour")
@@ -380,12 +382,14 @@ async def refresh_token(
     new_access_token = create_access_token(subject=str(user_session.user_id))
     new_refresh_token = await session_repo.create_session(user_session.user_id, previous_token=old_token)  # ← pass old token for 30s grace window
 
+    is_prod = settings.ENVIRONMENT == "production"
     response.set_cookie(
         key="refresh_token",
         value=new_refresh_token,
         httponly=True,
         secure=True,
         samesite="none",
+        domain=".zancrypt.in" if is_prod else None,
         max_age=7 * 24 * 60 * 60,
         path="/",
     )
@@ -424,12 +428,13 @@ async def logout(
     session_repo = SessionRepository(session)
     await session_repo.revoke_all_by_user(current_user.id)
 
+    is_prod = settings.ENVIRONMENT == "production"
     response.delete_cookie(
         key="refresh_token",
         httponly=True,
         secure=True,
         samesite="none",
-        domain=".zancrypt.in",
+        domain=".zancrypt.in" if is_prod else None,
         path="/",
     )
 

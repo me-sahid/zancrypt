@@ -66,7 +66,7 @@ const Register = () => {
       const keyMatRes = await api.get('/auth/key-material', {
         headers: { Authorization: `Bearer ${access_token}` }
       });
-      window.__keyMaterial = keyMatRes.data.master_key_salt;
+      useAuthStore.getState().setKeyMaterial(keyMatRes.data.master_key_salt);
 
       setAuth(user, access_token);
 

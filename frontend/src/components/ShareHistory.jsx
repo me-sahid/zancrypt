@@ -131,7 +131,7 @@ const ShareHistory = () => {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
   
   const getBaseUrl = () => {
-    return "https://zancrypt.in";
+    return window.location.origin;
   };
 
   useEffect(() => {

@@ -61,7 +61,7 @@ const ShareModal = ({ file, onClose }) => {
   const fileName = isMulti ? `${file.length} Secure Assets` : (file?.file_name || file?.encrypted_filename || file?.filename || 'decrypted_file');
 
   const getBaseUrl = () => {
-    return "https://zancrypt.in";
+    return window.location.origin;
   };
 
   const [encryptionKey] = useState(() => {

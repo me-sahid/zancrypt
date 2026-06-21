@@ -85,7 +85,7 @@ from fastapi.responses import JSONResponse
 async def webauthn_well_known():
     return JSONResponse(
         content={
-            "origins": [
+            "origins": settings.CORS_ORIGINS + [
                 "https://zancrypt.in",
                 "https://www.zancrypt.in"
             ]

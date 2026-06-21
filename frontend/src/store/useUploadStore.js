@@ -44,7 +44,7 @@ async function computeHash(buffer) {
 async function uploadSingleFile(fileObj, onProgress) {
   // 1. Retrieve authenticated user's key material
   const user = useAuthStore.getState().user;
-  if (!window.__keyMaterial) {
+  if (!useAuthStore.getState().keyMaterial) {
     toast.error('Session missing encryption key — please log out and log back in');
     throw new Error('Encryption key not available — please log in again');
   }
@@ -53,7 +53,7 @@ async function uploadSingleFile(fileObj, onProgress) {
   const fileBuffer = await fileObj.rawFile.arrayBuffer();
 
   // 3. Derive AES-256-GCM key from email + salt via PBKDF2 (100k iterations)
-  const encKey = await deriveKey(user.email, window.__keyMaterial);
+  const encKey = await deriveKey(user.email, useAuthStore.getState().keyMaterial);
 
   // 4. Encrypt the entire file BEFORE sharding — server never sees plaintext
   const encryptedBuffer = await encryptFileBuffer(fileBuffer, encKey);

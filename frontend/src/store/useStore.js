@@ -11,13 +11,17 @@ export const useAuthStore = create(
       token: null, // Add token directly to state
       isAuthenticated: false,
       isInitializing: true,
+      keyMaterial: null,
+
+      setKeyMaterial: (salt) => set({ keyMaterial: salt }),
+      clearKeyMaterial: () => set({ keyMaterial: null }),
 
       setAuth: (user, token) => {
         set({ user, token: token ?? null, isAuthenticated: true, isInitializing: false });
       },
 
       logout: () => {
-        set({ user: null, token: null, isAuthenticated: false, isInitializing: false });
+        set({ user: null, token: null, isAuthenticated: false, isInitializing: false, keyMaterial: null });
         localStorage.removeItem('zancrypt-auth-state');
         // Mark intentional logout so silentRefresh on the next page load
         // does not re-authenticate the user via a surviving httpOnly cookie.
