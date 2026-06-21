@@ -26,6 +26,7 @@ import {
   Eye,
   CheckCircle2
 } from 'lucide-react';
+import axios from 'axios';
 import api from '../../services/api';
 import { toast } from 'react-hot-toast';
 import Button from '../../components/ui/Button';
@@ -865,16 +866,12 @@ const SharedFile = () => {
             // Fetching Share Metadata Spinner
             <motion.div 
               key="loader"
-              className="text-center space-y-4"
+              className="max-w-md w-full"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto" />
-              <div>
-                <h3 className="font-bold text-sm text-slate-200 uppercase tracking-widest">Verifying Shared Asset Link...</h3>
-                <p className="text-xs text-slate-500 font-medium mt-1">Connecting to distributed secure node registries</p>
-              </div>
+              <SkeletonCard hasImage={false} hasButton={true} className="w-full bg-[#0c0f1d]/75 border-white/[0.04]" />
             </motion.div>
           ) : errorStatus === 401 ? (
             <motion.div 

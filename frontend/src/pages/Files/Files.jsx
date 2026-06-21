@@ -24,6 +24,8 @@ import CipherText from '../../components/crypto/CipherText';
 import SecureInput from '../../components/ui/SecureInput';
 import { useLanguageStore } from '../../store/useLanguageStore';
 import FileManagerSkeleton from '../../components/skeletons/FileManagerSkeleton';
+import SkeletonTableRow from '../../components/skeletons/SkeletonTableRow';
+import SkeletonCard from '../../components/skeletons/SkeletonCard';
 
 // Category Sniffer
 const getFileCategory = (filename) => {
@@ -789,11 +791,7 @@ const Files = () => {
                 ))}
 
                 {isLoading ? (
-                  <tr>
-                    <td colSpan={6} className="py-16 text-center text-text-muted text-xs uppercase tracking-widest">
-                      Refreshing Vault...
-                    </td>
-                  </tr>
+                  Array.from({ length: 4 }).map((_, i) => <SkeletonTableRow key={i} columns={5} hasAvatar={true} />)
                 ) : filteredFiles.length > 0 ? (
                   filteredFiles.map((file) => {
                     const displayName = decryptedNames[file.id] || file.encrypted_filename;
@@ -900,10 +898,7 @@ const Files = () => {
             ))}
 
             {isLoading ? (
-              <div className="col-span-full py-16 flex flex-col items-center justify-center">
-                <Loader2 className="w-8 h-8 text-accent animate-spin mb-4" />
-                <span className="text-xs uppercase tracking-widest text-text-muted">Fetching from Shards...</span>
-              </div>
+              Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} className="aspect-square p-2" hasButton={false} />)
             ) : filteredFiles.length > 0 ? (
               filteredFiles.map((file) => {
                 const displayName = decryptedNames[file.id] || file.encrypted_filename;
@@ -1025,7 +1020,7 @@ const Files = () => {
              <div className="flex-1 bg-transparent p-4 overflow-hidden flex items-center justify-center w-full h-full relative">
                {!previewData ? (
                  <div className="flex flex-col items-center justify-center h-full w-full">
-                   <Loader2 className="w-16 h-16 text-accent animate-spin" strokeWidth={2.5} />
+                   <SkeletonCard className="w-full max-w-lg h-64" hasImage={true} hasButton={false} />
                  </div>
                ) : previewData.fileType === 'image' ? (
                 <img src={previewData.objectUrl} alt="Preview" className="max-w-full max-h-full object-contain" />

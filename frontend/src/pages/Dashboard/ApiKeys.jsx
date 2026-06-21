@@ -4,6 +4,7 @@ import { Plus, Key, Eye, EyeOff, Copy, Trash2, ShieldAlert, CheckCircle2, Zap, S
 import { useAuthStore } from '../../store/useStore';
 import { apiKeysService } from '../../services/apiKeysService';
 import toast from 'react-hot-toast';
+import SkeletonTableRow from '../../components/skeletons/SkeletonTableRow';
 
 const ApiKeys = () => {
   const { user } = useAuthStore();
@@ -171,7 +172,11 @@ const ApiKeys = () => {
 
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-12 text-center text-text-secondary">Loading keys...</div>
+            <table className="w-full text-left border-collapse">
+              <tbody className="divide-y divide-border/50">
+                {Array.from({ length: 5 }).map((_, i) => <SkeletonTableRow key={i} columns={6} hasAvatar={false} />)}
+              </tbody>
+            </table>
           ) : keys.length === 0 ? (
             <div className="p-16 text-center flex flex-col items-center">
               <div className="w-16 h-16 bg-surface-raised rounded-full flex items-center justify-center mb-4 text-text-muted">

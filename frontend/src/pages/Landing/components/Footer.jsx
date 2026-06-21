@@ -372,6 +372,7 @@ const Footer = () => {
               <ul className="space-y-3">
                 <li><Link to="/api" className="text-sm text-text-secondary hover:text-accent transition-colors">REST API Reference</Link></li>
                 <li><Link to="/client-sdks" className="text-sm text-text-secondary hover:text-accent transition-colors">Client SDKs</Link></li>
+                <li><Link to="/cloud-alternative" className="text-sm text-text-secondary hover:text-accent transition-colors">Cloud Alternative</Link></li>
                 <li><a href="https://github.com/zancrypt" target="_blank" rel="noopener noreferrer" className="text-sm text-text-secondary hover:text-accent transition-colors">Open Source</a></li>
                 <li><Link to="/support-center" className="text-sm text-text-secondary hover:text-accent transition-colors">Support Center</Link></li>
               </ul>

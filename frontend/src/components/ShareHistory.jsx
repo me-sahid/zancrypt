@@ -8,6 +8,7 @@ import {
 import QRCode from 'qrcode';
 import api from '../services/api';
 import { toast } from 'react-hot-toast';
+import SkeletonTableRow from '../components/skeletons/SkeletonTableRow';
 
 const CountdownCell = ({ share, onExpire }) => {
   const [timeLeft, setTimeLeft] = useState('');
@@ -181,16 +182,15 @@ const ShareHistory = () => {
     <div className="bg-surface border border-border">
       <AnimatePresence mode="wait">
         {isLoading ? (
-          <motion.div 
-            key="loading" 
-            className="py-20 flex flex-col items-center justify-center space-y-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <Loader2 className="w-6 h-6 text-accent animate-spin" />
-            <p className="font-mono text-xs text-text-muted uppercase tracking-widest">Retrieving Share Matrix...</p>
-          </motion.div>
+          <div className="w-full flex flex-col">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left border-collapse">
+                <tbody className="divide-y divide-border/50">
+                  {Array.from({ length: 4 }).map((_, i) => <SkeletonTableRow key={i} columns={7} hasAvatar={false} />)}
+                </tbody>
+              </table>
+            </div>
+          </div>
         ) : shares.length > 0 ? (
           <motion.div 
             key="table-container"

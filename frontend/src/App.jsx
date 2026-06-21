@@ -15,6 +15,7 @@ import { pageContent } from './pages/Static/pageContent';
 import FileManagerSkeleton from './components/skeletons/FileManagerSkeleton';
 import PricingPageSkeleton from './components/skeletons/PricingPageSkeleton';
 import SettingsPageSkeleton from './components/skeletons/SettingsPageSkeleton';
+import ContentSkeleton from './components/layout/Skeletons';
 import GlobalUploadManager from './components/layout/GlobalUploadManager';
 import StorageLimitModal from './components/StorageLimitModal';
 
@@ -40,14 +41,12 @@ const PublicInfoPage = lazy(() => import('./pages/Static/PublicInfoPage'));
 const Pricing = lazy(() => import('./pages/Pricing/Pricing'));
 const Architecture = lazy(() => import('./pages/Architecture/Architecture'));
 const PrivacyPolicy = lazy(() => import('./pages/Static/PrivacyPolicy'));
+const CloudAlternative = lazy(() => import('./pages/Static/CloudAlternative'));
 
 // Loading Placeholder
 const PageLoader = () => (
-  <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-    <div className="flex flex-col items-center">
-      <div className="w-12 h-12 border-4 border-primary-accent border-t-transparent rounded-full animate-spin" />
-      <p className="mt-4 text-text-secondary text-sm font-medium">Synchronizing shards...</p>
-    </div>
+  <div className="p-4 sm:p-6 lg:p-10 max-w-[1600px] mx-auto w-full" style={{ minHeight: '100vh' }}>
+    <ContentSkeleton />
   </div>
 );
 
@@ -71,6 +70,7 @@ function App() {
           <Route path="/pricing" element={<Suspense fallback={<PricingPageSkeleton />}><Pricing /></Suspense>} />
           <Route path="/architecture" element={<Architecture />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/cloud-alternative" element={<CloudAlternative />} />
 
           {/* Static Info Pages */}
           {Object.entries(pageContent).map(([key, content]) => (

@@ -24,7 +24,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-
+import SkeletonTableRow from '../../components/skeletons/SkeletonTableRow';
 // Category Sniffer
 const getFileCategory = (filename) => {
   if (!filename) return 'other';
@@ -334,12 +334,7 @@ export default function RecycleBin() {
             </thead>
             <tbody className="divide-y divide-[#1e293b]/30">
               {isLoading ? (
-                <tr>
-                  <td colSpan={5} className="py-20 text-center">
-                    <Loader2 className="w-10 h-10 text-rose-500 animate-spin mx-auto" />
-                    <p className="text-slate-400 text-xs mt-3 uppercase tracking-wider font-semibold">Loading trash bin...</p>
-                  </td>
-                </tr>
+                Array.from({ length: 4 }).map((_, i) => <SkeletonTableRow key={i} columns={5} hasAvatar={true} />)
               ) : filteredFiles.length > 0 ? (
                 filteredFiles.map((file) => (
                   <tr 

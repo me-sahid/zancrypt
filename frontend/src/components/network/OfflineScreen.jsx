@@ -10,54 +10,31 @@ const OfflineScreen = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] bg-surface-primary flex flex-col items-center justify-center p-6"
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 50 }}
+      className="fixed bottom-6 right-6 z-[9999] bg-surface-elevated border border-border p-4 rounded-2xl shadow-2xl flex items-center gap-4 pointer-events-auto"
     >
-      <div className="flex flex-col items-center space-y-6 max-w-sm text-center">
-        {/* Cinematic Premium Dual-Ring Orbiting Loader */}
-        <div className="relative w-20 h-20">
-          {/* Animated Background Ring */}
-          <motion.div
-            className="absolute inset-0 rounded-full border-2 border-primary-accent/15"
-            style={{ borderTopColor: 'transparent' }}
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
-          />
-          {/* Active Orbiting Ring */}
-          <motion.div
-            className="absolute inset-0 rounded-full border-2 border-primary-accent"
-            style={{ borderTopColor: 'transparent', borderBottomColor: 'transparent' }}
-            animate={{ rotate: -360 }}
-            transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-          />
-          {/* Inner Pulsing Radar Glow */}
-          <div className="absolute inset-4 rounded-full bg-primary-accent/5 border border-primary-accent/20 flex items-center justify-center">
-            <WifiOff className="w-6 h-6 text-primary-accent animate-pulse" />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <h2 className="text-xl font-bold text-text-primary tracking-tight">
-            Network connection lost
-          </h2>
-          <p className="text-sm text-text-secondary">
-            Reconnecting to secure Zancrypt vault...
-          </p>
-        </div>
-
-        <button
-          onClick={() => window.location.reload()}
-          className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-surface-secondary border border-border hover:bg-surface-elevated text-xs font-bold text-text-secondary hover:text-text-primary active:scale-95 transition-all shadow-lg"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Force Reconnect</span>
-        </button>
+      <div className="p-2.5 bg-primary-accent/10 text-primary-accent rounded-xl border border-primary-accent/20">
+        <WifiOff className="w-5 h-5 animate-pulse" />
       </div>
 
-      {/* Decorative Premium Background Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-primary-accent/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="space-y-0.5">
+        <h2 className="text-sm font-bold text-text-primary tracking-tight">
+          Network connection lost
+        </h2>
+        <p className="text-xs text-text-secondary">
+          Reconnecting to secure Zancrypt vault...
+        </p>
+      </div>
+
+      <button
+        onClick={() => window.location.reload()}
+        className="ml-2 flex items-center p-2 rounded-xl bg-surface-secondary border border-border hover:bg-surface hover:text-text-primary text-text-secondary transition-all"
+        title="Force Reconnect"
+      >
+        <RefreshCw className="w-4 h-4" />
+      </button>
     </motion.div>
   );
 };
