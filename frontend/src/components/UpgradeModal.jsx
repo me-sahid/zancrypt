@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Zap, Check } from 'lucide-react';
+import { X, Check } from 'lucide-react';
+import { RiFolderWarningLine } from 'react-icons/ri';
 import { useNavigate } from 'react-router-dom';
 
 const UpgradeModal = ({ isOpen, onClose, title = "Upgrade Required", message, feature = "Pro", limitType = "limit" }) => {
@@ -34,7 +35,7 @@ const UpgradeModal = ({ isOpen, onClose, title = "Upgrade Required", message, fe
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-accent/10 rounded-lg text-accent">
-                  <Zap className="w-6 h-6" />
+                  <RiFolderWarningLine className="w-6 h-6" />
                 </div>
                 <h2 className="text-xl font-bold text-text-primary tracking-tight">
                   {title}
