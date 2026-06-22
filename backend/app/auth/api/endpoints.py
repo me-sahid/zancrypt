@@ -362,7 +362,9 @@ async def refresh_token(
         raise HTTPException(status_code=401, detail="Refresh token missing")
 
     origin = request.headers.get("origin") or request.headers.get("referer", "")
-    if not any(origin.startswith(allowed) for allowed in ALLOWED_ORIGINS):
+    # Allow requests with no origin (e.g. same-origin page reloads, curl, server-side calls).
+    # Only reject requests that actively present a disallowed origin.
+    if origin and not any(origin.startswith(allowed) for allowed in ALLOWED_ORIGINS):
         raise HTTPException(
             status_code=403,
             detail="Invalid origin"

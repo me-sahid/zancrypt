@@ -17,6 +17,7 @@ export const useAuthStore = create(
       clearKeyMaterial: () => set({ keyMaterial: null }),
 
       setAuth: (user, token) => {
+        sessionStorage.removeItem('zancrypt-logged-out');
         set({ user, token: token ?? null, isAuthenticated: true, isInitializing: false });
       },
 
@@ -42,9 +43,12 @@ export const useAuthStore = create(
     {
       name: 'zancrypt-auth-state',
       storage: createJSONStorage(() => localStorage),
-      // Only user + isAuthenticated persisted — token and isInitializing excluded
+      // Persist user + isAuthenticated so UI doesn't flash-redirect on reload
+      // before silentRefresh has had a chance to restore the access token.
+      // isInitializing, token and keyMaterial are intentionally excluded.
       partialize: (state) => ({ 
-        user: state.user, 
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
       }),
     }
   )

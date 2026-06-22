@@ -134,12 +134,15 @@ async function _runSilentRefresh() {
       console.error("Failed to fetch key material during refresh", e);
     }
   } catch (error) {
-    // Only logout on explicit server rejection
-    // NOT on network errors or server downtime
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      logout()
-    }
-    // Network error = preserve auth state, user stays logged in
+    // On page refresh, if the cookie is gone or session expired,
+    // just mark as initialized (not authenticated) — do NOT call logout()
+    // because that wipes sessionStorage and breaks future login.
+    // logout() is only for explicit user-initiated sign-out.
+    //
+    // Only call setInitialized so ProtectedRoute redirects to /login cleanly.
+    // (Network errors also land here — in that case user stays on their page
+    //  because isAuthenticated remains false but no redirect happens because
+    //  App doesn't forcibly navigate.)
   } finally {
     setInitialized()
   }
