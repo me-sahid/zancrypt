@@ -691,7 +691,7 @@ const Files = () => {
           <button onClick={() => setIsNewFolderModalOpen(true)} className="flex-1 md:flex-none px-4 md:px-6 py-3 border border-border text-text-primary font-mono text-[10px] md:text-xs uppercase tracking-widest hover:bg-surface-raised transition-colors flex items-center justify-center whitespace-nowrap">
             <FolderPlus className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">{t('vault', 'newFolder')}</span>
           </button>
-          <Link to="/uploads" className="flex-1 md:flex-none px-4 md:px-6 py-3 border border-accent text-accent text-center font-mono text-[10px] md:text-xs uppercase tracking-widest hover:bg-accent/10 transition-colors whitespace-nowrap">
+          <Link to="/uploads" className="flex-1 md:flex-none px-4 md:px-6 py-3 border border-accent text-accent text-center font-mono text-[10px] md:text-xs uppercase tracking-widest hover:bg-white hover:text-black hover:border-white transition-colors whitespace-nowrap">
             {t('vault', 'upload')}
           </Link>
         </div>

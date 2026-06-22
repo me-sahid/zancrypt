@@ -15,50 +15,50 @@ const PricingSection = () => {
       baseInr: 0,
       description: "Forever free, client-side zero-knowledge security standard.",
       features: [
-        "5 GB secure storage", 
-        "3 distributed storage nodes", 
-        "Passkey (WebAuthn) authentication", 
-        "Client-side AES-256-GCM encryption", 
-        "No credit card required", 
-        "Download and share encrypted files"
+        "2 GB storage",
+        "3 storage nodes",
+        "Passkey authentication",
+        "AES-256-GCM encryption",
+        "Up to 3 active share links",
+        "Max file size: 50 MB per file",
+        "No credit card required"
       ],
       cta: "Get Started",
       recommended: false
     },
     {
-      name: "SHIELD",
-      baseInr: 299,
+      name: "PRO",
+      baseInr: 199,
       description: "Enhanced capabilities for active developers and creators.",
       features: [
-        "50 GB secure storage", 
-        "6 distributed storage nodes", 
-        "Passkey (WebAuthn) authentication", 
-        "Client-side AES-256-GCM encryption",
-        "Download and share encrypted files",
-        "Self-destructing file links", 
-        "Priority multi-cloud routing",
-        "Dedicated upload bandwidth"
+        "50 GB storage", 
+        "3 distributed storage nodes", 
+        "All free features", 
+        "Unlimited share links",
+        "Self destructing file links",
+        "Max file size: 500 MB per file", 
+        "File version history",
+        "Priority support"
       ],
       cta: "Start Trial",
       recommended: true
     },
     {
-      name: "VAULT",
-      baseInr: 999,
+      name: "ADVANCED",
+      baseInr: 599,
       description: "Complete infrastructure scale for custom nodes and auditing.",
       features: [
         "500 GB secure storage", 
-        "Custom private node connection", 
-        "Passkey (WebAuthn) authentication", 
-        "Client-side AES-256-GCM encryption",
-        "Download and share encrypted files",
-        "Self-destructing file links", 
-        "Priority multi-cloud routing", 
-        "OpenTelemetry monitoring export", 
-        "Immutable audit log exports", 
-        "99.99% data availability SLA"
+        "API access with custom rate limits", 
+        "Team sharing available", 
+        "All pro features",
+        "Audit log exports",
+        "99.9% uptime SLA", 
+        "Max file size: 5 GB per file", 
+        "Dedicated account support", 
+        "Custom node connectivity"
       ],
-      cta: "Contact Sales",
+      cta: "Coming soon",
       recommended: false
     }
   ];
