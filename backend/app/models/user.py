@@ -26,6 +26,7 @@ class User(Base, TimestampMixin):
     encrypted_recovery_metadata = Column(String(1024), nullable=True)
     
     role = Column(SqlEnum(UserRole), default=UserRole.user, nullable=False)
+    plan = Column(String(50), default="free", nullable=False)
     trust_score = Column(Integer, default=100, nullable=False)
     last_login = Column(DateTime, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
@@ -37,3 +38,4 @@ class User(Base, TimestampMixin):
     sessions = relationship("Session", back_populates="user")
     files = relationship("File", back_populates="owner")
     api_keys = relationship("ApiKey", back_populates="user", cascade="all, delete-orphan")
+    payment_orders = relationship("PaymentOrder", back_populates="user", cascade="all, delete-orphan")

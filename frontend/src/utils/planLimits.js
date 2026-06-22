@@ -6,7 +6,7 @@ export const PLAN_LIMITS = {
     maxStorage: 2 * 1024 * 1024 * 1024, // 2 GB
     maxNodes: 3,
     maxShareLinks: 3,
-    maxFileSize: 50 * 1024 * 1024, // 50 MB
+    maxFileSize: 100 * 1024 * 1024, // 100 MB
     hasSelfDestruct: false,
     hasApiAccess: false,
   },

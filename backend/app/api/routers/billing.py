@@ -4,8 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Security, status
 from pydantic import BaseModel
 
 from app.main import limiter
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_async_session
 from app.core.config import settings
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.models.payment_order import PaymentOrder, PaymentStatus
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +37,8 @@ PLAN_PRICES = {
 async def create_order(
     request: Request,
     order_req: OrderRequest,
-    current_user = Security(get_current_user)
+    current_user = Security(get_current_user),
+    session: AsyncSession = Depends(get_async_session)
 ):
     plan_name = order_req.plan
     if plan_name not in PLAN_PRICES:
@@ -64,6 +68,18 @@ async def create_order(
     try:
         order = client.order.create(data=order_data)
         logger.info(f"Created Razorpay order {order['id']} for user {current_user.id} ({plan_name})")
+        
+        # Persist to database
+        db_order = PaymentOrder(
+            user_id=current_user.id,
+            razorpay_order_id=order["id"],
+            plan_id=plan_name,
+            amount=amount,
+            status=PaymentStatus.created
+        )
+        session.add(db_order)
+        await session.commit()
+        
         return {
             "order_id": order["id"],
             "amount": order["amount"],
@@ -104,3 +120,29 @@ async def razorpay_webhook(request: Request):
     # if payload['event'] == 'payment.captured': ...
     
     return {"status": "ok"}
+
+@router.get("/orders")
+async def get_my_orders(
+    current_user = Security(get_current_user),
+    session: AsyncSession = Depends(get_async_session)
+):
+    """
+    Fetch the user's payment orders.
+    Enforces Row-Level Security (RLS) / Multi-tenancy isolation by strictly
+    filtering the query to only include records where user_id matches the authenticated user.
+    """
+    stmt = select(PaymentOrder).where(PaymentOrder.user_id == current_user.id).order_by(PaymentOrder.created_at.desc())
+    result = await session.execute(stmt)
+    orders = result.scalars().all()
+    
+    return [
+        {
+            "id": order.id,
+            "razorpay_order_id": order.razorpay_order_id,
+            "plan_id": order.plan_id,
+            "amount": order.amount,
+            "status": order.status,
+            "created_at": order.created_at
+        }
+        for order in orders
+    ]

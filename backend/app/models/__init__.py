@@ -13,6 +13,7 @@ from app.models.pending_deletion import PendingDeletion
 from app.models.notification import Notification
 from app.models.wrapper_destruction import WrapperDestruction
 from app.models.folder import Folder
+from app.models.payment_order import PaymentOrder, PaymentStatus
 
 __all__ = [
     "Base",
@@ -32,4 +33,6 @@ __all__ = [
     "Notification",
     "WrapperDestruction",
     "Folder",
+    "PaymentOrder",
+    "PaymentStatus",
 ]
