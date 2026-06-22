@@ -64,15 +64,7 @@ export const pageContent = {
     isCareers: true
   },
 
-  termsOfService: {
-    title: "Terms of Service",
-    subtitle: "Rules of the network.",
-    content: [
-      "By using Zancrypt, you agree to not use the platform for the distribution of illegal, malicious, or abusive material. While we cannot read your files, we cooperate with verifiable legal requests and can terminate accounts found violating our policies.",
-      "The service is provided 'as is'. While we engineer for maximum uptime and data durability through replication, you are responsible for maintaining your master keys.",
-      "If you lose access to your biometric authenticators and your fallback keys, your data is mathematically unrecoverable. We cannot bypass our own encryption to save you."
-    ]
-  },
+
   whitepaper: {
     title: "Whitepaper",
     subtitle: "The mathematics of distributed trust.",

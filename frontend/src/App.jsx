@@ -71,6 +71,7 @@ function App() {
           <Route path="/pricing" element={<Suspense fallback={<PricingPageSkeleton />}><Pricing /></Suspense>} />
           <Route path="/architecture" element={<Architecture />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<PrivacyPolicy />} />
           <Route path="/cloud-alternative" element={<CloudAlternative />} />
 
           {/* Static Info Pages */}
