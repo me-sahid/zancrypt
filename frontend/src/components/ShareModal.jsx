@@ -8,6 +8,9 @@ import QRCode from 'qrcode';
 import api from '../services/api';
 import { toast } from 'react-hot-toast';
 import Button from './ui/Button';
+import { useAuthStore } from '../store/useStore';
+import { useUploadStore } from '../store/useUploadStore';
+import { getUserPlanConfig } from '../utils/planLimits';
 
 const ShareModal = ({ file, onClose }) => {
   const ttlOptions = [
@@ -38,7 +41,24 @@ const ShareModal = ({ file, onClose }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
   const [isCopied, setIsCopied] = useState(false);
+  
+  const { user } = useAuthStore();
+  const { setUpgradeModalDetails } = useUploadStore();
+  const planConfig = getUserPlanConfig(user);
+  const [currentSharesCount, setCurrentSharesCount] = useState(0);
+  const [isLoadingShares, setIsLoadingShares] = useState(false);
 
+  useEffect(() => {
+    if (planConfig.maxShareLinks !== Infinity) {
+      setIsLoadingShares(true);
+      api.get('/api/share/list')
+        .then(res => {
+          if (res.data) setCurrentSharesCount(res.data.length);
+        })
+        .catch(console.error)
+        .finally(() => setIsLoadingShares(false));
+    }
+  }, [planConfig]);
 
   const [enablePassword, setEnablePassword] = useState(false);
   const [password, setPassword] = useState('');
@@ -83,6 +103,16 @@ const ShareModal = ({ file, onClose }) => {
 
   const handleCreateShare = async (e) => {
     e.preventDefault();
+    if (planConfig.maxShareLinks !== Infinity && currentSharesCount >= planConfig.maxShareLinks) {
+      onClose();
+      setUpgradeModalDetails({
+        title: "Share Limit Reached",
+        message: `You've reached your ${planConfig.name} plan's limit of ${planConfig.maxShareLinks} active share links.`,
+        feature: "Pro",
+        limitType: "share links limit"
+      });
+      return;
+    }
     setIsSubmitting(true);
     try {
       let finalTtl = selectedTtlOption.value === 'custom' 
@@ -176,6 +206,11 @@ const ShareModal = ({ file, onClose }) => {
           <AnimatePresence mode="wait">
             {!shareUrl ? (
               <motion.form key="form" onSubmit={handleCreateShare} className="space-y-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                {planConfig.maxShareLinks !== Infinity && (
+                  <div className="text-xs font-mono text-text-muted mb-2">
+                    Shares used: {currentSharesCount} / {planConfig.maxShareLinks}
+                  </div>
+                )}
                 <p className="font-mono text-xs text-text-muted mb-4 truncate">Target: {fileName}</p>
                 
                 <div className="space-y-2">

@@ -18,6 +18,7 @@ import SettingsPageSkeleton from './components/skeletons/SettingsPageSkeleton';
 import ContentSkeleton from './components/layout/Skeletons';
 import GlobalUploadManager from './components/layout/GlobalUploadManager';
 import StorageLimitModal from './components/StorageLimitModal';
+import GlobalUpgradeModal from './components/GlobalUpgradeModal';
 
 // Lazy loading other pages
 const Login = lazy(() => import('./pages/Auth/Login'));
@@ -105,6 +106,7 @@ function App() {
       </Suspense>
       <GlobalUploadManager />
       <StorageLimitModal />
+      <GlobalUpgradeModal />
     </NetworkProvider>
   );
 }

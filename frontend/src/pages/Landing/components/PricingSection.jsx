@@ -149,7 +149,7 @@ const PricingSection = () => {
                   </div>
                 )}
                 
-                <h3 className="font-mono text-white tracking-widest uppercase mb-8 text-2xl font-bold">{tier.name}</h3>
+                <h3 className="font-mono text-text-primary tracking-widest uppercase mb-8 text-2xl font-bold">{tier.name}</h3>
                 
                 {/* Pricing Block */}
                 <div className="mb-6">
@@ -184,16 +184,16 @@ const PricingSection = () => {
                   ))}
                 </ul>
                 
-                <Link 
-                  to={tier.recommended ? "/register" : "/contact"} 
-                  className={`w-full py-4 text-center rounded-2xl font-mono text-sm uppercase tracking-widest transition-all duration-300 font-bold ${
+                <button 
+                  disabled
+                  className={`w-full py-4 text-center rounded-2xl font-mono text-sm uppercase tracking-widest transition-all duration-300 font-bold cursor-not-allowed opacity-60 ${
                     tier.recommended 
-                      ? 'bg-accent text-void hover:brightness-110 active:scale-98 shadow-lg shadow-accent/15' 
-                      : 'border border-border/80 text-text-secondary hover:text-text-primary hover:border-border-active hover:bg-border/20 active:scale-98'
+                      ? 'bg-accent text-void shadow-lg shadow-accent/15' 
+                      : 'border border-border/80 text-text-secondary'
                   }`}
                 >
                   [ {tier.cta} ]
-                </Link>
+                </button>
               </div>
             );
           })}

@@ -56,7 +56,7 @@ class Settings(BaseSettings):
 
     STORAGE_NODE_COUNT: int = Field(5, env="STORAGE_NODE_COUNT")
     STORAGE_REPLICATION_FACTOR: int = Field(3, env="STORAGE_REPLICATION_FACTOR")
-    MAX_UPLOAD_SIZE: int = Field(104857600, env="MAX_UPLOAD_SIZE")
+    MAX_UPLOAD_SIZE: int = Field(5368709120, env="MAX_UPLOAD_SIZE")
     TMP_STAGING_DIR: str = Field("/dev/shm/vault_staging", env="TMP_STAGING_DIR")
 
     B2_KEY_ID: str | None = Field(None, env="B2_KEY_ID")
@@ -80,6 +80,10 @@ class Settings(BaseSettings):
     ENABLE_OTEL: bool = Field(True, env="ENABLE_OTEL")
     PROMETHEUS_METRICS_ENABLED: bool = Field(True, env="PROMETHEUS_METRICS_ENABLED")
     LOG_LEVEL: str = Field("INFO", env="LOG_LEVEL")
+
+    RAZORPAY_KEY_ID: str | None = Field(None, env="RAZORPAY_KEY_ID")
+    RAZORPAY_KEY_SECRET: str | None = Field(None, env="RAZORPAY_KEY_SECRET")
+    RAZORPAY_WEBHOOK_SECRET: str | None = Field(None, env="RAZORPAY_WEBHOOK_SECRET")
 
     @property
     def CORS_ORIGINS(self) -> List[str]:

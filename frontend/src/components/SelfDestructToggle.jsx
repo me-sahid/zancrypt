@@ -4,6 +4,9 @@ import { ShieldAlert, Download, CheckCircle, Flame, Lock, Zap, Undo2 } from 'luc
 import api from '../services/api';
 import { toast } from 'react-hot-toast';
 import Button from './ui/Button';
+import { useAuthStore } from '../store/useStore';
+import { useUploadStore } from '../store/useUploadStore';
+import { getUserPlanConfig } from '../utils/planLimits';
 
 /**
  * SelfDestructToggle component
@@ -17,6 +20,10 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
   const [isCustom, setIsCustom] = useState(false);
   const [customHours, setCustomHours] = useState('0');
   const [customMins, setCustomMins] = useState('30');
+  
+  const { user } = useAuthStore();
+  const { setUpgradeModalDetails } = useUploadStore();
+  const planConfig = getUserPlanConfig(user);
 
   const timeOptions = [
     { label: '1 Hour', seconds: 3600 },
@@ -140,11 +147,22 @@ const SelfDestructToggle = ({ fileId, shareToken, fileName, mimeType, onWrapperG
             {/* Custom Activation Button */}
             <button
               type="button"
-              onClick={() => setIsEnabled(true)}
+              onClick={() => {
+                if (!planConfig.hasSelfDestruct) {
+                  setUpgradeModalDetails({
+                    title: "Pro Feature Locked",
+                    message: `Self-destructing secure containers are only available on Pro and Enterprise plans.`,
+                    feature: "Pro",
+                    limitType: "feature access"
+                  });
+                  return;
+                }
+                setIsEnabled(true);
+              }}
               className="w-full py-3.5 px-4 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 font-black text-xs uppercase tracking-wider transition-all active:scale-[0.98] shadow-lg shadow-rose-950/20 flex items-center justify-center space-x-2.5 group cursor-pointer"
             >
               <Flame className="w-4 h-4 text-rose-500 group-hover:scale-110 transition-transform" />
-              <span>Enable Ephemeral Self-Destruct</span>
+              <span>{planConfig.hasSelfDestruct ? "Enable Ephemeral Self-Destruct" : "Upgrade to Unlock Self-Destruct"}</span>
             </button>
           </motion.div>
         ) : (

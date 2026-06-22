@@ -5,9 +5,14 @@ import { useAuthStore } from '../../store/useStore';
 import { apiKeysService } from '../../services/apiKeysService';
 import toast from 'react-hot-toast';
 import SkeletonTableRow from '../../components/skeletons/SkeletonTableRow';
+import { getUserPlanConfig } from '../../utils/planLimits';
+import { useNavigate } from 'react-router-dom';
 
 const ApiKeys = () => {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
+  const planConfig = getUserPlanConfig(user);
+  
   const [keys, setKeys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -127,6 +132,26 @@ const ApiKeys = () => {
       toast.error('Failed to copy');
     }
   };
+
+  if (!planConfig.hasApiAccess) {
+    return (
+      <div className="max-w-4xl mx-auto text-center py-20 animate-fade-in">
+        <div className="w-20 h-20 mx-auto bg-surface border border-border rounded-2xl flex items-center justify-center mb-6 shadow-2xl shadow-accent/5">
+          <Key className="w-10 h-10 text-text-muted" />
+        </div>
+        <h1 className="text-3xl font-bold text-text-primary mb-4">Enterprise Feature Locked</h1>
+        <p className="text-text-secondary max-w-lg mx-auto mb-8">
+          Programmatic API access and custom rate limits are exclusive to the Enterprise tier. Upgrade to unlock powerful integrations and developer tools.
+        </p>
+        <button 
+          onClick={() => navigate('/#pricing')}
+          className="px-6 py-3 bg-accent hover:opacity-90 text-void rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(79,255,176,0.3)]"
+        >
+          View Enterprise Plan
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">

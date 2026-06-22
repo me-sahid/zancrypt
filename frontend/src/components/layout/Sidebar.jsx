@@ -15,7 +15,9 @@ import {
 } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 import { useDashboardStore } from '../../store/useDashboardStore';
+import { useAuthStore } from '../../store/useStore';
 import CipherText from '../crypto/CipherText';
+import { getUserPlanConfig } from '../../utils/planLimits';
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Overview', path: '/dashboard' },
@@ -31,7 +33,9 @@ const menuItems = [
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { isSidebarOpenMobile, setSidebarOpenMobile, metrics, files, setStorageManagerOpen } = useDashboardStore();
+  const { user } = useAuthStore();
   const [isMobileView, setIsMobileView] = useState(false);
+  const planConfig = getUserPlanConfig(user);
 
   useEffect(() => {
     const handleResize = () => {
@@ -142,13 +146,13 @@ const Sidebar = () => {
                   return `${mb.toFixed(1)} MB`;
                 }
                 return `${gb.toFixed(2)} GB`;
-              })()} / 1 GB
+              })()} / {planConfig.maxStorage >= 1024 * 1024 * 1024 * 1024 ? `${planConfig.maxStorage / (1024 * 1024 * 1024 * 1024)} TB` : `${planConfig.maxStorage / (1024 * 1024 * 1024)} GB`}
             </span>
           </div>
           <div className="w-full h-1 bg-surface-raised rounded-none overflow-hidden border border-white/5">
             <div 
               className="h-full bg-accent transition-all duration-500 shadow-[0_0_10px_rgba(var(--color-accent),0.5)]"
-              style={{ width: `${Math.min(100, Math.max(0.5, ((Math.max(metrics?.totalStorage || 0, (files || []).reduce((acc, f) => acc + (f.file_size || 0), 0))) / (1 * 1024 * 1024 * 1024)) * 100))}%` }}
+              style={{ width: `${Math.min(100, Math.max(0.5, ((Math.max(metrics?.totalStorage || 0, (files || []).reduce((acc, f) => acc + (f.file_size || 0), 0))) / planConfig.maxStorage) * 100))}%` }}
             />
           </div>
         </div>

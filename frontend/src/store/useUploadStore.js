@@ -5,6 +5,7 @@ import { useDashboardStore } from './useDashboardStore';
 import { useAuthStore } from './useStore';
 import { deriveKey } from '../utils/crypto';
 import { toast } from 'react-hot-toast';
+import { getUserPlanConfig } from '../utils/planLimits';
 
 function encodeWithWorker(fileBuffer) {
   return new Promise((resolve, reject) => {
@@ -153,11 +154,43 @@ export const useUploadStore = create((set, get) => ({
   isUploading: false,
   isMinimized: false,
   showStorageLimitModal: false,
+  upgradeModalDetails: null,
 
   setShowStorageLimitModal: (v) => set({ showStorageLimitModal: v }),
+  setUpgradeModalDetails: (details) => set({ upgradeModalDetails: details }),
   setMinimized: (v) => set({ isMinimized: v }),
 
   addFiles: async (filesArray) => {
+    const user = useAuthStore.getState().user;
+    const planConfig = getUserPlanConfig(user);
+    
+    // Check Max File Size limit
+    const oversizedFile = filesArray.find(file => file.size > planConfig.maxFileSize);
+    if (oversizedFile) {
+      set({ upgradeModalDetails: {
+        title: "File Too Large",
+        message: `The file "${oversizedFile.name}" exceeds the maximum allowed size of ${planConfig.maxFileSize / (1024 * 1024)}MB for the ${planConfig.name} plan.`,
+        feature: "Pro or Enterprise",
+        limitType: "file size limit"
+      }});
+      return;
+    }
+
+    // Check Total Storage limit
+    const dashState = useDashboardStore.getState();
+    const currentStorage = (dashState.files || []).reduce((acc, f) => acc + (f.file_size || 0), 0);
+    const newFilesStorage = filesArray.reduce((acc, f) => acc + f.size, 0);
+    
+    if (currentStorage + newFilesStorage > planConfig.maxStorage) {
+      set({ upgradeModalDetails: {
+        title: "Storage Limit Exceeded",
+        message: `Uploading these files would exceed your ${planConfig.name} plan's maximum storage limit of ${planConfig.maxStorage / (1024 * 1024 * 1024)}GB.`,
+        feature: "Pro or Enterprise",
+        limitType: "storage capacity"
+      }});
+      return;
+    }
+
     const newFiles = filesArray.map(file => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
