@@ -105,6 +105,25 @@ async def on_startup() -> None:
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS storage_used BIGINT DEFAULT 0;"))
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS api_credits BIGINT DEFAULT 0;"))
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS total_api_calls BIGINT DEFAULT 0;"))
+        
+        # Zero-Knowledge / Identity Verification fields
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS master_key_salt VARCHAR(255);"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS identity_verifier VARCHAR(255);"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS encrypted_recovery_metadata VARCHAR(1024);"))
+        
+        # Additional user fields that might be missing
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(255);"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS region VARCHAR(128);"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS plan VARCHAR(50) DEFAULT 'free';"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS trust_score INTEGER DEFAULT 100;"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP;"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;"))
+        
+        # WebAuthn fields
+        await conn.execute(text("ALTER TABLE webauthn_credentials ADD COLUMN IF NOT EXISTS authenticator_type VARCHAR(50);"))
+        await conn.execute(text("ALTER TABLE webauthn_credentials ADD COLUMN IF NOT EXISTS transports JSON;"))
+        await conn.execute(text("ALTER TABLE webauthn_credentials ADD COLUMN IF NOT EXISTS last_used_at TIMESTAMP;"))
+
         await conn.execute(text("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS scopes JSONB DEFAULT '[\"*\"]'::jsonb;"))
         await conn.execute(text("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS app_restrictions JSONB DEFAULT '{}'::jsonb;"))
         await conn.execute(text("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS rules JSONB DEFAULT '{}'::jsonb;"))

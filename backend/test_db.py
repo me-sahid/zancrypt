@@ -1,29 +1,30 @@
 import asyncio
-from app.db import async_session_maker
-from app.repositories.user_repo import UserRepository
-from sqlalchemy.exc import SQLAlchemyError
 import traceback
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import select
+from app.models.user import User
+from app.models.credential import WebAuthnCredential
 
 async def main():
     try:
-        async with async_session_maker() as session:
-            repo = UserRepository(session)
-            print("Querying user...")
-            user = await repo.get_by_username_or_email("test@example.com")
-            print("Success, user:", user)
+        engine = create_async_engine("postgresql+asyncpg://user:vaultpassword@localhost:5432/vault", echo=True)
+        async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+        
+        async with async_session() as session:
+            print("Querying users...")
+            user_result = await session.execute(select(User).limit(1))
+            user = user_result.scalars().first()
+            print("User query success!")
             
-            from app.auth.repositories.credential_repo import WebAuthnRepository
             if user:
-                cred_repo = WebAuthnRepository(session)
                 print("Querying credentials...")
-                creds = await cred_repo.get_by_user_id(user.id)
-                print("Success, credentials:", creds)
-                
-    except SQLAlchemyError as e:
-        print("SQLAlchemyError!")
-        traceback.print_exc()
+                cred_result = await session.execute(select(WebAuthnCredential).where(WebAuthnCredential.user_id == user.id))
+                creds = cred_result.scalars().all()
+                print("Cred query success!")
+            
     except Exception as e:
-        print("Other Exception!")
+        print("EXCEPTION CAUGHT:")
         traceback.print_exc()
 
 if __name__ == "__main__":
