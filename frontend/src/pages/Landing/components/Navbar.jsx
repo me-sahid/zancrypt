@@ -388,19 +388,23 @@ const Navbar = () => {
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <Link
-                to="/login"
+              <a
+                href="https://drive.zancrypt.in/login"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="h-10 px-4 flex items-center text-text-secondary hover:text-text-primary font-sans text-sm font-medium transition-colors"
               >
                 Sign In
-              </Link>
+              </a>
 
-              <Link
-                to="/register"
+              <a
+                href="https://drive.zancrypt.in/register"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="h-10 px-5 flex items-center bg-accent hover:bg-accent/90 text-void font-sans text-sm font-medium rounded-lg transition-all shadow-lg shadow-accent/20"
               >
                 Get Started
-              </Link>
+              </a>
             </div>
           )}
         </div>
@@ -530,20 +534,24 @@ const Navbar = () => {
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
-                  <Link
-                    to="/login"
-                    className="w-full py-2.5 border border-border text-text-primary font-sans text-xs font-semibold rounded-lg text-center hover:bg-surface-raised transition-all"
+                  <a
+                    href="https://drive.zancrypt.in/login"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full block py-2.5 border border-border text-text-primary font-sans text-xs font-semibold rounded-lg text-center hover:bg-surface-raised transition-all"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Sign In
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="w-full py-2.5 bg-accent text-void font-sans text-xs font-semibold rounded-lg text-center hover:bg-accent/90 transition-all"
+                  </a>
+                  <a
+                    href="https://drive.zancrypt.in/register"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full block py-2.5 bg-accent text-void font-sans text-xs font-semibold rounded-lg text-center hover:bg-accent/90 transition-all"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Get Started
-                  </Link>
+                  </a>
                 </div>
               )}
             </div>
