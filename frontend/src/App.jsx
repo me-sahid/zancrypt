@@ -51,8 +51,18 @@ const PageLoader = () => (
   </div>
 );
 
+const ExternalRedirect = ({ to }) => {
+  React.useEffect(() => {
+    window.location.href = to;
+  }, [to]);
+  return <PageLoader />;
+};
+
 function App() {
   const { isAuthenticated } = useAuthStore();
+  const hostname = window.location.hostname;
+  const isDriveDomain = hostname === 'drive.zancrypt.in';
+  const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
 
   return (
     <NetworkProvider>
@@ -62,12 +72,12 @@ function App() {
         
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<Landing />} />
+          <Route path="/" element={isDriveDomain ? <Navigate to="/dashboard" replace /> : <Landing />} />
           <Route path="/api" element={<ApiSoon />} />
           <Route path="/download" element={<DownloadPage />} />
           <Route path="/share/:token" element={<SharedFile />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={!isDriveDomain && !isLocal ? <ExternalRedirect to="https://drive.zancrypt.in/login" /> : <Login />} />
+          <Route path="/register" element={!isDriveDomain && !isLocal ? <ExternalRedirect to="https://drive.zancrypt.in/register" /> : <Register />} />
           <Route path="/pricing" element={<Suspense fallback={<PricingPageSkeleton />}><Pricing /></Suspense>} />
           <Route path="/architecture" element={<Architecture />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />

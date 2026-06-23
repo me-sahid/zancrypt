@@ -32,6 +32,7 @@ app.add_middleware(
         "https://zancrypt.in",
         "https://www.zancrypt.in",
         "https://zancrypt-front.pages.dev",
+        "https://drive.zancrypt.in",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -88,7 +89,8 @@ async def webauthn_well_known():
         content={
             "origins": settings.CORS_ORIGINS + [
                 "https://zancrypt.in",
-                "https://www.zancrypt.in"
+                "https://www.zancrypt.in",
+                "https://drive.zancrypt.in"
             ]
         },
         media_type="application/json"

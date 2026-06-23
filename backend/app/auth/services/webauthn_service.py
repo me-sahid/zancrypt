@@ -29,6 +29,7 @@ ALLOWED_ORIGINS = settings.CORS_ORIGINS + [
     "https://zancrypt.in",
     "https://www.zancrypt.in",
     "https://vault.zancrypt.in",
+    "https://drive.zancrypt.in",
     "https://zancrypt-front.pages.dev",
 ]
 
