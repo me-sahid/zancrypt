@@ -64,7 +64,7 @@ This document tracks all completed features, active developments, and pending sy
 ---
 
 ## 🔄 Last Sync Telemetry
-- **Last Sync**: 2026-06-22 19:34:39 UTC
+- **Last Sync**: 2026-06-22 20:23:02 UTC
 - **Active Branch**: `main`
-- **Latest Commit**: `811e177 - Added users table for billing, added ROW LEVEL SECURITY to the order endpoint (me-sahid)`
+- **Latest Commit**: `1b5630d - Added Terms-Of-Services of the application (me-sahid)`
 - **Sync Action**: Git Push Triggered

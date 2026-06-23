@@ -142,14 +142,13 @@ async def register_verify(
     session_repo = SessionRepository(session)
     refresh_token = await session_repo.create_session(user.id)
 
-    is_prod = settings.ENVIRONMENT == "production"
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
         secure=True,
         samesite="none",
-        domain=".zancrypt.in" if is_prod else None,
+        domain=".zancrypt.in",
         max_age=7 * 24 * 60 * 60,
         path="/",
     )
@@ -436,7 +435,7 @@ async def logout(
         httponly=True,
         secure=True,
         samesite="none",
-        domain=".zancrypt.in" if is_prod else None,
+        domain=".zancrypt.in" ,
         path="/",
     )
 
