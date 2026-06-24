@@ -47,7 +47,7 @@ export function useWorkspace() {
     wid,
 
     // ── Core sections ─────────────────────────────────────────────
-    home:      `/home/${wid}`,
+    home:      `/drive/${wid}`,
     keys:      `/home/${wid}/keys`,
     drive:     `/drive/${wid}`,
     bin:       `/drive/${wid}/bin`,

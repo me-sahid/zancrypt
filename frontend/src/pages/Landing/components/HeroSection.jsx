@@ -57,9 +57,9 @@ const HeroSection = ({ isLoading }) => {
           
           <div className="flex flex-col sm:flex-row justify-center lg:justify-start space-y-4 sm:space-y-0 sm:space-x-6 overflow-hidden">
             <div className="hero-text-line w-full sm:w-auto">
-              <Link to="/register" className="inline-flex items-center justify-center px-6 py-3 bg-accent border border-transparent text-void font-mono tracking-widest uppercase text-sm rounded-md hover:brightness-110 transition-all">
+              <a href="https://drive.zancrypt.in/register" className="inline-flex items-center justify-center px-6 py-3 bg-accent border border-transparent text-void font-mono tracking-widest uppercase text-sm rounded-md hover:brightness-110 transition-all">
                 {t('hero', 'start')}
-              </Link>
+              </a>
             </div>
             <div className="hero-text-line w-full sm:w-auto">
               <Link to="/architecture" className="inline-flex items-center justify-center px-6 py-3 bg-transparent border border-border text-text-secondary font-mono tracking-widest uppercase text-sm rounded-md hover:text-text-primary hover:border-border-active transition-all">

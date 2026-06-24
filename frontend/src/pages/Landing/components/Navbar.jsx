@@ -170,12 +170,12 @@ const Navbar = () => {
                   className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[320px] bg-surface border border-border shadow-2xl rounded-xl z-50 overflow-hidden backdrop-blur-xl"
                 >
                   <div className="p-3 grid grid-cols-1 gap-2">
-                    <a href="https://drive.zancrypt.in/auth/login" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
+                    <Link to="/product" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
                       <div className="shrink-0 p-2.5 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
                         <img src={isDark ? '/icons/zk-sheild-lock-dark.png' : '/zk-shield-lock.png'} alt="Secure Vault" className="w-5 h-5 object-contain" />
                       </div>
                       <p className="font-sans font-normal text-base text-text-primary transition-colors">Secure Vault</p>
-                    </a>
+                    </Link>
                     <Link to="/api" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
                       <div className="shrink-0 p-2.5 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
                         <img src={isDark ? '/icons/Code-Bracket-dark.png' : '/Code-Bracket.png'} alt="Developer API" className="w-5 h-5 object-contain" />
@@ -457,10 +457,10 @@ const Navbar = () => {
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden pl-3 mt-2 space-y-2"
                     >
-                      <a href="https://drive.zancrypt.in/auth/login" target="_blank" rel="noopener noreferrer" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
+                      <Link to="/product" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
                         <img src={isDark ? '/icons/zk-sheild-lock-dark.png' : '/zk-shield-lock.png'} alt="Secure Vault" className="w-4 h-4 object-contain" />
                         <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Secure Vault</span>
-                      </a>
+                      </Link>
                       <Link to="/api" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
                         <img src={isDark ? '/icons/Code-Bracket-dark.png' : '/Code-Bracket.png'} alt="Developer API" className="w-4 h-4 object-contain" />
                         <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Developer API</span>

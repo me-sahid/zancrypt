@@ -44,6 +44,7 @@ const Pricing = lazy(() => import('./pages/Pricing/Pricing'));
 const Architecture = lazy(() => import('./pages/Architecture/Architecture'));
 const PrivacyPolicy = lazy(() => import('./pages/Static/PrivacyPolicy'));
 const CloudAlternative = lazy(() => import('./pages/Static/CloudAlternative'));
+const Product = lazy(() => import('./pages/Product/Product'));
 
 // Loading Placeholder
 const PageLoader = () => (
@@ -99,6 +100,7 @@ function App() {
           <Route path="/privacy-policy"   element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<PrivacyPolicy />} />
           <Route path="/cloud-alternative" element={<CloudAlternative />} />
+          <Route path="/product"          element={<Suspense fallback={<PageLoader />}><Product /></Suspense>} />
 
           {/* Static Info Pages */}
           {Object.entries(pageContent).map(([key, content]) => (
