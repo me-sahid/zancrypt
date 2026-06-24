@@ -460,7 +460,7 @@ const Navbar = () => {
                       <a href="https://drive.zancrypt.in/auth/login" target="_blank" rel="noopener noreferrer" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
                         <img src={isDark ? '/icons/zk-sheild-lock-dark.png' : '/zk-shield-lock.png'} alt="Secure Vault" className="w-4 h-4 object-contain" />
                         <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Secure Vault</span>
-                      </Link>
+                      </a>
                       <Link to="/api" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
                         <img src={isDark ? '/icons/Code-Bracket-dark.png' : '/Code-Bracket.png'} alt="Developer API" className="w-4 h-4 object-contain" />
                         <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Developer API</span>
@@ -528,7 +528,7 @@ const Navbar = () => {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Open Vault
-                  </Link>
+                  </a>
                   <button
                     onClick={() => { logout(); setIsMobileMenuOpen(false); }}
                     className="w-full py-2.5 border border-danger/40 text-danger font-sans text-xs font-semibold rounded-lg hover:bg-danger/5 transition-colors"

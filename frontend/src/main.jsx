@@ -144,8 +144,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// Initialize authentication state from httpOnly cookie without blocking render
-// ProtectedRoute handles the isInitializing spinner state natively
+// Initialize authentication state from httpOnly cookie, then mount React
 async function init() {
   await silentRefresh();
   ReactDOM.createRoot(document.getElementById('root')).render(
@@ -159,13 +158,45 @@ async function init() {
   );
 }
 
-// On drive.zancrypt.in — redirect bare root "/" to "/home/{workspace-uuid}"
-// All other paths (auth/login, drive/uuid, etc.) mount directly — no basename wrapping
-if (window.location.hostname === 'drive.zancrypt.in' && window.location.pathname === '/') {
-  const { getWorkspaceId } = await import('./hooks/useWorkspace.js');
-  const wid = getWorkspaceId();
-  window.location.replace(`/home/${wid}`);
-} else {
-  init();
-}
 
+// ─── Drive domain bootstrap ───────────────────────────────────────────────────
+// On drive.zancrypt.in, enforce the new UUID-based URL structure BEFORE mounting.
+// Uses async IIFE instead of top-level await for wider browser/bundler compat.
+;(async () => {
+  const ON_DRIVE = window.location.hostname === 'drive.zancrypt.in' ||
+                   window.location.hostname === 'localhost' ||
+                   window.location.hostname === '127.0.0.1';
+
+  if (ON_DRIVE) {
+    const { getWorkspaceId } = await import('./hooks/useWorkspace.js');
+    const wid = getWorkspaceId();
+    const path = window.location.pathname;
+
+    // Map of old paths → new UUID-based paths
+    // history.replaceState rewrites URL without a full page reload
+    const LEGACY_REDIRECTS = {
+      '/':            `/home/${wid}`,
+      '/dashboard':   `/home/${wid}`,
+      '/vault':       `/drive/${wid}`,
+      '/uploads':     `/drive/${wid}/upload`,
+      '/shares':      `/drive/${wid}/shared`,
+      '/bin':         `/drive/${wid}/bin`,
+      '/settings':    `/workspace/${wid}/settings`,
+      '/profile':     `/workspace/${wid}/profile`,
+      '/security':    `/workspace/${wid}/security`,
+      '/nodes':       `/workspace/${wid}/nodes`,
+      '/monitoring':  `/workspace/${wid}/monitor`,
+      '/analytics':   `/workspace/${wid}/analytics`,
+      '/audit':       `/workspace/${wid}/audit`,
+      '/login':       '/auth/login',
+      '/register':    '/auth/register',
+    };
+
+    const newPath = LEGACY_REDIRECTS[path];
+    if (newPath && newPath !== path) {
+      window.history.replaceState(null, '', newPath + window.location.search);
+    }
+  }
+
+  init();
+})();
