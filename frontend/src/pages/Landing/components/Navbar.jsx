@@ -118,13 +118,15 @@ const Navbar = () => {
     { label: 'Taiwan',   code: 'TW' },
   ];
 
+  const driveBase = 'https://drive.zancrypt.in';
+
   const userMenuItems = [
-    { to: '/vault',     icon: Lock,            label: t('nav', 'privateVault') },
-    { to: '/dashboard', icon: LayoutDashboard, label: t('nav', 'dashboard') },
-    { to: '/nodes',     icon: Cloud,           label: t('nav', 'multiCloud') },
-    { to: '/security',  icon: Key,             label: t('nav', 'secCreds') },
-    { to: '/audit',     icon: FileText,        label: t('nav', 'audit') },
-    { to: '/settings',  icon: Settings,        label: t('nav', 'settings') },
+    { to: `${driveBase}/auth/login`, icon: Lock,            label: t('nav', 'privateVault') },
+    { to: `${driveBase}/auth/login`, icon: LayoutDashboard, label: t('nav', 'dashboard') },
+    { to: `${driveBase}/auth/login`, icon: Cloud,           label: t('nav', 'multiCloud') },
+    { to: `${driveBase}/auth/login`, icon: Key,             label: t('nav', 'secCreds') },
+    { to: `${driveBase}/auth/login`, icon: FileText,        label: t('nav', 'audit') },
+    { to: `${driveBase}/auth/login`, icon: Settings,        label: t('nav', 'settings') },
   ];
 
   return (
@@ -168,12 +170,12 @@ const Navbar = () => {
                   className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[320px] bg-surface border border-border shadow-2xl rounded-xl z-50 overflow-hidden backdrop-blur-xl"
                 >
                   <div className="p-3 grid grid-cols-1 gap-2">
-                    <Link to="/vault" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
+                    <a href="https://drive.zancrypt.in/auth/login" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
                       <div className="shrink-0 p-2.5 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
                         <img src={isDark ? '/icons/zk-sheild-lock-dark.png' : '/zk-shield-lock.png'} alt="Secure Vault" className="w-5 h-5 object-contain" />
                       </div>
                       <p className="font-sans font-normal text-base text-text-primary transition-colors">Secure Vault</p>
-                    </Link>
+                    </a>
                     <Link to="/api" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-raised transition-all group">
                       <div className="shrink-0 p-2.5 rounded-lg bg-surface-raised border border-border/80 group-hover:border-border-active transition-colors">
                         <img src={isDark ? '/icons/Code-Bracket-dark.png' : '/Code-Bracket.png'} alt="Developer API" className="w-5 h-5 object-contain" />
@@ -455,7 +457,7 @@ const Navbar = () => {
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden pl-3 mt-2 space-y-2"
                     >
-                      <Link to="/vault" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
+                      <a href="https://drive.zancrypt.in/auth/login" target="_blank" rel="noopener noreferrer" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
                         <img src={isDark ? '/icons/zk-sheild-lock-dark.png' : '/zk-shield-lock.png'} alt="Secure Vault" className="w-4 h-4 object-contain" />
                         <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Secure Vault</span>
                       </Link>
@@ -518,8 +520,10 @@ const Navbar = () => {
                     </div>
                     <span className="font-sans text-xs font-medium text-text-primary">{user?.full_name || user?.username || 'User'}</span>
                   </div>
-                  <Link
-                    to="/vault"
+                  <a
+                    href="https://drive.zancrypt.in/auth/login"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="w-full py-2.5 bg-accent text-void font-sans text-xs font-semibold rounded-lg text-center hover:bg-accent/90 transition-all"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >

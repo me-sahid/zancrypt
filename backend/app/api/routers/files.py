@@ -1,17 +1,46 @@
 from app.api.routers.share import limiter
 from typing import List
+from uuid import UUID
 import json
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status, Form, Security, Request
 from fastapi.responses import StreamingResponse, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from app.api.deps import get_async_session, get_current_user, get_current_user_or_api_key
+from app.models.file import File as FileModel
 from app.schemas.file import FileMetadataResponse, FileManifestResponse
 from app.services.file_service import FileService
 from app.storage.routing import StorageRouter
 
 router = APIRouter()
+
+@router.get("/by-uuid/{file_uuid}", response_model=FileMetadataResponse)
+@limiter.limit("60/minute")
+async def get_file_by_uuid(
+    request: Request,
+    file_uuid: UUID,
+    current_user=Security(get_current_user_or_api_key, scopes=["storage"]),
+    session: AsyncSession = Depends(get_async_session),
+):
+    """
+    Resolve a file UUID to its metadata. Used by the frontend for UUID-based URL routing.
+    Security: Returns 404 for BOTH non-existent AND unauthorized files — never 403.
+    This prevents attackers from probing whether a UUID exists without ownership.
+    """
+    result = await session.execute(
+        select(FileModel).where(
+            FileModel.file_uuid == file_uuid,
+            FileModel.owner_id == current_user.id,
+            FileModel.is_deleted == False,
+        )
+    )
+    file = result.scalar_one_or_none()
+    if not file:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+    return file
+
 
 @router.post("/upload", status_code=status.HTTP_201_CREATED)
 @limiter.limit("20/minute")

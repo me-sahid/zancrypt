@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
+from uuid import UUID
 
 class FolderCreate(BaseModel):
     encrypted_name: str
@@ -12,6 +13,7 @@ class FolderUpdate(BaseModel):
 
 class FolderResponse(BaseModel):
     id: int
+    folder_uuid: UUID
     encrypted_name: str
     parent_id: Optional[int]
     owner_id: int

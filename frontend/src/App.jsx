@@ -11,6 +11,7 @@ import DegradedBanner from './components/network/DegradedBanner';
 import { useAuthStore } from './store/useStore';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { pageContent } from './pages/Static/pageContent';
+import { useWorkspace } from './hooks/useWorkspace';
 
 import FileManagerSkeleton from './components/skeletons/FileManagerSkeleton';
 import PricingPageSkeleton from './components/skeletons/PricingPageSkeleton';
@@ -51,68 +52,118 @@ const PageLoader = () => (
   </div>
 );
 
-const ExternalRedirect = ({ to }) => {
-  React.useEffect(() => {
-    window.location.href = to;
-  }, [to]);
-  return <PageLoader />;
-};
-
 function App() {
   const { isAuthenticated } = useAuthStore();
+  const workspace = useWorkspace();
   const hostname = window.location.hostname;
   const isDriveDomain = hostname === 'drive.zancrypt.in';
   const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+  const isAppDomain = isDriveDomain || isLocal;
 
   return (
     <NetworkProvider>
       <Suspense fallback={<PageLoader />}>
         <DegradedBanner />
         <OfflineScreen />
-        
+
         <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={isDriveDomain ? <Navigate to="/dashboard" replace /> : <Landing />} />
-          <Route path="/api" element={<ApiSoon />} />
-          <Route path="/download" element={<DownloadPage />} />
-          <Route path="/share/:token" element={<SharedFile />} />
-          <Route path="/login" element={!isDriveDomain && !isLocal ? <ExternalRedirect to="https://drive.zancrypt.in/login" /> : <Login />} />
-          <Route path="/register" element={!isDriveDomain && !isLocal ? <ExternalRedirect to="https://drive.zancrypt.in/register" /> : <Register />} />
-          <Route path="/pricing" element={<Suspense fallback={<PricingPageSkeleton />}><Pricing /></Suspense>} />
-          <Route path="/architecture" element={<Architecture />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          {/* ── Landing (main domain only) ──────────────────────── */}
+          <Route path="/" element={isDriveDomain ? <Navigate to={workspace.home} replace /> : <Landing />} />
+
+          {/* ── Auth routes (drive domain) ───────────────────────── */}
+          {/* On drive domain: /auth/login and /auth/register are the canonical paths */}
+          {/* On main domain: /login and /register redirect to drive */}
+          <Route path="/auth/login"    element={<Login />} />
+          <Route path="/auth/register" element={<Register />} />
+          <Route
+            path="/login"
+            element={isAppDomain ? <Navigate to="/auth/login" replace /> : <Navigate to="https://drive.zancrypt.in/auth/login" replace />}
+          />
+          <Route
+            path="/register"
+            element={isAppDomain ? <Navigate to="/auth/register" replace /> : <Navigate to="https://drive.zancrypt.in/auth/register" replace />}
+          />
+
+          {/* ── Public share + download ─────────────────────────── */}
+          {/* Short clean URLs: /s/{token} and /dl */}
+          <Route path="/s/:token"  element={<SharedFile />} />
+          <Route path="/dl"        element={<DownloadPage />} />
+          {/* Legacy share URL support (backward compat) */}
+          <Route path="/share/:token" element={<Navigate to={({ params }) => `/s/${params.token}`} replace />} />
+          <Route path="/download"     element={<Navigate to="/dl" replace />} />
+
+          {/* ── Static / Marketing pages (both domains) ─────────── */}
+          <Route path="/api"              element={<ApiSoon />} />
+          <Route path="/pricing"          element={<Suspense fallback={<PricingPageSkeleton />}><Pricing /></Suspense>} />
+          <Route path="/architecture"     element={<Architecture />} />
+          <Route path="/privacy-policy"   element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<PrivacyPolicy />} />
           <Route path="/cloud-alternative" element={<CloudAlternative />} />
 
           {/* Static Info Pages */}
           {Object.entries(pageContent).map(([key, content]) => (
-            <Route 
-              key={key} 
-              path={`/${key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}`} 
-              element={<PublicInfoPage {...content} />} 
+            <Route
+              key={key}
+              path={`/${key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}`}
+              element={<PublicInfoPage {...content} />}
             />
           ))}
 
-          {/* Protected Dashboard Routes - Single Shared Layout instance for instant page loads */}
+          {/* ── Protected App Routes (drive domain, UUID-scoped) ── */}
+          {/*
+            Route structure:
+              /home/:wid            → Dashboard + API Keys
+              /drive/:wid           → File vault
+              /drive/:wid/folder/:fid → Folder deep-link
+              /drive/:wid/file/:fid   → File preview deep-link
+              /drive/:wid/bin       → Recycle bin
+              /drive/:wid/shared    → Shared files list
+              /drive/:wid/upload    → Upload page
+              /workspace/:wid/*     → Settings area
+
+            Security: :wid is a frontend routing token only — NEVER sent to backend.
+            All API calls use Bearer token from httpOnly cookie independently.
+          */}
           <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard/api-keys" element={<ApiKeys />} />
-            <Route path="/vault" element={<Suspense fallback={<FileManagerSkeleton />}><Files /></Suspense>} />
-            <Route path="/bin" element={<RecycleBin />} />
-            <Route path="/shares" element={<SharesPage />} />
-            <Route path="/uploads" element={<Upload />} />
-            <Route path="/nodes" element={<Nodes />} />
-            <Route path="/security" element={<Security />} />
-            <Route path="/monitoring" element={<Monitoring />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/audit" element={<Audit />} />
-            <Route path="/settings" element={<Suspense fallback={<SettingsPageSkeleton />}><Settings /></Suspense>} />
-            <Route path="/profile" element={<Suspense fallback={<SettingsPageSkeleton />}><Profile /></Suspense>} />
+            {/* Home / Dashboard */}
+            <Route path="/home/:wid"      element={<Dashboard />} />
+            <Route path="/home/:wid/keys" element={<ApiKeys />} />
+
+            {/* Drive — file vault with folder/file deep links */}
+            <Route path="/drive/:wid"                element={<Suspense fallback={<FileManagerSkeleton />}><Files /></Suspense>} />
+            <Route path="/drive/:wid/folder/:fid"    element={<Suspense fallback={<FileManagerSkeleton />}><Files /></Suspense>} />
+            <Route path="/drive/:wid/file/:fid"      element={<Suspense fallback={<FileManagerSkeleton />}><Files /></Suspense>} />
+            <Route path="/drive/:wid/bin"            element={<RecycleBin />} />
+            <Route path="/drive/:wid/shared"         element={<SharesPage />} />
+            <Route path="/drive/:wid/upload"         element={<Upload />} />
+
+            {/* Workspace settings area */}
+            <Route path="/workspace/:wid/settings"   element={<Suspense fallback={<SettingsPageSkeleton />}><Settings /></Suspense>} />
+            <Route path="/workspace/:wid/profile"    element={<Suspense fallback={<SettingsPageSkeleton />}><Profile /></Suspense>} />
+            <Route path="/workspace/:wid/security"   element={<Security />} />
+            <Route path="/workspace/:wid/nodes"      element={<Nodes />} />
+            <Route path="/workspace/:wid/monitor"    element={<Monitoring />} />
+            <Route path="/workspace/:wid/analytics"  element={<Analytics />} />
+            <Route path="/workspace/:wid/audit"      element={<Audit />} />
+
+            {/* Legacy path redirects → new UUID routes */}
+            <Route path="/dashboard"  element={<Navigate to={workspace.home} replace />} />
+            <Route path="/vault"      element={<Navigate to={workspace.drive} replace />} />
+            <Route path="/bin"        element={<Navigate to={workspace.bin} replace />} />
+            <Route path="/shares"     element={<Navigate to={workspace.shared} replace />} />
+            <Route path="/uploads"    element={<Navigate to={workspace.upload} replace />} />
+            <Route path="/settings"   element={<Navigate to={workspace.settings} replace />} />
+            <Route path="/profile"    element={<Navigate to={workspace.profile} replace />} />
+            <Route path="/security"   element={<Navigate to={workspace.security} replace />} />
+            <Route path="/nodes"      element={<Navigate to={workspace.nodes} replace />} />
+            <Route path="/monitoring" element={<Navigate to={workspace.monitor} replace />} />
+            <Route path="/analytics"  element={<Navigate to={workspace.analytics} replace />} />
+            <Route path="/audit"      element={<Navigate to={workspace.audit} replace />} />
           </Route>
 
-          {/* 404 & Redirects */}
+          {/* ── 404 ─────────────────────────────────────────────── */}
           <Route path="/404" element={<NotFound />} />
-          <Route path="*" element={<Navigate to="/404" replace />} />
+          <Route path="*"    element={<Navigate to="/404" replace />} />
         </Routes>
       </Suspense>
       <GlobalUploadManager />

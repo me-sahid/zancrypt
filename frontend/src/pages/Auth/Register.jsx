@@ -9,9 +9,10 @@ import { useAuthStore } from '../../store/useStore';
 import api from '../../services/api';
 import { isWebAuthnSupported, registerPasskey } from '../../utils/webauthn';
 import { generateSalt } from '../../utils/crypto';
+import { useWorkspace } from '../../hooks/useWorkspace';
 
 const Register = () => {
-  const [status, setStatus] = useState('idle'); // 'idle' , 'loading' , 'success'
+  const [status, setStatus] = useState('idle');
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -20,6 +21,7 @@ const Register = () => {
   });
   const navigate = useNavigate();
   const { isAuthenticated, setAuth } = useAuthStore();
+  const workspace = useWorkspace();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -72,7 +74,7 @@ const Register = () => {
 
       setStatus('success');
       setTimeout(() => {
-        navigate('/vault');
+        navigate(workspace.drive);
       }, 1500);
     } catch (error) {
       setStatus('idle');
@@ -226,7 +228,7 @@ const Register = () => {
           <div className="mt-5 text-center">
             <p className="font-sans text-xs text-text-secondary">
               Identity exists?{' '}
-              <Link to="/login" className="text-accent hover:underline font-mono uppercase tracking-widest text-xs">
+              <Link to="/auth/login" className="text-accent hover:underline font-mono uppercase tracking-widest text-xs">
                 Authenticate
               </Link>
             </p>

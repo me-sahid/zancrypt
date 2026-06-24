@@ -23,7 +23,7 @@ async def security_headers_middleware(request: Request, call_next):
         "font-src 'self' https://fonts.gstatic.com data:; "
         "img-src 'self' data: blob:; "
         "media-src 'self' blob:; "
-        "connect-src 'self' https://zancrypt.in https://zancrypt-front.pages.dev; "
+        "connect-src 'self' https://zancrypt.in https://www.zancrypt.in https://drive.zancrypt.in https://zancrypt-front.pages.dev; "
         "object-src 'none'; "
         "frame-ancestors 'none';"
     )

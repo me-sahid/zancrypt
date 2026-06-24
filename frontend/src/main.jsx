@@ -145,7 +145,7 @@ const queryClient = new QueryClient({
 });
 
 // Initialize authentication state from httpOnly cookie without blocking render
-// ProtectedRoute will handle the isInitializing spinner state natively
+// ProtectedRoute handles the isInitializing spinner state natively
 async function init() {
   await silentRefresh();
   ReactDOM.createRoot(document.getElementById('root')).render(
@@ -159,5 +159,13 @@ async function init() {
   );
 }
 
-init();
+// On drive.zancrypt.in — redirect bare root "/" to "/home/{workspace-uuid}"
+// All other paths (auth/login, drive/uuid, etc.) mount directly — no basename wrapping
+if (window.location.hostname === 'drive.zancrypt.in' && window.location.pathname === '/') {
+  const { getWorkspaceId } = await import('./hooks/useWorkspace.js');
+  const wid = getWorkspaceId();
+  window.location.replace(`/home/${wid}`);
+} else {
+  init();
+}
 

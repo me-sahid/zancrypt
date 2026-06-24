@@ -18,17 +18,7 @@ import { useDashboardStore } from '../../store/useDashboardStore';
 import { useAuthStore } from '../../store/useStore';
 import CipherText from '../crypto/CipherText';
 import { getUserPlanConfig } from '../../utils/planLimits';
-
-const menuItems = [
-  { icon: LayoutDashboard, label: 'Overview', path: '/dashboard' },
-  { icon: Database, label: 'My Vault', path: '/vault' },
-  { icon: UploadCloud, label: 'Add Files', path: '/uploads' },
-  { icon: Share2, label: 'Shared Links', path: '/shares' },
-  { icon: Key, label: 'API Keys', path: '/dashboard/api-keys' },
-  { icon: Trash2, label: 'Recycle Bin', path: '/bin' },
-  { icon: ShieldCheck, label: 'Security', path: '/security' },
-  { icon: Settings, label: 'Settings', path: '/settings' },
-];
+import { useWorkspace } from '../../hooks/useWorkspace';
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -36,6 +26,18 @@ const Sidebar = () => {
   const { user } = useAuthStore();
   const [isMobileView, setIsMobileView] = useState(false);
   const planConfig = getUserPlanConfig(user);
+  const workspace = useWorkspace();
+
+  const menuItems = [
+    { icon: LayoutDashboard, label: 'Overview',     path: workspace.home },
+    { icon: Database,        label: 'My Vault',     path: workspace.drive },
+    { icon: UploadCloud,     label: 'Add Files',    path: workspace.upload },
+    { icon: Share2,          label: 'Shared Links', path: workspace.shared },
+    { icon: Key,             label: 'API Keys',     path: workspace.keys },
+    { icon: Trash2,          label: 'Recycle Bin',  path: workspace.bin },
+    { icon: ShieldCheck,     label: 'Security',     path: workspace.security },
+    { icon: Settings,        label: 'Settings',     path: workspace.settings },
+  ];
 
   useEffect(() => {
     const handleResize = () => {

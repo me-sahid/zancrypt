@@ -8,6 +8,7 @@ import SecureInput from '../../components/ui/SecureInput';
 import { useAuthStore } from '../../store/useStore';
 import api from '../../services/api';
 import { authenticatePasskey } from '../../utils/webauthn';
+import { useWorkspace } from '../../hooks/useWorkspace';
 
 const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
@@ -17,7 +18,16 @@ const Login = () => {
   const [accessKey, setAccessKey] = useState('');
   const [showFallback, setShowFallback] = useState(false);
   const navigate = useNavigate();
-  const { isAuthenticated, setAuth } = useAuthStore();
+  const { isAuthenticated, isInitializing, setAuth } = useAuthStore();
+  const workspace = useWorkspace();
+
+  // If already authenticated (e.g. user navigated back to /auth/login), redirect to drive.
+  // Use replace so the login page is NOT added to the history stack.
+  useEffect(() => {
+    if (!isInitializing && isAuthenticated) {
+      navigate(workspace.home, { replace: true });
+    }
+  }, [isAuthenticated, isInitializing, navigate, workspace.home]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,7 +58,9 @@ const Login = () => {
         setAuth(user, access_token);
         setStatus('success');
         setTimeout(() => {
-          navigate('/vault');
+          // replace: true removes /auth/login from history — Back button
+          // from the drive will never send the user back to the login page.
+          navigate(workspace.home, { replace: true });
         }, 1500);
 
       } catch (error) {
@@ -79,7 +91,9 @@ const Login = () => {
         setAuth(user, access_token);
         setStatus('success');
         setTimeout(() => {
-          navigate('/vault');
+          // replace: true removes /auth/login from history — Back button
+          // from the drive will never send the user back to the login page.
+          navigate(workspace.home, { replace: true });
         }, 1500);
       } catch (error) {
         setStatus('idle');
@@ -238,7 +252,7 @@ const Login = () => {
           <div className="mt-12 text-center">
             <p className="font-sans text-xs text-text-secondary">
               No vault assigned?{' '}
-              <Link to="/register" className="text-accent hover:underline font-mono uppercase tracking-widest text-xs">
+              <Link to="/auth/register" className="text-accent hover:underline font-mono uppercase tracking-widest text-xs">
                 Initialize
               </Link>
             </p>

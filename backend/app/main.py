@@ -137,6 +137,20 @@ async def on_startup() -> None:
         await conn.execute(text("ALTER TABLE files ADD COLUMN IF NOT EXISTS thumbnail TEXT;"))
         await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS allow_downloads BOOLEAN DEFAULT TRUE;"))
         await conn.execute(text("ALTER TABLE files ADD COLUMN IF NOT EXISTS folder_id INTEGER REFERENCES folders(id);"))
+
+        # UUID columns for clean URL routing (added after initial schema)
+        await conn.execute(text(
+            "ALTER TABLE files ADD COLUMN IF NOT EXISTS file_uuid UUID DEFAULT gen_random_uuid() NOT NULL;"
+        ))
+        await conn.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS ix_files_file_uuid ON files(file_uuid);"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE folders ADD COLUMN IF NOT EXISTS folder_uuid UUID DEFAULT gen_random_uuid() NOT NULL;"
+        ))
+        await conn.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS ix_folders_folder_uuid ON folders(folder_uuid);"
+        ))
     await initialize_nodes()
     instrument_app(app)
 # cache-bust

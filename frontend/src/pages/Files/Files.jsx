@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { 
   Database, File, Search, Filter, Share2, 
   Download, Trash2, Lock, CheckCircle2,
@@ -26,6 +26,7 @@ import { useLanguageStore } from '../../store/useLanguageStore';
 import FileManagerSkeleton from '../../components/skeletons/FileManagerSkeleton';
 import SkeletonTableRow from '../../components/skeletons/SkeletonTableRow';
 import SkeletonCard from '../../components/skeletons/SkeletonCard';
+import { useWorkspace } from '../../hooks/useWorkspace';
 
 // Category Sniffer
 const getFileCategory = (filename) => {
@@ -135,6 +136,9 @@ const Files = () => {
     clipboard, setClipboard, clearClipboard
   } = useDashboardStore();
   const { t } = useLanguageStore();
+  const navigate = useNavigate();
+  const { wid, fid } = useParams();  // wid = workspace UUID, fid = folder/file UUID from URL
+  const workspace = useWorkspace();
   const [isLoading, setIsLoading] = useState(false);
   const [previewData, setPreviewData] = useState(null);
   const [previewLoadingTarget, setPreviewLoadingTarget] = useState(null);
@@ -257,14 +261,25 @@ const Files = () => {
   };
 
   const handleNavigateInto = (folder) => {
-    setFolderPath(prev => [...prev, { id: folder.id, name: folder.encrypted_name }]);
+    setFolderPath(prev => [...prev, { id: folder.id, uuid: folder.folder_uuid, name: folder.encrypted_name }]);
     setCurrentFolderId(folder.id);
+    // Push clean UUID URL — security: folder_uuid from server response (validated), not user input
+    if (folder.folder_uuid) {
+      navigate(workspace.folder(folder.folder_uuid));
+    }
   };
 
   const handleNavigateUp = () => {
     setFolderPath(prev => {
       const newPath = prev.slice(0, -1);
-      setCurrentFolderId(newPath.length > 0 ? newPath[newPath.length - 1].id : null);
+      const parentFolder = newPath.length > 0 ? newPath[newPath.length - 1] : null;
+      setCurrentFolderId(parentFolder ? parentFolder.id : null);
+      // Navigate to parent folder UUID URL or root drive
+      if (parentFolder?.uuid) {
+        navigate(workspace.folder(parentFolder.uuid));
+      } else {
+        navigate(workspace.drive);
+      }
       return newPath;
     });
   };
@@ -280,6 +295,7 @@ const Files = () => {
   const handleNavigateToRoot = () => {
     setFolderPath([]);
     setCurrentFolderId(null);
+    navigate(workspace.drive);
   };
 
   const getSelectedItemsArray = () => {
@@ -691,7 +707,7 @@ const Files = () => {
           <button onClick={() => setIsNewFolderModalOpen(true)} className="flex-1 md:flex-none px-4 md:px-6 py-3 border border-border text-text-primary font-mono text-[10px] md:text-xs uppercase tracking-widest hover:bg-surface-raised transition-colors flex items-center justify-center whitespace-nowrap">
             <FolderPlus className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">{t('vault', 'newFolder')}</span>
           </button>
-          <Link to="/uploads" className="flex-1 md:flex-none px-4 md:px-6 py-3 border border-accent text-accent text-center font-mono text-[10px] md:text-xs uppercase tracking-widest hover:bg-white hover:text-black hover:border-white transition-colors whitespace-nowrap">
+          <Link to={workspace.upload} className="flex-1 md:flex-none px-4 md:px-6 py-3 border border-accent text-accent text-center font-mono text-[10px] md:text-xs uppercase tracking-widest hover:bg-white hover:text-black hover:border-white transition-colors whitespace-nowrap">
             {t('vault', 'upload')}
           </Link>
         </div>

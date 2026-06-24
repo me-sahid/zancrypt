@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import List
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
@@ -12,6 +13,7 @@ class FileCreateRequest(BaseModel):
 
 class FileMetadataResponse(BaseModel):
     id: int
+    file_uuid: UUID
     encrypted_filename: str
     file_size: int
     version_count: int

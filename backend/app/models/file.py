@@ -1,6 +1,8 @@
 from datetime import datetime
+from uuid import uuid4
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Boolean
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
@@ -9,6 +11,7 @@ class File(Base, TimestampMixin):
     __tablename__ = "files"
 
     id = Column(Integer, primary_key=True, index=True)
+    file_uuid = Column(PG_UUID(as_uuid=True), default=uuid4, unique=True, nullable=False, index=True)
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     encrypted_filename = Column(String(512), nullable=False)
     encrypted_metadata = Column(String, nullable=False)
