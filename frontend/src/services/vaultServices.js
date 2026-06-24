@@ -49,3 +49,8 @@ export const adminService = {
 export const dashboardService = {
   getStats: () => api.get('/api/dashboard/stats'),
 };
+
+export const shareService = {
+  listShares: () => api.get('/api/share/list'),
+};
+

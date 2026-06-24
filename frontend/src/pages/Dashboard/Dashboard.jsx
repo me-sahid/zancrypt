@@ -1,22 +1,149 @@
-import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { RiAddLargeLine } from 'react-icons/ri';
 import { 
-  Database, 
   Server, 
-  ShieldCheck, 
-  HardDrive,
+  Database,
   Activity,
-  FileText
+  FileText,
+  Share2,
+  HardDrive,
+  Zap
 } from 'lucide-react';
 import { useDashboardStore } from '../../store/useDashboardStore';
 import { useAuthStore } from '../../store/useStore';
 import { useLanguageStore } from '../../store/useLanguageStore';
 import { useSimulationEngine } from '../../hooks/useSimulationEngine';
 import MetricCard from '../../components/dashboard/MetricCard';
-import NodeStatusGrid from '../../components/dashboard/NodeStatusGrid';
-import { fileService, adminService } from '../../services/vaultServices';
+import { fileService, adminService, shareService } from '../../services/vaultServices';
 import DashboardSkeleton from '../../components/skeletons/DashboardSkeleton';
+import { useUploadStore } from '../../store/useUploadStore';
+
+// --- Real-time Node Shard Distribution Panel ---
+const NodeShardPanel = ({ nodes, uploadQueue }) => {
+  // Build a live map of which nodes have which file shards
+  // nodes come from the store; uploadQueue gives live uploading progress
+
+  const PROVIDER_COLORS = {
+    S3:       { dot: '#fb923c', badge: 'rgba(251,146,60,0.15)',  text: '#fb923c'  },
+    SUPABASE: { dot: '#34d399', badge: 'rgba(52,211,153,0.15)',  text: '#34d399'  },
+    STORJ:    { dot: '#22d3ee', badge: 'rgba(34,211,238,0.15)',  text: '#22d3ee'  },
+    LOCAL:    { dot: '#a78bfa', badge: 'rgba(167,139,250,0.15)', text: '#a78bfa'  },
+    DEFAULT:  { dot: '#94a3b8', badge: 'rgba(148,163,184,0.15)', text: '#94a3b8'  },
+  };
+
+  const getColor = (provider) => PROVIDER_COLORS[provider] || PROVIDER_COLORS.DEFAULT;
+
+  const activeUploads = (uploadQueue || []).filter(f => f.status === 'uploading');
+
+  return (
+    <div className="grid grid-cols-1 gap-2">
+      {(!nodes || nodes.length === 0) && (
+        <div className="flex flex-col items-center justify-center py-10 text-center opacity-40">
+          <Server className="w-8 h-8 mb-3 text-text-muted" />
+          <p className="font-mono text-xs text-text-muted uppercase tracking-widest">No nodes found</p>
+        </div>
+      )}
+
+      {(nodes || []).map((node, i) => {
+        const colors = getColor(node.provider);
+        const isOnline = node.health === 'Healthy';
+
+        // Find uploads going through this node (by shards/provider match)
+        const liveUpload = activeUploads.find(() => true); // all active uploads distribute across all nodes
+
+        return (
+          <motion.div
+            key={node.id}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.06 }}
+            className="flex flex-col gap-2 p-3 border border-border bg-void hover:bg-surface-raised transition-colors"
+          >
+            {/* Node header row */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 min-w-0">
+                {/* Status dot */}
+                <span
+                  className="relative flex-shrink-0 w-2 h-2 rounded-full"
+                  style={{ backgroundColor: isOnline ? colors.dot : '#475569' }}
+                >
+                  {isOnline && (
+                    <span
+                      className="absolute inset-0 rounded-full animate-ping opacity-60"
+                      style={{ backgroundColor: colors.dot }}
+                    />
+                  )}
+                </span>
+                <span className="font-mono text-[11px] text-text-primary truncate">{node.name}</span>
+              </div>
+
+              {/* Provider badge */}
+              <span
+                className="flex-shrink-0 font-mono text-[10px] uppercase tracking-widest px-2 py-0.5"
+                style={{ color: colors.text, backgroundColor: colors.badge }}
+              >
+                {node.provider}
+              </span>
+            </div>
+
+            {/* File parts bar */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[10px] text-text-muted uppercase tracking-widest">
+                  File Parts
+                </span>
+                <span className="font-mono text-[10px]" style={{ color: colors.text }}>
+                  {isOnline ? `${node.shards || 0} shards` : 'OFFLINE'}
+                </span>
+              </div>
+
+              {/* Load bar */}
+              <div className="h-1 bg-surface-raised overflow-hidden">
+                <motion.div
+                  className="h-full"
+                  style={{ backgroundColor: isOnline ? colors.dot : '#334155' }}
+                  initial={{ width: 0 }}
+                  animate={{ width: isOnline ? `${Math.max(2, node.load || 0)}%` : '100%' }}
+                  transition={{ duration: 0.8, ease: 'easeOut', delay: i * 0.05 }}
+                />
+              </div>
+
+              {/* Live upload indicator */}
+              <AnimatePresence>
+                {liveUpload && isOnline && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex items-center gap-1.5 pt-0.5"
+                  >
+                    <Zap className="w-2.5 h-2.5 flex-shrink-0" style={{ color: colors.dot }} />
+                    <div className="flex-1 h-0.5 bg-surface-raised overflow-hidden">
+                      <motion.div
+                        className="h-full"
+                        style={{ backgroundColor: colors.dot }}
+                        animate={{ width: [`${liveUpload.progress}%`, `${Math.min(100, liveUpload.progress + 3)}%`] }}
+                        transition={{ duration: 0.3, ease: 'linear' }}
+                      />
+                    </div>
+                    <span className="font-mono text-[10px]" style={{ color: colors.dot }}>
+                      {liveUpload.progress}%
+                    </span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Region */}
+            <p className="font-mono text-[10px] text-text-muted truncate">{node.region}</p>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+};
 
 const Dashboard = () => {
   useSimulationEngine();
@@ -24,16 +151,19 @@ const Dashboard = () => {
   const { metrics, nodes, files, setFiles, setNodes, updateMetrics } = useDashboardStore();
   const { user } = useAuthStore();
   const { t } = useLanguageStore();
+  const { uploadQueue } = useUploadStore();
   const [isLoading, setIsLoading] = React.useState(true);
+  const [activeShares, setActiveShares] = React.useState(0);
 
   useEffect(() => {
     let isMounted = true;
     const fetchStats = async () => {
       try {
-        const [filesResult, nodesResult, metricsResult] = await Promise.allSettled([
+        const [filesResult, nodesResult, metricsResult, sharesResult] = await Promise.allSettled([
           fileService.listFiles(),
           adminService.getNodes(),
-          adminService.getSystemMetrics()
+          adminService.getSystemMetrics(),
+          shareService.listShares(),
         ]);
 
         if (isMounted) {
@@ -42,6 +172,17 @@ const Dashboard = () => {
           } else if (filesResult.status === 'rejected') {
             console.error('Failed to fetch files:', filesResult.reason);
           }
+
+          if (sharesResult.status === 'fulfilled' && sharesResult.value?.data) {
+            const now = new Date();
+            const active = sharesResult.value.data.filter(s => {
+              if (!s.is_active) return false;
+              if (s.expires_at && new Date(s.expires_at) < now) return false;
+              return true;
+            });
+            setActiveShares(active.length);
+          }
+
           if (metricsResult.status === 'fulfilled' && metricsResult.value?.data) {
             const data = metricsResult.value.data;
             updateMetrics({
@@ -56,7 +197,6 @@ const Dashboard = () => {
 
           if (nodesResult.status === 'fulfilled' && nodesResult.value?.data) {
             const data = nodesResult.value.data;
-            // Map backend data to frontend structure
             const mappedNodes = data.map(n => {
               const capacityGB = n.node_metadata?.capacity_gb || 1024;
               const capacityBytes = capacityGB * 1024 * 1024 * 1024;
@@ -108,19 +248,10 @@ const Dashboard = () => {
   const CLOUD_PROVIDERS = ['S3', 'SUPABASE', 'STORJ'];
   const cloudNodes = (nodes || []).filter(n => CLOUD_PROVIDERS.includes(n.provider));
 
-  const formatTotalStorage = (bytes) => {
-    if (!bytes || bytes === 0) return { value: '0', suffix: ' B' };
-    if (bytes < 1024) return { value: bytes.toFixed(2), suffix: ' B' };
-    if (bytes < 1048576) return { value: (bytes / 1024).toFixed(2), suffix: ' KB' };
-    if (bytes < 1073741824) return { value: (bytes / 1048576).toFixed(2), suffix: ' MB' };
-    return { value: (bytes / 1073741824).toFixed(2), suffix: ' GB' };
-  };
-
-  const realTotalStorage = files.reduce((acc, f) => acc + (f.file_size || 0), 0);
-  const displayStorage = Math.max(safeMetrics.totalStorage || 0, realTotalStorage);
-  
-  const storageInfo = formatTotalStorage(displayStorage);
   const liveNodesCount = nodes ? nodes.filter(n => n.health === 'Healthy').length : 0;
+  const activeNodesCount = cloudNodes.length > 0
+    ? cloudNodes.filter(n => n.health === 'Healthy').length
+    : liveNodesCount;
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -139,40 +270,38 @@ const Dashboard = () => {
           </p>
         </div>
         
-        <Link to="/uploads" className="px-6 py-3 w-full md:w-auto text-center border border-accent text-accent font-mono text-xs uppercase tracking-widest hover:bg-accent/10 transition-colors">
-          {t('dashboard', 'upload')}
+        <Link
+          to="/uploads"
+          className="inline-flex items-center gap-2 px-5 py-2.5 w-full md:w-auto justify-center border border-accent text-accent font-mono text-xs uppercase tracking-widest hover:bg-accent/10 transition-colors"
+        >
+          <RiAddLargeLine className="w-4 h-4" />
+          New
         </Link>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard 
-          label={t('dashboard', 'totalStorage')} 
-          value={storageInfo.value} 
-          suffix={storageInfo.suffix} 
-          icon={HardDrive} 
-          trend="NOMINAL" 
-          isPositive={true} 
+      {/* Stats Cards — flex row */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <MetricCard
+          label="Active Shares"
+          value={activeShares}
+          icon={Share2}
+          trend="LIVE"
+          isPositive={true}
+          className="flex-1"
         />
-        <MetricCard 
-          label={t('dashboard', 'securityProtocol')} 
-          value={safeMetrics.securityScore || 100} 
-          suffix="%" 
-          icon={ShieldCheck} 
-          trend="LOCKED" 
-          isPositive={true} 
+        <MetricCard
+          label={t('dashboard', 'encryptedItems')}
+          value={files ? files.length : 0}
+          icon={Database}
+          className="flex-1"
         />
-        <MetricCard 
-          label={t('dashboard', 'encryptedItems')} 
-          value={files ? files.length : 0} 
-          icon={Database} 
-        />
-        <MetricCard 
-          label={t('dashboard', 'activeNodes')} 
-          value={cloudNodes.length > 0 ? cloudNodes.filter(n => n.health === 'Healthy').length : liveNodesCount} 
-          icon={Server} 
-          trend="ONLINE" 
-          isPositive={true} 
+        <MetricCard
+          label={t('dashboard', 'activeNodes')}
+          value={activeNodesCount}
+          icon={Server}
+          trend="ONLINE"
+          isPositive={true}
+          className="flex-1"
         />
       </div>
 
@@ -220,16 +349,26 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Node Health Grid */}
+        {/* Node File Distribution — Real-time */}
         <div className="bg-surface border border-border h-[400px] flex flex-col">
           <div className="flex items-center justify-between p-4 border-b border-border">
             <div className="font-mono text-[11px] uppercase tracking-widest text-text-muted flex items-center">
               <Activity className="w-3.5 h-3.5 mr-2" />
-              {t('dashboard', 'nodeMatrix')}
+              Node Distribution
             </div>
+            {uploadQueue.some(f => f.status === 'uploading') && (
+              <motion.div
+                animate={{ opacity: [1, 0.4, 1] }}
+                transition={{ duration: 1.2, repeat: Infinity }}
+                className="flex items-center gap-1.5"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                <span className="font-mono text-[10px] text-accent uppercase tracking-widest">Live</span>
+              </motion.div>
+            )}
           </div>
           <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
-            <NodeStatusGrid nodes={cloudNodes} />
+            <NodeShardPanel nodes={cloudNodes.length > 0 ? cloudNodes : nodes} uploadQueue={uploadQueue} />
           </div>
         </div>
       </div>
