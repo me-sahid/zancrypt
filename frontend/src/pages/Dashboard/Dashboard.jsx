@@ -25,15 +25,16 @@ const NodeShardPanel = ({ nodes, uploadQueue }) => {
   // Build a live map of which nodes have which file shards
   // nodes come from the store; uploadQueue gives live uploading progress
 
-  const PROVIDER_COLORS = {
-    S3:       { dot: '#fb923c', badge: 'rgba(251,146,60,0.15)',  text: '#fb923c'  },
-    SUPABASE: { dot: '#34d399', badge: 'rgba(52,211,153,0.15)',  text: '#34d399'  },
-    STORJ:    { dot: '#22d3ee', badge: 'rgba(34,211,238,0.15)',  text: '#22d3ee'  },
-    LOCAL:    { dot: '#a78bfa', badge: 'rgba(167,139,250,0.15)', text: '#a78bfa'  },
-    DEFAULT:  { dot: '#94a3b8', badge: 'rgba(148,163,184,0.15)', text: '#94a3b8'  },
+  // Monochrome white palette — no colored accents
+  const NODE_STYLE = {
+    dot:   '#e2e8f0',
+    bar:   '#cbd5e1',
+    badge: 'rgba(226,232,240,0.08)',
+    text:  '#e2e8f0',
+    muted: '#94a3b8',
   };
 
-  const getColor = (provider) => PROVIDER_COLORS[provider] || PROVIDER_COLORS.DEFAULT;
+  const getColor = () => NODE_STYLE;
 
   const activeUploads = (uploadQueue || []).filter(f => f.status === 'uploading');
 
@@ -47,7 +48,7 @@ const NodeShardPanel = ({ nodes, uploadQueue }) => {
       )}
 
       {(nodes || []).map((node, i) => {
-        const colors = getColor(node.provider);
+        const colors = getColor();
         const isOnline = node.health === 'Healthy';
 
         // Find uploads going through this node (by shards/provider match)
@@ -64,19 +65,12 @@ const NodeShardPanel = ({ nodes, uploadQueue }) => {
             {/* Node header row */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 min-w-0">
-                {/* Status dot */}
+                {/* Status dot — no blinking */}
                 <span
-                  className="relative flex-shrink-0 w-2 h-2 rounded-full"
+                  className="flex-shrink-0 w-2 h-2 rounded-full"
                   style={{ backgroundColor: isOnline ? colors.dot : '#475569' }}
-                >
-                  {isOnline && (
-                    <span
-                      className="absolute inset-0 rounded-full animate-ping opacity-60"
-                      style={{ backgroundColor: colors.dot }}
-                    />
-                  )}
-                </span>
-                <span className="font-mono text-[11px] text-text-primary truncate">{node.name}</span>
+                />
+                <span className="font-mono text-[11px] text-white truncate">{node.name}</span>
               </div>
 
               {/* Provider badge */}
@@ -91,19 +85,19 @@ const NodeShardPanel = ({ nodes, uploadQueue }) => {
             {/* File parts bar */}
             <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-[10px] text-text-muted uppercase tracking-widest">
+                <span className="font-mono text-[10px] text-white/50 uppercase tracking-widest">
                   File Parts
                 </span>
-                <span className="font-mono text-[10px]" style={{ color: colors.text }}>
+                <span className="font-mono text-[10px] text-white">
                   {isOnline ? `${node.shards || 0} shards` : 'OFFLINE'}
                 </span>
               </div>
 
               {/* Load bar */}
-              <div className="h-1 bg-surface-raised overflow-hidden">
+              <div className="h-1 bg-white/10 overflow-hidden">
                 <motion.div
                   className="h-full"
-                  style={{ backgroundColor: isOnline ? colors.dot : '#334155' }}
+                  style={{ backgroundColor: isOnline ? colors.bar : '#334155' }}
                   initial={{ width: 0 }}
                   animate={{ width: isOnline ? `${Math.max(2, node.load || 0)}%` : '100%' }}
                   transition={{ duration: 0.8, ease: 'easeOut', delay: i * 0.05 }}
@@ -119,11 +113,10 @@ const NodeShardPanel = ({ nodes, uploadQueue }) => {
                     exit={{ opacity: 0, height: 0 }}
                     className="flex items-center gap-1.5 pt-0.5"
                   >
-                    <Zap className="w-2.5 h-2.5 flex-shrink-0" style={{ color: colors.dot }} />
-                    <div className="flex-1 h-0.5 bg-surface-raised overflow-hidden">
+                    <Zap className="w-2.5 h-2.5 flex-shrink-0 text-white/70" />
+                    <div className="flex-1 h-0.5 bg-white/10 overflow-hidden">
                       <motion.div
-                        className="h-full"
-                        style={{ backgroundColor: colors.dot }}
+                        className="h-full bg-white/60"
                         animate={{ width: [`${liveUpload.progress}%`, `${Math.min(100, liveUpload.progress + 3)}%`] }}
                         transition={{ duration: 0.3, ease: 'linear' }}
                       />
@@ -137,7 +130,7 @@ const NodeShardPanel = ({ nodes, uploadQueue }) => {
             </div>
 
             {/* Region */}
-            <p className="font-mono text-[10px] text-text-muted truncate">{node.region}</p>
+            <p className="font-mono text-[10px] text-white/40 truncate">{node.region}</p>
           </motion.div>
         );
       })}
