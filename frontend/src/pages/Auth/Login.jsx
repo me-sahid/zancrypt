@@ -58,8 +58,7 @@ const Login = () => {
         setStatus('success');
         setTimeout(() => {
           setAuth(user, access_token);
-          // navigate is handled by the useEffect above
-        }, 2000);
+        }, 800);
 
       } catch (error) {
         setStatus('idle');
@@ -89,7 +88,7 @@ const Login = () => {
         setStatus('success');
         setTimeout(() => {
           setAuth(user, access_token);
-        }, 2000);
+        }, 800);
       } catch (error) {
         setStatus('idle');
       }

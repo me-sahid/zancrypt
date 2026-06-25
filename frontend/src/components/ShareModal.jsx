@@ -99,7 +99,7 @@ const ShareModal = ({ file, onClose }) => {
     }
     if (!shareToken) return '';
     return `${getBaseUrl()}/share/${shareToken}#${encryptionKey}`;
-  }, [isMulti, shareToken, multiTokens, multiKeys, encryptionKey, customSharingIp]);
+  }, [isMulti, shareToken, multiTokens, multiKeys, encryptionKey]);
 
   const handleCreateShare = async (e) => {
     e.preventDefault();

@@ -74,7 +74,7 @@ const Register = () => {
       setTimeout(() => {
         setAuth(user, access_token);
         navigate(workspace.drive);
-      }, 2000);
+      }, 800);
     } catch (error) {
       setStatus('idle');
     }
