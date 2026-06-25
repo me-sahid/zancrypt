@@ -55,13 +55,11 @@ const Login = () => {
         });
         useAuthStore.getState().setKeyMaterial(keyMatRes.data.master_key_salt);
 
-        setAuth(user, access_token);
         setStatus('success');
         setTimeout(() => {
-          // replace: true removes /auth/login from history — Back button
-          // from the drive will never send the user back to the login page.
-          navigate(workspace.home, { replace: true });
-        }, 1500);
+          setAuth(user, access_token);
+          // navigate is handled by the useEffect above
+        }, 2000);
 
       } catch (error) {
         setStatus('idle');
@@ -88,13 +86,10 @@ const Login = () => {
         });
         useAuthStore.getState().setKeyMaterial(keyMatRes.data.master_key_salt);
 
-        setAuth(user, access_token);
         setStatus('success');
         setTimeout(() => {
-          // replace: true removes /auth/login from history — Back button
-          // from the drive will never send the user back to the login page.
-          navigate(workspace.home, { replace: true });
-        }, 1500);
+          setAuth(user, access_token);
+        }, 2000);
       } catch (error) {
         setStatus('idle');
       }

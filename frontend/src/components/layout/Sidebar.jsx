@@ -62,7 +62,7 @@ const Sidebar = () => {
       )}
     >
       {/* Logo Section */}
-      <Link to="/" className="flex items-center h-16 px-6 border-b border-border hover:bg-surface-raised transition-colors">
+      <Link to="/" className="flex items-center h-20 px-6 border-b border-border hover:bg-surface-raised transition-colors">
         <div className="flex items-center justify-center w-7 h-7 rounded-sm overflow-hidden">
           <img src="/favi/zancr.png" alt="Zancrypt Logo" className="w-full h-full object-cover" />
         </div>

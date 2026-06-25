@@ -70,12 +70,11 @@ const Register = () => {
       });
       useAuthStore.getState().setKeyMaterial(keyMatRes.data.master_key_salt);
 
-      setAuth(user, access_token);
-
       setStatus('success');
       setTimeout(() => {
+        setAuth(user, access_token);
         navigate(workspace.drive);
-      }, 1500);
+      }, 2000);
     } catch (error) {
       setStatus('idle');
     }
