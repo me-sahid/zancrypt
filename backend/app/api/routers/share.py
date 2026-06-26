@@ -86,20 +86,17 @@ class SharedFileResponse(BaseModel):
 
 # --- API Endpoints ---
 
-from passlib.context import CryptContext
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 import hashlib
+import bcrypt as bcrypt_lib
 
 def get_password_hash(password: str) -> str:
-    # SHA-256 the password first → always 64 hex chars (well under 72 bytes)
     hashed = hashlib.sha256(password.encode()).hexdigest()
-    return pwd_context.hash(hashed)
+    salt = bcrypt_lib.gensalt()
+    return bcrypt_lib.hashpw(hashed.encode(), salt).decode()
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     hashed = hashlib.sha256(plain_password.encode()).hexdigest()
-    return pwd_context.verify(hashed, hashed_password)
+    return bcrypt_lib.checkpw(hashed.encode(), hashed_password.encode())
 
 @router.post("/create", response_model=ShareCreateResponse, status_code=status.HTTP_201_CREATED)
 async def create_share(
