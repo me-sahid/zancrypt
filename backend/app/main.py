@@ -102,70 +102,41 @@ async def on_startup() -> None:
     from app.db import engine
     from app.core.nodes import initialize_nodes
     from sqlalchemy import text
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS storage_used BIGINT DEFAULT 0;"))
-        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS api_credits BIGINT DEFAULT 0;"))
-        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS total_api_calls BIGINT DEFAULT 0;"))
-        
-        # Zero-Knowledge / Identity Verification fields
-        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS master_key_salt VARCHAR(255);"))
-        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS identity_verifier VARCHAR(255);"))
-        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS encrypted_recovery_metadata VARCHAR(1024);"))
-        
-        # Additional user fields that might be missing
-        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(255);"))
-        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS region VARCHAR(128);"))
-        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS plan VARCHAR(50) DEFAULT 'free';"))
-        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS trust_score INTEGER DEFAULT 100;"))
-        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP;"))
-        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;"))
-        
-        # WebAuthn fields
-        await conn.execute(text("ALTER TABLE webauthn_credentials ADD COLUMN IF NOT EXISTS authenticator_type VARCHAR(50);"))
-        await conn.execute(text("ALTER TABLE webauthn_credentials ADD COLUMN IF NOT EXISTS transports JSON;"))
-        await conn.execute(text("ALTER TABLE webauthn_credentials ADD COLUMN IF NOT EXISTS last_used_at TIMESTAMP;"))
 
-        await conn.execute(text("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS scopes JSONB DEFAULT '[\"*\"]'::jsonb;"))
-        await conn.execute(text("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS app_restrictions JSONB DEFAULT '{}'::jsonb;"))
-        await conn.execute(text("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS rules JSONB DEFAULT '{}'::jsonb;"))
-        await conn.execute(text("ALTER TABLE node_registry ADD COLUMN IF NOT EXISTS storage_used BIGINT DEFAULT 0;"))
-        await conn.execute(text("ALTER TABLE shard_registry ADD COLUMN IF NOT EXISTS shard_size INT DEFAULT 0;"))
-        await conn.execute(text("ALTER TABLE shard_registry ADD COLUMN IF NOT EXISTS provider VARCHAR(64) DEFAULT 'local';"))
-        await conn.execute(text("ALTER TABLE files ALTER COLUMN file_size TYPE BIGINT;"))
-        await conn.execute(text("ALTER TABLE files ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;"))
-        await conn.execute(text("ALTER TABLE files ADD COLUMN IF NOT EXISTS thumbnail TEXT;"))
-        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS allow_downloads BOOLEAN DEFAULT TRUE;"))
-        await conn.execute(text("ALTER TABLE files ADD COLUMN IF NOT EXISTS folder_id INTEGER REFERENCES folders(id);"))
+    # Run each migration separately so one failure doesn't block others
+    migrations = [
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS storage_used BIGINT DEFAULT 0;",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS api_credits BIGINT DEFAULT 0;",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS total_api_calls BIGINT DEFAULT 0;",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS plan VARCHAR(20) DEFAULT 'free';",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS storage_limit BIGINT DEFAULT 2147483648;",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_expires_at TIMESTAMP;",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS razorpay_customer_id VARCHAR(100);",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS razorpay_subscription_id VARCHAR(100);",
+        "ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS scopes JSONB DEFAULT '[\"*\"]'::jsonb;",
+        "ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS app_restrictions JSONB DEFAULT '{}'::jsonb;",
+        "ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS rules JSONB DEFAULT '{}'::jsonb;",
+        "ALTER TABLE node_registry ADD COLUMN IF NOT EXISTS storage_used BIGINT DEFAULT 0;",
+        "ALTER TABLE shard_registry ADD COLUMN IF NOT EXISTS shard_size INT DEFAULT 0;",
+        "ALTER TABLE shard_registry ADD COLUMN IF NOT EXISTS provider VARCHAR(64) DEFAULT 'local';",
+        "ALTER TABLE files ALTER COLUMN file_size TYPE BIGINT;",
+        "ALTER TABLE files ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;",
+        "ALTER TABLE files ADD COLUMN IF NOT EXISTS thumbnail TEXT;",
+        "ALTER TABLE files ADD COLUMN IF NOT EXISTS folder_id INTEGER REFERENCES folders(id);",
+        "ALTER TABLE shares ADD COLUMN IF NOT EXISTS allow_downloads BOOLEAN DEFAULT TRUE;",
+        "ALTER TABLE shares DROP COLUMN IF EXISTS share_password;",
+    ]
 
+    for migration in migrations:
         try:
-            await conn.execute(text("ALTER TABLE shares RENAME COLUMN share_token TO share_token_hash;"))
-        except Exception:
-            pass 
-            
-        await conn.execute(text("ALTER TABLE shares DROP COLUMN IF EXISTS share_password;"))
-        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS max_views INTEGER;"))
-        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS view_count INTEGER NOT NULL DEFAULT 0;"))
-        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);"))
-        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS wrapped_content_key VARCHAR(255);"))
-        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS kdf_salt VARCHAR(255);"))
-        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS kdf_iterations INTEGER;"))
-        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS failed_attempts INTEGER NOT NULL DEFAULT 0;"))
-        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP WITH TIME ZONE;"))
+            async with engine.begin() as conn:
+                await conn.execute(text(migration))
+        except Exception as e:
+            print(f"[MIGRATION] Skipped: {migration[:60]}... → {e}")
 
-        # UUID columns for clean URL routing (added after initial schema)
-        await conn.execute(text(
-            "ALTER TABLE files ADD COLUMN IF NOT EXISTS file_uuid UUID DEFAULT gen_random_uuid() NOT NULL;"
-        ))
-        await conn.execute(text(
-            "CREATE UNIQUE INDEX IF NOT EXISTS ix_files_file_uuid ON files(file_uuid);"
-        ))
-        await conn.execute(text(
-            "ALTER TABLE folders ADD COLUMN IF NOT EXISTS folder_uuid UUID DEFAULT gen_random_uuid() NOT NULL;"
-        ))
-        await conn.execute(text(
-            "CREATE UNIQUE INDEX IF NOT EXISTS ix_folders_folder_uuid ON folders(folder_uuid);"
-        ))
     await initialize_nodes()
+    from app.monitoring.otel import instrument_app
     instrument_app(app)
-# cache-bust
