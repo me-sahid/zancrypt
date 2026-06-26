@@ -138,6 +138,21 @@ async def on_startup() -> None:
         await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS allow_downloads BOOLEAN DEFAULT TRUE;"))
         await conn.execute(text("ALTER TABLE files ADD COLUMN IF NOT EXISTS folder_id INTEGER REFERENCES folders(id);"))
 
+        try:
+            await conn.execute(text("ALTER TABLE shares RENAME COLUMN share_token TO share_token_hash;"))
+        except Exception:
+            pass 
+            
+        await conn.execute(text("ALTER TABLE shares DROP COLUMN IF EXISTS share_password;"))
+        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS max_views INTEGER;"))
+        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS view_count INTEGER NOT NULL DEFAULT 0;"))
+        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);"))
+        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS wrapped_content_key VARCHAR(255);"))
+        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS kdf_salt VARCHAR(255);"))
+        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS kdf_iterations INTEGER;"))
+        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS failed_attempts INTEGER NOT NULL DEFAULT 0;"))
+        await conn.execute(text("ALTER TABLE shares ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP WITH TIME ZONE;"))
+
         # UUID columns for clean URL routing (added after initial schema)
         await conn.execute(text(
             "ALTER TABLE files ADD COLUMN IF NOT EXISTS file_uuid UUID DEFAULT gen_random_uuid() NOT NULL;"

@@ -11,7 +11,7 @@ class Share(Base):
     share_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     file_id = Column(Integer, ForeignKey("files.id", ondelete="CASCADE"), nullable=False, index=True)
     owner_user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    share_token = Column(String(255), unique=True, nullable=False, index=True)
+    share_token_hash = Column(String(255), unique=True, nullable=False, index=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=True)
     max_downloads = Column(Integer, nullable=True)
@@ -21,7 +21,21 @@ class Share(Base):
     allow_downloads = Column(Boolean, default=True, nullable=False)
     delete_original = Column(Boolean, default=False, nullable=False)
     notify_on_expire = Column(Boolean, default=True, nullable=False)
-    share_password = Column(String(255), nullable=True)
+    
+    # View Limits
+    max_views = Column(Integer, nullable=True)
+    view_count = Column(Integer, default=0, nullable=False)
+    
+    # Password Protection (Client-side key wrapping + Server-side gate)
+    password_hash = Column(String(255), nullable=True)
+    wrapped_content_key = Column(String(255), nullable=True)
+    kdf_salt = Column(String(255), nullable=True)
+    kdf_iterations = Column(Integer, nullable=True)
+    
+    # Rate Limiting
+    failed_attempts = Column(Integer, default=0, nullable=False)
+    locked_until = Column(DateTime(timezone=True), nullable=True)
+
     # VULN-010: server-side timer enforcement
     first_accessed_at = Column(DateTime(timezone=True), nullable=True)  # Set on first wrapper download
     wrapper_timer_seconds = Column(Integer, nullable=True)   # TTL stored at wrapper-generation time

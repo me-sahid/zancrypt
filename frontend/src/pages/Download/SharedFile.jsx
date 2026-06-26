@@ -30,6 +30,7 @@ import axios from 'axios';
 import api from '../../services/api';
 import { toast } from 'react-hot-toast';
 import Button from '../../components/ui/Button';
+import { unwrapKeyWithPassword } from '../../utils/shareCrypto';
 
 const hexToBytes = (hex) => {
   if (!hex) return new Uint8Array(0);
@@ -92,13 +93,24 @@ const SharedFile = () => {
     // Fetch file metadata (validates tokens)
     const validateToken = async () => {
       try {
+        const hashPassword = async (pwd) => {
+          const pwdBuf = new TextEncoder().encode(pwd);
+          const hashBuf = await window.crypto.subtle.digest('SHA-256', pwdBuf);
+          return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        };
+        
+        let passwordVerifier = undefined;
+        if (sharePassword) {
+          passwordVerifier = await hashPassword(sharePassword);
+        }
+
         if (isMultiShare) {
           const tokenArray = tokensParam.split(',').filter(Boolean);
           const detailsList = [];
           
           for (const t of tokenArray) {
             const res = await api.get(`/api/share/${t}`, {
-              headers: sharePassword ? { 'x-share-password': sharePassword } : {}
+              headers: passwordVerifier ? { 'x-share-password': passwordVerifier } : {}
             });
             detailsList.push(res.data);
           }
@@ -111,7 +123,7 @@ const SharedFile = () => {
           setErrorMsg('');
         } else {
           const res = await api.get(`/api/share/${token}`, {
-            headers: sharePassword ? { 'x-share-password': sharePassword } : {}
+            headers: passwordVerifier ? { 'x-share-password': passwordVerifier } : {}
           });
           setFileDetails(res.data);
           setErrorStatus(200);
@@ -262,7 +274,9 @@ const SharedFile = () => {
 
   // Perform client-side assembly & simulated crypto decryption with the fragment keys
   const handleDecryptAndDownload = async () => {
-    if (!key) {
+    // If password-protected, the key is unwrapped using the password. Otherwise from URL.
+    const isPasswordProtected = Array.isArray(fileDetails) ? fileDetails[0]?.wrapped_content_key : fileDetails?.wrapped_content_key;
+    if (!key && !isPasswordProtected) {
       toast.error('Decryption key is missing in URL fragment!');
       return;
     }
@@ -284,10 +298,25 @@ const SharedFile = () => {
       
       if (isMultiShare) {
         const decryptedList = [];
-        const keyList = key.split(',');
+        const keyList = key ? key.split(',') : [];
         
         for (let i = 0; i < fileDetails.length; i++) {
           const detail = fileDetails[i];
+          
+          let activeKey = keyList[i];
+          if (detail.wrapped_content_key) {
+            try {
+              activeKey = await unwrapKeyWithPassword(
+                detail.wrapped_content_key, 
+                detail.kdf_salt, 
+                detail.kdf_iterations, 
+                sharePassword
+              );
+            } catch (err) {
+              throw new Error(`Failed to unwrap key for ${detail.encrypted_filename}. Incorrect password.`);
+            }
+          }
+
           const shards = detail.shards;
           if (!shards || !Array.isArray(shards)) {
             throw new Error(`Shard blocks missing for file: ${detail.encrypted_filename}`);
@@ -337,6 +366,19 @@ const SharedFile = () => {
         setDecryptedFile(decryptedList);
         setActiveMultiIndex(0);
       } else {
+        if (fileDetails.wrapped_content_key) {
+          try {
+            await unwrapKeyWithPassword(
+              fileDetails.wrapped_content_key, 
+              fileDetails.kdf_salt, 
+              fileDetails.kdf_iterations, 
+              sharePassword
+            );
+          } catch (err) {
+            throw new Error('Failed to unwrap content key. Incorrect password.');
+          }
+        }
+
         const shards = fileDetails.shards;
         if (!shards || !Array.isArray(shards)) {
           throw new Error('No shard binary data available in response payload.');

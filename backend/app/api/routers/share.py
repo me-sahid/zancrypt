@@ -18,6 +18,7 @@ from app.api.deps import get_async_session, get_current_user, get_current_user_o
 from app.models.file import File
 from app.models.manifest import Manifest
 from app.models.share import Share
+from app.models.audit import AuditLog, SecurityEvent
 from app.core.crypto import encrypt_symmetric, decrypt_symmetric
 
 logger = logging.getLogger(__name__)
@@ -30,9 +31,15 @@ class ShareCreateRequest(BaseModel):
     file_id: int
     ttl_hours: Optional[float] = None  # None or 0 = Never
     max_downloads: Optional[int] = None  # None or 0 = Unlimited
+    max_views: Optional[int] = None
     label: Optional[str] = None
     allow_downloads: Optional[bool] = True
-    password: Optional[str] = None
+    
+    # Password wrapping parameters
+    password_verifier: Optional[str] = None # SHA-256 of password from client, to be bcrypt'd by server
+    wrapped_content_key: Optional[str] = None
+    kdf_salt: Optional[str] = None
+    kdf_iterations: Optional[int] = None
 
 
 class ShareCreateResponse(BaseModel):
@@ -47,10 +54,16 @@ class ShareListItem(BaseModel):
     expires_at: Optional[datetime] = None
     max_downloads: Optional[int] = None
     download_count: int
+    max_views: Optional[int] = None
+    view_count: int = 0
     is_active: bool
     label: Optional[str] = None
     allow_downloads: bool
-    share_password: Optional[str] = None
+    
+    # Expose wrapping parameters instead of raw password
+    wrapped_content_key: Optional[str] = None
+    kdf_salt: Optional[str] = None
+    kdf_iterations: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -65,8 +78,23 @@ class SharedFileResponse(BaseModel):
     manifest: dict
     shards: List[dict]  # Contains list of { shard_id, data (hex) }
     allow_downloads: bool
+    
+    # If password protected, provide these so client can unwrap the key
+    wrapped_content_key: Optional[str] = None
+    kdf_salt: Optional[str] = None
+    kdf_iterations: Optional[int] = None
 
 # --- API Endpoints ---
+
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
 
 @router.post("/create", response_model=ShareCreateResponse, status_code=status.HTTP_201_CREATED)
 async def create_share(
@@ -89,8 +117,10 @@ async def create_share(
             detail="Access denied or file not found"
         )
 
-    # 2. Generate a secure, unique share token
+    # 2. Generate a secure, unique share token and hash it for DB storage
     share_token = secrets.token_urlsafe(32)
+    import hashlib
+    share_token_hash = hashlib.sha256(share_token.encode('utf-8')).hexdigest()
 
     # 3. Calculate optional expiration timestamp
     expires_at = None
@@ -101,18 +131,37 @@ async def create_share(
     db_share = Share(
         file_id=payload.file_id,
         owner_user_id=current_user.id,
-        share_token=share_token,
+        share_token_hash=share_token_hash,
         expires_at=expires_at,
         max_downloads=payload.max_downloads if payload.max_downloads and payload.max_downloads > 0 else None,
+        max_views=payload.max_views if payload.max_views and payload.max_views > 0 else None,
         download_count=0,
+        view_count=0,
         is_active=True,
         label=payload.label,
         allow_downloads=payload.allow_downloads if payload.allow_downloads is not None else True,
-        share_password=encrypt_symmetric(payload.password) if payload.password else None,
+        
+        password_hash=get_password_hash(payload.password_verifier) if payload.password_verifier else None,
+        wrapped_content_key=payload.wrapped_content_key,
+        kdf_salt=payload.kdf_salt,
+        kdf_iterations=payload.kdf_iterations,
     )
     
     session.add(db_share)
     await session.commit()
+    await session.refresh(db_share)
+
+    # Activity Log
+    audit = AuditLog(
+        user_id=current_user.id,
+        action="share_created",
+        resource=f"share_{db_share.share_id}",
+        status="success",
+        metadata_json={"file_id": db_share.file_id, "label": db_share.label}
+    )
+    session.add(audit)
+    await session.commit()
+
     return {"share_token": share_token}
 
 
@@ -139,15 +188,19 @@ async def list_shares(
             share_id=share.share_id,
             file_id=share.file_id,
             encrypted_filename=share.file.encrypted_filename if share.file else "Unknown File",
-            share_token=share.share_token,
+            share_token=share.share_token_hash, # Only hash is available here, not the raw token
             created_at=share.created_at,
             expires_at=share.expires_at,
             max_downloads=share.max_downloads,
             download_count=share.download_count,
+            max_views=share.max_views,
+            view_count=share.view_count,
             is_active=share.is_active,
             label=share.label,
             allow_downloads=share.allow_downloads if getattr(share, "allow_downloads", None) is not None else True,
-            share_password=decrypt_symmetric(share.share_password) if getattr(share, "share_password", None) else None
+            wrapped_content_key=share.wrapped_content_key,
+            kdf_salt=share.kdf_salt,
+            kdf_iterations=share.kdf_iterations
         ))
     return response_items
 
@@ -185,7 +238,9 @@ async def revoke_share(
     """
     Revokes an active share link (soft-delete by setting is_active=false).
     """
-    stmt = select(Share).where(Share.share_token == token, Share.owner_user_id == current_user.id)
+    import hashlib
+    token_hash = hashlib.sha256(token.encode('utf-8')).hexdigest()
+    stmt = select(Share).where(Share.share_token_hash == token_hash, Share.owner_user_id == current_user.id)
     result = await session.execute(stmt)
     db_share = result.scalar_one_or_none()
     
@@ -197,6 +252,18 @@ async def revoke_share(
     
     db_share.is_active = False
     await session.commit()
+
+    # Activity Log
+    audit = AuditLog(
+        user_id=current_user.id,
+        action="share_revoked",
+        resource=f"share_{db_share.share_id}",
+        status="success",
+        metadata_json={"file_id": db_share.file_id}
+    )
+    session.add(audit)
+    await session.commit()
+
     return {"status": "revoked"}
 
 
@@ -217,10 +284,13 @@ async def get_shared_file(
     If the max_downloads limit is hit during this request, it triggers an async
     auto-deletion workflow (if configured).
     """
+    import hashlib
+    token_hash = hashlib.sha256(token.encode('utf-8')).hexdigest()
+    
     stmt = (
         select(Share)
         .options(selectinload(Share.file))
-        .where(Share.share_token == token)
+        .where(Share.share_token_hash == token_hash)
     )
     result = await session.execute(stmt)
     db_share = result.scalar_one_or_none()
@@ -231,19 +301,60 @@ async def get_shared_file(
             detail="Share link not found"
         )
 
-    # Password Check
-    if getattr(db_share, "share_password", None):
-        provided_password = request.headers.get("x-share-password")
-        if not provided_password:
+    # Check rate limit for failed attempts (if password protected)
+    if db_share.locked_until and datetime.now(timezone.utc) < db_share.locked_until.replace(tzinfo=timezone.utc):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many incorrect password attempts. Please try again later."
+        )
+
+    # Password check happens on client-side via PBKDF2 unwrapping, 
+    # but we still require the raw wrapped_content_key to proceed.
+    # We verify the password_verifier to protect the shards from offline brute force.
+    if db_share.password_hash:
+        provided_verifier = request.headers.get("x-share-password")
+        if not provided_verifier:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Password required"
             )
-        if provided_password != decrypt_symmetric(db_share.share_password):
+        if not verify_password(provided_verifier, db_share.password_hash):
+            # Increment failed attempts
+            db_share.failed_attempts += 1
+            
+            # Audit log for failure
+            audit = AuditLog(
+                user_id=db_share.owner_user_id,
+                action="share_password_failed",
+                resource=f"share_{db_share.share_id}",
+                status="failure",
+                ip_address=request.client.host if request.client else None
+            )
+            session.add(audit)
+
+            if db_share.failed_attempts >= 5:
+                db_share.locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
+                db_share.failed_attempts = 0 # reset for after lockout
+                
+                # Security event for rate limit exceeded
+                sec_event = SecurityEvent(
+                    user_id=db_share.owner_user_id,
+                    event_type="share_brute_force_attempt",
+                    severity="high",
+                    description=f"Share link {db_share.share_id} locked due to 5 consecutive failed password attempts."
+                )
+                session.add(sec_event)
+                
+            await session.commit()
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect password"
             )
+        else:
+            # Reset on success
+            if db_share.failed_attempts > 0:
+                db_share.failed_attempts = 0
+                await session.commit()
 
     # Check active status
     if not db_share.is_active:
@@ -275,11 +386,30 @@ async def get_shared_file(
             status_code=status.HTTP_410_GONE,
             detail="This share link has reached its maximum download limit"
         )
-
-    # Increment download counter (commit later, after successfully reading shards to be safe)
-    db_share.download_count += 1
-    if db_share.max_downloads and db_share.download_count >= db_share.max_downloads:
+        
+    # Check View Limit
+    if db_share.max_views and db_share.view_count >= db_share.max_views:
         db_share.is_active = False
+        await session.commit()
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="This share link has reached its maximum view limit"
+        )
+
+    # Increment view counter (commit later, after successfully reading shards to be safe)
+    db_share.view_count += 1
+    if db_share.max_views and db_share.view_count >= db_share.max_views:
+        db_share.is_active = False
+
+    # Activity log for access
+    audit = AuditLog(
+        user_id=db_share.owner_user_id,
+        action="share_accessed",
+        resource=f"share_{db_share.share_id}",
+        status="success",
+        ip_address=request.client.host if request.client else None
+    )
+    session.add(audit)
 
     # Load manifest and nodes assignment
     manifest_stmt = select(Manifest).where(Manifest.file_id == db_share.file_id)
@@ -334,7 +464,10 @@ async def get_shared_file(
         integrity_hash=file.integrity_hash,
         manifest=manifest_data,
         shards=shards_list,
-        allow_downloads=db_share.allow_downloads if getattr(db_share, "allow_downloads", None) is not None else True
+        allow_downloads=db_share.allow_downloads if getattr(db_share, "allow_downloads", None) is not None else True,
+        wrapped_content_key=db_share.wrapped_content_key,
+        kdf_salt=db_share.kdf_salt,
+        kdf_iterations=db_share.kdf_iterations,
     )
 
 
@@ -386,7 +519,9 @@ async def generate_wrapper(
         )
 
     # 3. Verify share token matches file
-    share_stmt = select(Share).where(Share.share_token == payload.share_token, Share.file_id == payload.file_id)
+    import hashlib
+    token_hash = hashlib.sha256(payload.share_token.encode('utf-8')).hexdigest()
+    share_stmt = select(Share).where(Share.share_token_hash == token_hash, Share.file_id == payload.file_id)
     share_result = await session.execute(share_stmt)
     db_share = share_result.scalar_one_or_none()
     if not db_share:
@@ -538,10 +673,12 @@ async def download_public_wrapper(
     HTML wrapper directly, and streams it back to the client as an attachment.
     """
     # 1. Fetch and validate share
+    import hashlib
+    token_hash = hashlib.sha256(token.encode('utf-8')).hexdigest()
     stmt = (
         select(Share)
         .options(selectinload(Share.file))
-        .where(Share.share_token == token)
+        .where(Share.share_token_hash == token_hash)
     )
     result = await session.execute(stmt)
     db_share = result.scalar_one_or_none()
@@ -552,19 +689,19 @@ async def download_public_wrapper(
             detail="Share link not found"
         )
 
-    # Password Check
-    if getattr(db_share, "share_password", None):
-        provided_password = request.query_params.get("pwd") or request.headers.get("x-share-password")
-        if not provided_password:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Password required"
-            )
-        if provided_password != decrypt_symmetric(db_share.share_password):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect password"
-            )
+    # Password Check / Rate Limiting
+    if db_share.locked_until and datetime.now(timezone.utc) < db_share.locked_until.replace(tzinfo=timezone.utc):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many incorrect password attempts. Please try again later."
+        )
+
+    # Note: True password verification is done client side via unwrapping.
+    if getattr(db_share, "wrapped_content_key", None):
+         raise HTTPException(
+             status_code=status.HTTP_400_BAD_REQUEST,
+             detail="Password protected shares must be accessed via the web application interface."
+         )
 
     if not db_share.is_active:
         raise HTTPException(

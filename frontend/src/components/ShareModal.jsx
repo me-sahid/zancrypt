@@ -11,6 +11,7 @@ import Button from './ui/Button';
 import { useAuthStore } from '../store/useStore';
 import { useUploadStore } from '../store/useUploadStore';
 import { getUserPlanConfig } from '../utils/planLimits';
+import { wrapKeyWithPassword } from '../utils/shareCrypto';
 
 const ShareModal = ({ file, onClose }) => {
   const ttlOptions = [
@@ -35,6 +36,17 @@ const ShareModal = ({ file, onClose }) => {
   const [selectedDlOption, setSelectedDlOption] = useState(dlOptions[0]);
   const [customDownloads, setCustomDownloads] = useState('3');
   const [isDlDropdownOpen, setIsDlDropdownOpen] = useState(false);
+
+  const vwOptions = [
+    { label: 'Unlimited Views', value: 0 },
+    { label: '1 View only', value: 1 },
+    { label: '5 Views max', value: 5 },
+    { label: '10 Views max', value: 10 },
+    { label: 'Custom Limit...', value: 'custom' }
+  ];
+  const [selectedVwOption, setSelectedVwOption] = useState(vwOptions[0]);
+  const [customViews, setCustomViews] = useState('3');
+  const [isVwDropdownOpen, setIsVwDropdownOpen] = useState(false);
 
   const [label, setLabel] = useState('');
   const [allowDownloads, setAllowDownloads] = useState(true);
@@ -81,6 +93,10 @@ const ShareModal = ({ file, onClose }) => {
   const fileName = isMulti ? `${file.length} Secure Assets` : (file?.file_name || file?.encrypted_filename || file?.filename || 'decrypted_file');
 
   const getBaseUrl = () => {
+    const hostname = window.location.hostname;
+    if (hostname.includes('drive.zancrypt.in') || hostname.includes('zancrypt-front.pages.dev')) {
+      return 'https://zancrypt.in';
+    }
     return window.location.origin;
   };
 
@@ -95,11 +111,19 @@ const ShareModal = ({ file, onClose }) => {
   const shareUrl = React.useMemo(() => {
     if (isMulti) {
       if (multiTokens.length === 0) return '';
-      return `${getBaseUrl()}/share/multi?tokens=${multiTokens.join(',')}#keys=${multiKeys.join(',')}`;
+      // If password protected, keys are fetched and unwrapped from server, not in URL
+      if (enablePassword) {
+        return `${getBaseUrl()}/s/multi?tokens=${multiTokens.join(',')}`;
+      }
+      return `${getBaseUrl()}/s/multi?tokens=${multiTokens.join(',')}#keys=${multiKeys.join(',')}`;
     }
     if (!shareToken) return '';
-    return `${getBaseUrl()}/share/${shareToken}#${encryptionKey}`;
-  }, [isMulti, shareToken, multiTokens, multiKeys, encryptionKey]);
+    // If password protected, the key is fetched and unwrapped from server
+    if (enablePassword) {
+      return `${getBaseUrl()}/s/${shareToken}`;
+    }
+    return `${getBaseUrl()}/s/${shareToken}#${encryptionKey}`;
+  }, [isMulti, shareToken, multiTokens, multiKeys, encryptionKey, enablePassword]);
 
   const handleCreateShare = async (e) => {
     e.preventDefault();
@@ -125,19 +149,34 @@ const ShareModal = ({ file, onClose }) => {
         ? parseInt(customDownloads, 10) || 0
         : parseInt(selectedDlOption.value, 10);
 
+      let finalMaxViews = selectedVwOption.value === 'custom'
+        ? parseInt(customViews, 10) || 0
+        : parseInt(selectedVwOption.value, 10);
+
       if (isMulti) {
         const tokens = []; const keys = [];
         for (const item of file) {
           const keyBytes = new Uint8Array(32);
           window.crypto.getRandomValues(keyBytes);
           const derivedKey = btoa(String.fromCharCode.apply(null, keyBytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+          
+          let wrapPayload = {};
+          if (enablePassword && password) {
+            wrapPayload = await wrapKeyWithPassword(derivedKey, password);
+            const pwdBuf = new TextEncoder().encode(password);
+            const hashBuf = await window.crypto.subtle.digest('SHA-256', pwdBuf);
+            const hashHex = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+            wrapPayload.password_verifier = hashHex;
+          }
+
           const res = await api.post('/api/share/create', {
             file_id: parseInt(item.file_id || item.id, 10),
             ttl_hours: finalTtl,
             max_downloads: finalMaxDownloads,
+            max_views: finalMaxViews,
             label: label.trim() ? `${label.trim()} (${item.encrypted_filename || 'asset'})` : undefined,
             allow_downloads: allowDownloads,
-            password: enablePassword ? password : undefined
+            ...wrapPayload
           });
           tokens.push(res.data.share_token);
           keys.push(derivedKey);
@@ -145,13 +184,24 @@ const ShareModal = ({ file, onClose }) => {
         setMultiTokens(tokens); setMultiKeys(keys);
         toast.success('Multi-Asset share link created!');
       } else {
+        
+        let wrapPayload = {};
+        if (enablePassword && password) {
+          wrapPayload = await wrapKeyWithPassword(encryptionKey, password);
+          const pwdBuf = new TextEncoder().encode(password);
+          const hashBuf = await window.crypto.subtle.digest('SHA-256', pwdBuf);
+          const hashHex = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+          wrapPayload.password_verifier = hashHex;
+        }
+
         const res = await api.post('/api/share/create', {
           file_id: parseInt(fileId, 10),
           ttl_hours: finalTtl,
           max_downloads: finalMaxDownloads,
+          max_views: finalMaxViews,
           label: label.trim() || undefined,
           allow_downloads: allowDownloads,
-          password: enablePassword ? password : undefined
+          ...wrapPayload
         });
         setShareToken(res.data.share_token);
         toast.success('Zero-Knowledge share link created!');
@@ -278,6 +328,31 @@ const ShareModal = ({ file, onClose }) => {
                   <div className="space-y-2">
                     <label className="text-xs font-mono text-text-muted uppercase tracking-widest">Custom Limit</label>
                     <input type="number" min="1" value={customDownloads} onChange={(e) => setCustomDownloads(e.target.value)} className="w-full bg-void border border-border focus:border-accent text-xs font-mono py-2 px-3 outline-none" />
+                  </div>
+                )}
+
+                <div className="space-y-2 relative">
+                  <label className="text-xs font-mono text-text-muted uppercase tracking-widest flex items-center">
+                    <Eye className="w-3 h-3 mr-2 text-accent" /> View Limit
+                  </label>
+                  <button type="button" onClick={() => setIsVwDropdownOpen(!isVwDropdownOpen)} className="w-full bg-void border border-border text-left px-3 py-2 text-xs font-mono text-text-primary flex justify-between items-center">
+                    {selectedVwOption.label} <span className="text-xs">▼</span>
+                  </button>
+                  {isVwDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-surface-raised border border-border z-20 shadow-xl">
+                      {vwOptions.map(opt => (
+                        <div key={opt.value} onClick={() => { setSelectedVwOption(opt); setIsVwDropdownOpen(false); }} className="px-3 py-2 text-xs font-mono text-text-secondary hover:text-accent hover:bg-surface cursor-pointer">
+                          {opt.label}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {selectedVwOption.value === 'custom' && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-mono text-text-muted uppercase tracking-widest">Custom Limit</label>
+                    <input type="number" min="1" value={customViews} onChange={(e) => setCustomViews(e.target.value)} className="w-full bg-void border border-border focus:border-accent text-xs font-mono py-2 px-3 outline-none" />
                   </div>
                 )}
 
