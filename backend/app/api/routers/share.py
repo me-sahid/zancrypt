@@ -90,11 +90,16 @@ from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+import hashlib
+
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    # SHA-256 the password first → always 64 hex chars (well under 72 bytes)
+    hashed = hashlib.sha256(password.encode()).hexdigest()
+    return pwd_context.hash(hashed)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    hashed = hashlib.sha256(plain_password.encode()).hexdigest()
+    return pwd_context.verify(hashed, hashed_password)
 
 @router.post("/create", response_model=ShareCreateResponse, status_code=status.HTTP_201_CREATED)
 async def create_share(
