@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Share2, Copy, Check, Clock, Download, 
-  Tag, AlertTriangle, QrCode, Lock
+  Tag, AlertTriangle, QrCode, Lock,Eye
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import api from '../services/api';
