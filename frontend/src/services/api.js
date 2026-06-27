@@ -74,12 +74,15 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);
       } catch (refreshError) {
-        processQueue(refreshError, null);
-        useAuthStore.getState().logout();
-        return Promise.reject(refreshError);
-      } finally {
-        _isRefreshing = false;
-      }
+          processQueue(refreshError, null);
+          const status = refreshError?.response?.status;
+          if (status === 401 || status === 403) {
+            useAuthStore.getState().logout();
+          }
+          return Promise.reject(refreshError);
+        } finally {
+          _isRefreshing = false;
+        }
     }
 
     // Connectivity tracking
