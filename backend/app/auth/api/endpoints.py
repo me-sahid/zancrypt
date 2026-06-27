@@ -153,7 +153,7 @@ async def register_verify(
         value=refresh_token,
         httponly=True,
         secure=True,
-        samesite="lax",
+        samesite="none",
         domain=".zancrypt.in",
         max_age=7 * 24 * 60 * 60,
     
@@ -269,7 +269,7 @@ async def login_verify(
             value=refresh_token,
             httponly=True,
             secure=True,
-            samesite="lax",
+            samesite="none",
             domain=".zancrypt.in",
             max_age=7 * 24 * 60 * 60,
         )
@@ -340,7 +340,7 @@ async def login_fallback(
         value=refresh_token,
         httponly=True,
         secure=True,
-        samesite="lax",
+        samesite="none",
         domain=".zancrypt.in",
         max_age=7 * 24 * 60 * 60,
     
@@ -408,7 +408,7 @@ async def refresh_token(
         value=refresh_token,
         httponly=True,
         secure=True,
-        samesite="lax",
+        samesite="none",
         domain=".zancrypt.in",
         max_age=7 * 24 * 60 * 60,
     
