@@ -31,14 +31,19 @@ async def login(
 ) -> TokenResponse:
     tokens = await AuthService(session).authenticate_user(form_data.username, form_data.password)
     
-    # Set the refresh token in an HttpOnly cookie
+    response.delete_cookie(
+        key="refresh_token",
+        domain="api.zancrypt.in"
+    )
+    
     response.set_cookie(
         key="refresh_token",
         value=tokens.refresh_token,
         httponly=True,
-        secure=True, # Must be True for SameSite=None
-        samesite="none",  # Cross-site cookies mandatory for detached frontend deployments
-        max_age=7 * 24 * 60 * 60, # 7 days
+        secure=True,
+        samesite="none",
+        domain=".zancrypt.in",
+        max_age=7 * 24 * 60 * 60,
     )
     return tokens
 
@@ -56,14 +61,19 @@ async def refresh_token(
         
     tokens = await AuthService(session).refresh_tokens(token)
     
-    # Rotate the refresh cookie
+    response.delete_cookie(
+        key="refresh_token",
+        domain="api.zancrypt.in"
+    )
+    
     response.set_cookie(
         key="refresh_token",
         value=tokens.refresh_token,
         httponly=True,
         secure=True,
         samesite="none",
-        max_age=7 * 24 * 60 * 60, # 7 days
+        domain=".zancrypt.in",
+        max_age=7 * 24 * 60 * 60,
     )
     return tokens
 
