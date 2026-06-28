@@ -165,6 +165,11 @@ const Files = () => {
   const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
 
+  // Delete Modal State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [infoTargetFile, setInfoTargetFile] = useState(null);
 
@@ -251,12 +256,51 @@ const Files = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const openDeleteModal = (target) => {
+    setDeleteTarget(target);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
     try {
-      await fileService.deleteFile(id);
+      if (deleteTarget.type === 'file') {
+        await fileService.deleteFile(deleteTarget.id);
+      } else if (deleteTarget.type === 'folder') {
+        await folderService.deleteFolder(deleteTarget.id);
+      } else if (deleteTarget.type === 'multi') {
+        const itemsToDelete = getTargetItems();
+        if (itemsToDelete.length === 0) {
+          setIsDeleting(false);
+          setIsDeleteModalOpen(false);
+          return;
+        }
+        toast.loading(`Destroying ${itemsToDelete.length} item(s)...`, { id: 'multi-delete' });
+        let success = 0, fail = 0;
+        for (const item of itemsToDelete) {
+          try {
+            if (item.type === 'folder') {
+              await folderService.deleteFolder(item.id);
+            } else {
+              await fileService.deleteFile(item.id);
+            }
+            success++;
+          } catch (e) {
+            fail++;
+          }
+        }
+        if (success > 0) toast.success('Items destroyed', { id: 'multi-delete' });
+        if (fail > 0) toast.error('Failed to destroy some items', { id: 'multi-delete' });
+        setSelectedIds({});
+      }
       fetchFiles();
+      setIsDeleteModalOpen(false);
+      setDeleteTarget(null);
     } catch (error) {
-      toast.error('Failed to destroy file');
+      toast.error('Failed to destroy item');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -328,25 +372,10 @@ const Files = () => {
     }
   };
 
-  const handleMultiDelete = async () => {
+  const handleMultiDelete = () => {
     const itemsToDelete = getTargetItems();
     if (itemsToDelete.length === 0) return;
-    
-    toast.loading(`Destroying ${itemsToDelete.length} item(s)...`, { id: 'multi-delete' });
-    try {
-      for (const item of itemsToDelete) {
-        if (item.isFolder) {
-          await folderService.deleteFolder(item.id);
-        } else {
-          await fileService.deleteFile(item.id);
-        }
-      }
-      toast.success('Items destroyed', { id: 'multi-delete' });
-      setSelectedIds({});
-      fetchFiles();
-    } catch (error) {
-      toast.error('Failed to destroy some items', { id: 'multi-delete' });
-    }
+    openDeleteModal({ type: 'multi', count: itemsToDelete.length });
   };
 
   const openShareTarget = () => {
@@ -803,7 +832,7 @@ const Files = () => {
                     </td>
                     <td className="py-4 px-6 text-right opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="flex items-center justify-end space-x-2">
-                        <button onClick={(e) => { e.stopPropagation(); folderService.deleteFolder(folder.id).then(() => { fetchFiles(); }); }} className="p-2 hover:bg-danger/10 hover:text-danger text-text-muted rounded transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                        <button onClick={(e) => { e.stopPropagation(); openDeleteModal({ type: 'folder', id: folder.id, name: decryptedFolderNames[folder.id] || folder.encrypted_name }); }} className="p-2 hover:bg-danger/10 hover:text-danger text-text-muted rounded transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </td>
                   </tr>
@@ -857,7 +886,7 @@ const Files = () => {
                           <div className="flex items-center justify-end space-x-2">
                             <button onClick={(e) => { e.stopPropagation(); handlePreview(file); }} className="p-2 hover:bg-surface-raised hover:text-accent text-text-muted rounded transition-colors" title="Preview"><Eye className="w-4 h-4" /></button>
                             <button onClick={(e) => { e.stopPropagation(); setShareFilesTarget(file); setIsShareModalOpen(true); }} className="p-2 hover:bg-surface-raised hover:text-accent text-text-muted rounded transition-colors" title="Share"><Share2 className="w-4 h-4" /></button>
-                            <button onClick={(e) => { e.stopPropagation(); handleDelete(file.id); }} className="p-2 hover:bg-danger/10 hover:text-danger text-text-muted rounded transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                            <button onClick={(e) => { e.stopPropagation(); openDeleteModal({ type: 'file', id: file.id, name: decryptedNames[file.id] || file.encrypted_filename }); }} className="p-2 hover:bg-danger/10 hover:text-danger text-text-muted rounded transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
                           </div>
                         </td>
                       </tr>
@@ -1096,6 +1125,82 @@ const Files = () => {
         />,
         document.body
       )}
+
+      {/* File Info Modal */}
+      {isInfoModalOpen && infoTargetFile && createPortal(
+        <FileInfoModal
+          isOpen={isInfoModalOpen}
+          onClose={() => setIsInfoModalOpen(false)}
+          file={infoTargetFile}
+        />,
+        document.body
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {isDeleteModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-void border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden relative"
+            >
+              <div className="flex items-center justify-between p-5 border-b border-border bg-surface">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-danger/10 flex items-center justify-center">
+                    <Trash2 className="w-5 h-5 text-danger" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-text-primary">Confirm Deletion</h3>
+                    <p className="text-xs text-text-muted font-mono uppercase tracking-widest mt-0.5">Permanent action</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setIsDeleteModalOpen(false)}
+                  disabled={isDeleting}
+                  className="p-2 text-text-muted hover:text-text-primary rounded-lg hover:bg-surface-raised transition-colors disabled:opacity-50"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6">
+                <p className="text-text-secondary text-sm">
+                  {deleteTarget?.type === 'multi' 
+                    ? `Are you sure you want to permanently delete ${deleteTarget.count} item(s)?`
+                    : `Are you sure you want to permanently delete "${deleteTarget?.name || 'this item'}"?`}
+                </p>
+                <p className="text-danger text-sm mt-2 font-semibold">This action cannot be undone.</p>
+                
+                <div className="flex justify-end gap-3 mt-8">
+                  <button
+                    onClick={() => setIsDeleteModalOpen(false)}
+                    disabled={isDeleting}
+                    className="px-5 py-2.5 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    disabled={isDeleting}
+                    className="flex items-center justify-center gap-2 px-5 py-2.5 bg-danger text-white text-sm font-medium rounded shadow-lg hover:bg-danger/90 hover:shadow-danger/20 transition-all disabled:opacity-70 min-w-[100px]"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Removing...
+                      </>
+                    ) : (
+                      'Remove'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Rename Modal */}
       {isRenameModalOpen && renameTargetFile && createPortal(
