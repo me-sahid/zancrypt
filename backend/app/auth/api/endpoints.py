@@ -34,6 +34,36 @@ router = APIRouter()
 webauthn_service = WebAuthnService()
 session_service = SessionService()
 
+COOKIE_DOMAIN = f".{settings.DOMAIN}" if settings.DOMAIN != "localhost" else None
+
+def _set_refresh_cookie(response: Response, token: str) -> None:
+    response.delete_cookie("refresh_token", domain="api.zancrypt.in")
+    
+    cookie_kwargs = {
+        "key": "refresh_token",
+        "value": token,
+        "httponly": True,
+        "secure": True,
+        "samesite": "none",
+        "path": "/",
+        "max_age": 7 * 24 * 60 * 60,
+    }
+    if COOKIE_DOMAIN:
+        cookie_kwargs["domain"] = COOKIE_DOMAIN
+    response.set_cookie(**cookie_kwargs)
+
+def _delete_refresh_cookie(response: Response) -> None:
+    cookie_kwargs = {
+        "key": "refresh_token",
+        "httponly": True,
+        "secure": True,
+        "samesite": "none",
+        "path": "/",
+    }
+    if COOKIE_DOMAIN:
+        cookie_kwargs["domain"] = COOKIE_DOMAIN
+    response.delete_cookie(**cookie_kwargs)
+
 @router.post("/register/start", response_model=RegistrationStartResponse)
 @limiter.limit("10/minute")
 async def register_start(
@@ -142,22 +172,7 @@ async def register_verify(
     session_repo = SessionRepository(session)
     refresh_token = await session_repo.create_session(user.id)
 
-    response.delete_cookie(
-        key="refresh_token",
-        domain="api.zancrypt.in"
-    )
-    
-    response.set_cookie(
-
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        domain=".zancrypt.in",
-        max_age=7 * 24 * 60 * 60,
-    
-    )
+    _set_refresh_cookie(response, refresh_token)
 
     return TokenResponse(
         access_token=access_token,
@@ -259,20 +274,7 @@ async def login_verify(
         user_repo = UserRepository(session)
         user = await user_repo.get_by_id(user_id)
 
-        response.delete_cookie(
-            key="refresh_token",
-            domain="api.zancrypt.in"
-        )
-    
-        response.set_cookie(
-            key="refresh_token",
-            value=refresh_token,
-            httponly=True,
-            secure=True,
-            samesite="none",
-            domain=".zancrypt.in",
-            max_age=7 * 24 * 60 * 60,
-        )
+        _set_refresh_cookie(response, refresh_token)
 
         return TokenResponse(
             access_token=access_token,
@@ -329,22 +331,7 @@ async def login_fallback(
     session_repo = SessionRepository(session)
     refresh_token = await session_repo.create_session(user.id)
 
-    response.delete_cookie(
-        key="refresh_token",
-        domain="api.zancrypt.in"
-    )
-    
-    response.set_cookie(
-
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        domain=".zancrypt.in",
-        max_age=7 * 24 * 60 * 60,
-    
-    )
+    _set_refresh_cookie(response, refresh_token)
 
     return TokenResponse(
         access_token=access_token,
@@ -377,11 +364,20 @@ async def refresh_token(
     origin = request.headers.get("origin") or request.headers.get("referer", "")
     # Allow requests with no origin (e.g. same-origin page reloads, curl, server-side calls).
     # Only reject requests that actively present a disallowed origin.
-    if origin and not any(origin.startswith(allowed) for allowed in ALLOWED_ORIGINS):
-        raise HTTPException(
-            status_code=403,
-            detail="Invalid origin"
-        )
+    if origin:
+        is_allowed = any(origin.startswith(allowed) for allowed in ALLOWED_ORIGINS)
+        
+        # fallback for dev environments
+        if not is_allowed and settings.ENVIRONMENT != "production":
+            if origin.startswith("http://localhost") or origin.startswith("http://127.0.0.1") or "localhost" in origin:
+                is_allowed = True
+                
+        if not is_allowed:
+            logger.warning(f"Refresh token denied for origin: {origin}. Allowed: {ALLOWED_ORIGINS}")
+            raise HTTPException(
+                status_code=403,
+                detail=f"Invalid origin: {origin}"
+            )
 
     from app.repositories.session_repo import SessionRepository
     from app.repositories.user_repo import UserRepository
@@ -397,22 +393,7 @@ async def refresh_token(
     new_access_token = create_access_token(subject=str(user_session.user_id))
     new_refresh_token = await session_repo.create_session(user_session.user_id, previous_token=old_token)  # ← pass old token for 30s grace window
 
-    response.delete_cookie(
-        key="refresh_token",
-        domain="api.zancrypt.in"
-    )
-    
-    response.set_cookie(
-
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        domain=".zancrypt.in",
-        max_age=7 * 24 * 60 * 60,
-    
-    )
+    _set_refresh_cookie(response, new_refresh_token)
 
     user_repo = UserRepository(session)
     user = await user_repo.get_by_id(user_session.user_id)
@@ -448,14 +429,7 @@ async def logout(
     session_repo = SessionRepository(session)
     await session_repo.revoke_all_by_user(current_user.id)
 
-    response.delete_cookie(
-        key="refresh_token",
-        httponly=True,
-        secure=True,
-        samesite="none",
-        domain=".zancrypt.in" ,
-        path="/",
-    )
+    _delete_refresh_cookie(response)
 
 @router.put("/profile")
 @limiter.limit("10/minute")
