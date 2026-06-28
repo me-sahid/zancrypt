@@ -15,34 +15,42 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+from app.core.config import settings
+
 # ── Cookie constants ───────────────────────────────────────────────
-COOKIE_DOMAIN   = ".zancrypt.in" 
+# In production, use the root domain (e.g., .zancrypt.in) to share cookies across subdomains.
+# In development, it's often better to omit the domain (None) or use localhost.
+COOKIE_DOMAIN = f".{settings.DOMAIN}" if settings.DOMAIN != "localhost" else None
 COOKIE_PATH     = "/"
 COOKIE_MAX_AGE  = 7 * 24 * 60 * 60  
 
 
 def _set_refresh_cookie(response: Response, token: str) -> None:
-    response.set_cookie(
-        key="refresh_token",
-        value=token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        domain=COOKIE_DOMAIN,
-        path=COOKIE_PATH,
-        max_age=COOKIE_MAX_AGE,
-    )
+    cookie_kwargs = {
+        "key": "refresh_token",
+        "value": token,
+        "httponly": True,
+        "secure": True,
+        "samesite": "none",
+        "path": COOKIE_PATH,
+        "max_age": COOKIE_MAX_AGE,
+    }
+    if COOKIE_DOMAIN:
+        cookie_kwargs["domain"] = COOKIE_DOMAIN
+    response.set_cookie(**cookie_kwargs)
 
 
 def _delete_refresh_cookie(response: Response) -> None:
-    response.delete_cookie(
-        key="refresh_token",
-        httponly=True,
-        secure=True,
-        samesite="none",
-        domain=COOKIE_DOMAIN,
-        path=COOKIE_PATH,
-    )
+    cookie_kwargs = {
+        "key": "refresh_token",
+        "httponly": True,
+        "secure": True,
+        "samesite": "none",
+        "path": COOKIE_PATH,
+    }
+    if COOKIE_DOMAIN:
+        cookie_kwargs["domain"] = COOKIE_DOMAIN
+    response.delete_cookie(**cookie_kwargs)
 
 
 # ── Routes ────────────────────────────────────────────────────────
@@ -82,12 +90,7 @@ async def refresh_token(
 ) -> TokenResponse:
     # Validate Origin to prevent CSRF on this endpoint
     origin = request.headers.get("origin", "")
-    allowed = [
-        "https://zancrypt.in",
-        "https://www.zancrypt.in",
-        "https://drive.zancrypt.in",
-        "https://zancrypt-front.pages.dev",
-    ]
+    allowed = settings.CORS_ORIGINS
     if origin and origin not in allowed:
         raise HTTPException(status_code=403, detail="Invalid request origin")
 
