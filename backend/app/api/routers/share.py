@@ -274,6 +274,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi import Request
 
 @router.get("/{token}", response_model=SharedFileResponse)
+@limiter.limit("10/minute")
 async def get_shared_file(
     token: str,
     request: Request,

@@ -436,6 +436,13 @@ const SharedFile = () => {
     }
   };
 
+  // Auto-decrypt when fileDetails are loaded (and no error)
+  useEffect(() => {
+    if (fileDetails && !errorMsg && !isProcessing && decryptStep === 0 && !decryptedFile) {
+      handleUnlockAndMount();
+    }
+  }, [fileDetails, errorMsg, decryptStep, isProcessing, decryptedFile]);
+
   // Download Trigger from live player
   const triggerNativeDownload = (fileToDownload) => {
     if (!allowDownloads) {
@@ -566,13 +573,13 @@ const SharedFile = () => {
     const activeFile = isMultiDecrypted ? decryptedFile[activeMultiIndex] : decryptedFile;
 
     return (
-      <div className="min-h-screen bg-[#070913] text-white flex flex-col justify-between relative overflow-hidden font-sans">
+      <div className="min-h-screen bg-primary-bg text-text-primary flex flex-col justify-between relative overflow-hidden font-sans">
         {/* Background Gradients */}
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
 
         {/* Header */}
-        <header className="w-full max-w-7xl mx-auto px-6 py-4 flex items-center justify-between border-b border-white/[0.04] relative z-10">
+        <header className="w-full max-w-7xl mx-auto px-6 py-4 flex items-center justify-between border-b border-border relative z-10">
           <div className="flex items-center space-x-3.5">
             <Link to="/" className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg animate-pulse">
               <Lock className="w-4 h-4 text-white" />
@@ -620,7 +627,7 @@ const SharedFile = () => {
           
           {/* Side Bar Panel (only for Multi Decrypted Assets) */}
           {isMultiDecrypted && (
-            <div className="lg:col-span-1 bg-[#0f1423]/50 border border-white/[0.04] rounded-2xl p-4 flex flex-col space-y-3 max-h-[70vh] overflow-y-auto custom-scrollbar shadow-2xl">
+            <div className="lg:col-span-1 bg-surface-secondary border border-border rounded-2xl p-4 flex flex-col space-y-3 max-h-[70vh] overflow-y-auto custom-scrollbar shadow-2xl">
               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2 mb-1 flex items-center">
                 <Layers className="w-3.5 h-3.5 mr-2 text-indigo-400" />
                 Bundle Assets ({decryptedFile.length})
@@ -639,10 +646,10 @@ const SharedFile = () => {
                       className={`w-full text-left p-3 rounded-xl border flex items-center space-x-3 transition-all active:scale-[0.98] ${
                         isActive
                           ? 'bg-blue-600/10 border-blue-500/50 text-white shadow-lg'
-                          : 'bg-[#0b0e17]/80 border-transparent hover:border-white/[0.08] hover:bg-[#0f1423]/60 text-slate-400 hover:text-slate-200'
+                          : 'bg-surface-secondary border-transparent hover:border-white/[0.08] hover:bg-[#0f1423]/60 text-slate-400 hover:text-slate-200'
                       }`}
                     >
-                      <div className={`w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center shrink-0 border border-white/10 ${
+                      <div className={`w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center shrink-0 border border-border ${
                         isActive ? 'bg-blue-500/20' : 'bg-slate-950/60'
                       }`}>
                         {category === 'image' ? (
@@ -668,11 +675,11 @@ const SharedFile = () => {
 
           {/* Main Stage Preview viewport */}
           <div className={`${isMultiDecrypted ? 'lg:col-span-3' : 'lg:col-span-4'} flex flex-col items-center justify-center`}>
-            <div className="w-full bg-[#0c0f1d]/60 border border-white/[0.04] rounded-3xl overflow-hidden shadow-2xl relative min-h-[50vh] flex flex-col items-center justify-center p-6 backdrop-blur-md">
+            <div className="w-full bg-surface-elevated border border-border rounded-3xl overflow-hidden shadow-2xl relative min-h-[50vh] flex flex-col items-center justify-center p-6 backdrop-blur-md">
               
               {activeFile.fileType === 'video' ? (
                 // Video player component
-                <div className="relative w-full max-w-4xl rounded-2xl overflow-hidden border border-white/5 bg-black/40 group aspect-video flex items-center justify-center">
+                <div className="relative w-full max-w-4xl rounded-2xl overflow-hidden border border-border bg-black/40 group aspect-video flex items-center justify-center">
                   <video 
                     ref={videoRef}
                     src={activeFile.blobUrl}
@@ -764,7 +771,7 @@ const SharedFile = () => {
                 </div>
               ) : activeFile.fileType === 'image' ? (
                 // Image viewer component
-                <div className="relative max-w-3xl rounded-2xl overflow-hidden border border-white/5 bg-[#080a13] shadow-2xl flex items-center justify-center p-2 group">
+                <div className="relative max-w-3xl rounded-2xl overflow-hidden border border-border bg-[#080a13] shadow-2xl flex items-center justify-center p-2 group">
                   <div className="absolute inset-0 bg-cover bg-center filter blur-3xl opacity-20 pointer-events-none" style={{ backgroundImage: `url(${activeFile.blobUrl})` }} />
                   <img 
                     src={activeFile.blobUrl} 
@@ -774,7 +781,7 @@ const SharedFile = () => {
                 </div>
               ) : activeFile.fileType === 'audio' ? (
                 // Audio player component
-                <div className="max-w-md w-full bg-[#0f1425] border border-white/5 p-8 rounded-3xl text-center space-y-6 shadow-2xl">
+                <div className="max-w-md w-full bg-surface-secondary border border-border p-8 rounded-3xl text-center space-y-6 shadow-2xl">
                   <div className="w-16 h-16 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center mx-auto shadow-lg">
                     <FileText className="w-8 h-8 text-fuchsia-400" />
                   </div>
@@ -786,7 +793,7 @@ const SharedFile = () => {
                 </div>
               ) : activeFile.fileType === 'pdf' ? (
                 // PDF viewer component
-                <div className="w-full max-w-4xl h-[65vh] rounded-2xl overflow-hidden border border-white/5 bg-[#0a0c16] shadow-xl">
+                <div className="w-full max-w-4xl h-[65vh] rounded-2xl overflow-hidden border border-border bg-[#0a0c16] shadow-xl">
                   <iframe 
                     src={activeFile.blobUrl}
                     title={activeFile.fileName}
@@ -803,14 +810,14 @@ const SharedFile = () => {
                 </div>
               ) : (
                 // Office documents / unknown card preview
-                <div className="max-w-md w-full bg-[#0f1425] border border-white/5 p-8 rounded-3xl text-center space-y-6 shadow-2xl relative overflow-hidden group">
+                <div className="max-w-md w-full bg-surface-secondary border border-border p-8 rounded-3xl text-center space-y-6 shadow-2xl relative overflow-hidden group">
                   <div className={`absolute top-0 inset-x-0 h-1.5 ${
                     activeFile.fileName.endsWith('.docx') || activeFile.fileName.endsWith('.doc') ? 'bg-blue-500' :
                     activeFile.fileName.endsWith('.xlsx') || activeFile.fileName.endsWith('.xls') ? 'bg-emerald-500' :
                     'bg-amber-500'
                   }`} />
 
-                  <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center mx-auto shadow-lg group-hover:scale-105 transition-transform duration-300">
+                  <div className="w-16 h-16 rounded-2xl bg-surface-secondary border border-border flex items-center justify-center mx-auto shadow-lg group-hover:scale-105 transition-transform duration-300">
                     <FileText className={`w-8 h-8 ${
                       activeFile.fileName.endsWith('.docx') || activeFile.fileName.endsWith('.doc') ? 'text-blue-400' :
                       activeFile.fileName.endsWith('.xlsx') || activeFile.fileName.endsWith('.xls') ? 'text-emerald-400' :
@@ -827,20 +834,20 @@ const SharedFile = () => {
 
                   {/* Nodes diagram */}
                   <div className="bg-[#080b13] border border-[#1e293b]/40 rounded-2xl p-4 flex flex-col space-y-2.5">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-white/5 pb-2">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-border pb-2">
                       <span>VM cluster location</span>
                       <span className="text-emerald-400">Reassembled</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="p-2 rounded-xl bg-white/[0.02] border border-white/5 text-center">
+                      <div className="p-2 rounded-xl bg-white/[0.02] border border-border text-center">
                         <p className="text-[11px] text-slate-500 uppercase tracking-widest font-bold">Mumbai</p>
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mx-auto mt-1" />
                       </div>
-                      <div className="p-2 rounded-xl bg-white/[0.02] border border-white/5 text-center">
+                      <div className="p-2 rounded-xl bg-white/[0.02] border border-border text-center">
                         <p className="text-[11px] text-slate-500 uppercase tracking-widest font-bold">Frankfurt</p>
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mx-auto mt-1" />
                       </div>
-                      <div className="p-2 rounded-xl bg-white/[0.02] border border-white/5 text-center">
+                      <div className="p-2 rounded-xl bg-white/[0.02] border border-border text-center">
                         <p className="text-[11px] text-slate-500 uppercase tracking-widest font-bold">Tokyo</p>
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mx-auto mt-1" />
                       </div>
@@ -883,13 +890,13 @@ const SharedFile = () => {
   const singleFile = isMultiDetails ? fileDetails[0] : fileDetails;
 
   return (
-    <div className="min-h-screen bg-[#070913] text-white flex flex-col justify-between relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-primary-bg text-text-primary flex flex-col justify-between relative overflow-hidden font-sans">
       {/* Background Gradients */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Header */}
-      <header className="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between border-b border-white/[0.04] relative z-10">
+      <header className="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between border-b border-border relative z-10">
         <div className="flex items-center space-x-3.5">
           <Link to="/" className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
             <Lock className="w-4.5 h-4.5 text-white" />
@@ -914,35 +921,35 @@ const SharedFile = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <SkeletonCard hasImage={false} hasButton={true} className="w-full bg-[#0c0f1d]/75 border-white/[0.04]" />
+              <SkeletonCard hasImage={false} hasButton={true} className="w-full bg-surface-elevated border-border" />
             </motion.div>
           ) : errorStatus === 401 ? (
             <motion.div 
               key="password-prompt"
-              className="max-w-md w-full bg-[#0c0f1d]/75 border border-white/[0.04] p-6 sm:p-8 rounded-3xl text-center space-y-6 shadow-2xl backdrop-blur-md relative overflow-hidden"
+              className="max-w-md w-full bg-surface-elevated border border-border p-6 sm:p-8 rounded-3xl text-center space-y-6 shadow-2xl backdrop-blur-md relative overflow-hidden"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
             >
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
-              <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center mx-auto shadow-xl">
-                <Key className="w-8 h-8 text-blue-400" />
+              <div className="w-20 h-20 rounded-3xl bg-primary-bg border border-border flex items-center justify-center mx-auto shadow-xl">
+                <Key className="w-10 h-10 text-security" />
               </div>
               <div>
-                <h3 className="font-bold text-lg text-slate-100">Password Protected</h3>
-                <p className="text-xs text-slate-400 mt-2">
+                <h3 className="font-bold text-xl text-text-primary">Password Protected</h3>
+                <p className="text-sm text-text-secondary mt-2">
                   This secure share link requires a password to decrypt its contents.
                 </p>
-                {errorMsg && <p className="text-xs text-rose-500 mt-2">{errorMsg}</p>}
+                {errorMsg && <p className="text-sm text-status-danger mt-2">{errorMsg}</p>}
               </div>
               <form onSubmit={(e) => { e.preventDefault(); setIsLoading(true); setSharePassword(e.target.password.value); }} className="space-y-4">
                 <input
                   type="password"
                   name="password"
                   placeholder="Enter password..."
-                  className="w-full bg-[#070913] border border-white/10 focus:border-blue-500 text-slate-200 font-mono text-sm py-3 px-4 rounded-xl outline-none transition-colors"
+                  className="w-full bg-primary-bg border border-border focus:border-security text-text-primary font-mono text-base py-4 px-5 rounded-2xl outline-none transition-colors"
                 />
-                <Button type="submit" variant="primary" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 py-3 rounded-xl font-bold text-sm">
+                <Button type="submit" variant="primary" className="w-full bg-primary-accent text-white py-4 rounded-2xl font-bold text-base hover:opacity-90">
                   Unlock Access
                 </Button>
               </form>
@@ -951,7 +958,7 @@ const SharedFile = () => {
             // Validation Error Panel (e.g. Expired, Active limit reached, 404 mismatch)
             <motion.div 
               key="error"
-              className="max-w-md w-full bg-[#0f1425]/70 border border-rose-500/25 p-6 sm:p-8 rounded-3xl text-center space-y-6 shadow-2xl backdrop-blur-md"
+              className="max-w-md w-full bg-surface-elevated border border-rose-500/25 p-6 sm:p-8 rounded-3xl text-center space-y-6 shadow-2xl backdrop-blur-md"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
@@ -969,7 +976,7 @@ const SharedFile = () => {
               </div>
               <div className="pt-2">
                 <Link to="/">
-                  <Button variant="outline" className="w-full border-white/10 text-slate-300 hover:text-white py-2.5 font-bold text-xs rounded-xl">
+                  <Button variant="outline" className="w-full border-border text-slate-300 hover:text-white py-2.5 font-bold text-xs rounded-xl">
                     Back to Portal
                   </Button>
                 </Link>
@@ -979,11 +986,15 @@ const SharedFile = () => {
             // Metadata verified. Ready for AES decryption
             <motion.div 
               key="verified"
-              className="max-w-lg w-full bg-[#0c0f1d]/75 border border-white/[0.04] p-5 sm:p-8 rounded-3xl shadow-2xl text-center space-y-7 relative overflow-hidden backdrop-blur-md"
+              className="max-w-lg w-full bg-surface-elevated border border-border p-5 sm:p-8 rounded-3xl shadow-2xl text-center space-y-7 relative overflow-hidden backdrop-blur-md"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
             >
+              <div className="absolute inset-0 bg-primary-bg/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center space-y-4">
+                 <Loader2 className="w-8 h-8 text-security animate-spin" />
+                 <p className="text-sm font-bold text-security animate-pulse">Decrypting Secure Payload...</p>
+              </div>
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-cyan-400" />
 
               <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto shadow-xl">
@@ -1052,15 +1063,7 @@ const SharedFile = () => {
               )}
 
               <div className="pt-2 space-y-3">
-                <Button
-                  onClick={handleDecryptAndDownload}
-                  variant="primary"
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-3.5 font-bold text-xs shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center space-x-1.5"
-                  isLoading={isProcessing}
-                >
-                  <Key className="w-4 h-4" />
-                  <span>Decrypt & Mount Live Preview</span>
-                </Button>
+                
                 
                 <p className="text-xs text-slate-500 select-none leading-relaxed px-4">
                   All segments remain fully encrypted until reassembled and decrypted in this browser. Plain content is never stored on backend infrastructure.
