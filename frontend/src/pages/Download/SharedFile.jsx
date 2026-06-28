@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { gsap } from 'gsap';
 import { 
   Download, 
   ShieldCheck, 
@@ -26,6 +27,7 @@ import {
   Eye,
   CheckCircle2
 } from 'lucide-react';
+import { RiFolderLockLine } from 'react-icons/ri';
 import axios from 'axios';
 import api from '../../services/api';
 import { toast } from 'react-hot-toast';
@@ -41,6 +43,103 @@ const hexToBytes = (hex) => {
     bytes[i >> 1] = parseInt(hex.substring(i, i + 2), 16);
   }
   return bytes;
+};
+
+// --- Password Gate Component with GSAP animation ---
+const PasswordGate = ({ errorMsg, onSubmit }) => {
+  const [value, setValue] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+  const btnRef = React.useRef(null);
+  const fillRef = React.useRef(null);
+
+  const handleMouseEnter = () => {
+    gsap.to(fillRef.current, { scaleX: 1, duration: 0.35, ease: 'power2.out', transformOrigin: 'left center' });
+    gsap.to(btnRef.current, { color: '#000000', duration: 0.2 });
+  };
+
+  const handleMouseLeave = () => {
+    gsap.to(fillRef.current, { scaleX: 0, duration: 0.3, ease: 'power2.in', transformOrigin: 'left center' });
+    gsap.to(btnRef.current, { color: '#ffffff', duration: 0.2 });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!value.trim()) return;
+    setSubmitting(true);
+    onSubmit(value);
+  };
+
+  return (
+    <motion.div
+      key="password-prompt"
+      className="max-w-md w-full mx-auto"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
+    >
+      {/* Card */}
+      <div className="bg-[#111111] border border-white/[0.08] rounded-2xl p-8 sm:p-10 text-center space-y-7">
+        
+        {/* Icon */}
+        <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center mx-auto">
+          <RiFolderLockLine className="w-8 h-8 text-white/60" />
+        </div>
+
+        {/* Title */}
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold text-white tracking-tight">Password Protected</h2>
+          <p className="text-sm text-white/40 leading-relaxed">
+            Enter the password to decrypt and preview this secure file.
+          </p>
+          {errorMsg && (
+            <p className="text-sm text-red-400/90 mt-1 font-medium">{errorMsg}</p>
+          )}
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="password"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="Enter password..."
+            disabled={submitting}
+            autoFocus
+            className="w-full bg-[#0a0a0a] border border-white/[0.08] focus:border-white/30 text-white text-base font-mono py-4 px-5 rounded-xl outline-none transition-all placeholder:text-white/20 disabled:opacity-50"
+          />
+
+          {/* GSAP animated button */}
+          <button
+            type="submit"
+            ref={btnRef}
+            disabled={submitting || !value.trim()}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            className="w-full relative overflow-hidden rounded-xl py-4 border border-white/[0.12] text-white font-semibold text-sm tracking-wide cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+            style={{ background: '#0a0a0a' }}
+          >
+            {/* GSAP fill layer */}
+            <span
+              ref={fillRef}
+              className="absolute inset-0 bg-white pointer-events-none"
+              style={{ transform: 'scaleX(0)', transformOrigin: 'left center' }}
+            />
+            <span className="relative z-10 flex items-center justify-center space-x-2">
+              {submitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Unlocking...</span>
+                </>
+              ) : (
+                <span>Unlock Access</span>
+              )}
+            </span>
+          </button>
+        </form>
+      </div>
+    </motion.div>
+  );
 };
 
 const SharedFile = () => {
@@ -439,9 +538,9 @@ const SharedFile = () => {
   // Auto-decrypt when fileDetails are loaded (and no error)
   useEffect(() => {
     if (fileDetails && !errorMsg && !isProcessing && decryptStep === 0 && !decryptedFile) {
-      handleUnlockAndMount();
+      handleDecryptAndDownload();
     }
-  }, [fileDetails, errorMsg, decryptStep, isProcessing, decryptedFile]);
+  }, [fileDetails, errorMsg]);
 
   // Download Trigger from live player
   const triggerNativeDownload = (fileToDownload) => {
@@ -890,21 +989,15 @@ const SharedFile = () => {
   const singleFile = isMultiDetails ? fileDetails[0] : fileDetails;
 
   return (
-    <div className="min-h-screen bg-primary-bg text-text-primary flex flex-col justify-between relative overflow-hidden font-sans">
-      {/* Background Gradients */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-[#080808] text-white flex flex-col justify-between relative font-sans">
 
-      {/* Header */}
-      <header className="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between border-b border-border relative z-10">
-        <div className="flex items-center space-x-3.5">
-          <Link to="/" className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
-            <Lock className="w-4.5 h-4.5 text-white" />
+      {/* Minimal Header */}
+      <header className="w-full px-6 py-5 flex items-center border-b border-white/[0.06] relative z-10">
+        <div className="flex items-center space-x-3">
+          <Link to="/" className="w-8 h-8 rounded-lg bg-white/[0.06] border border-white/[0.08] flex items-center justify-center">
+            <Lock className="w-4 h-4 text-white/70" />
           </Link>
-          <div>
-            <h2 className="font-bold text-sm tracking-wide text-slate-200">Zancrypt</h2>
-            <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">Distributed Zero-Knowledge Storage</p>
-          </div>
+          <span className="font-semibold text-sm text-white/80 tracking-wide">Zancrypt</span>
         </div>
       </header>
 
@@ -924,36 +1017,10 @@ const SharedFile = () => {
               <SkeletonCard hasImage={false} hasButton={true} className="w-full bg-surface-elevated border-border" />
             </motion.div>
           ) : errorStatus === 401 ? (
-            <motion.div 
-              key="password-prompt"
-              className="max-w-md w-full bg-surface-elevated border border-border p-6 sm:p-8 rounded-3xl text-center space-y-6 shadow-2xl backdrop-blur-md relative overflow-hidden"
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-            >
-              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
-              <div className="w-20 h-20 rounded-3xl bg-primary-bg border border-border flex items-center justify-center mx-auto shadow-xl">
-                <Key className="w-10 h-10 text-security" />
-              </div>
-              <div>
-                <h3 className="font-bold text-xl text-text-primary">Password Protected</h3>
-                <p className="text-sm text-text-secondary mt-2">
-                  This secure share link requires a password to decrypt its contents.
-                </p>
-                {errorMsg && <p className="text-sm text-status-danger mt-2">{errorMsg}</p>}
-              </div>
-              <form onSubmit={(e) => { e.preventDefault(); setIsLoading(true); setSharePassword(e.target.password.value); }} className="space-y-4">
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Enter password..."
-                  className="w-full bg-primary-bg border border-border focus:border-security text-text-primary font-mono text-base py-4 px-5 rounded-2xl outline-none transition-colors"
-                />
-                <Button type="submit" variant="primary" className="w-full bg-primary-accent text-white py-4 rounded-2xl font-bold text-base hover:opacity-90">
-                  Unlock Access
-                </Button>
-              </form>
-            </motion.div>
+            <PasswordGate
+              errorMsg={errorMsg}
+              onSubmit={(pwd) => { setIsLoading(true); setSharePassword(pwd); }}
+            />
           ) : errorMsg ? (
             // Validation Error Panel (e.g. Expired, Active limit reached, 404 mismatch)
             <motion.div 
@@ -983,19 +1050,18 @@ const SharedFile = () => {
               </div>
             </motion.div>
           ) : (
-            // Metadata verified. Ready for AES decryption
+            // Metadata verified. Auto-decrypting
             <motion.div 
               key="verified"
-              className="max-w-lg w-full bg-surface-elevated border border-border p-5 sm:p-8 rounded-3xl shadow-2xl text-center space-y-7 relative overflow-hidden backdrop-blur-md"
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+              className="max-w-lg w-full bg-[#111111] border border-white/[0.08] p-8 rounded-2xl shadow-2xl text-center space-y-5 relative overflow-hidden"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
             >
-              <div className="absolute inset-0 bg-primary-bg/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center space-y-4">
-                 <Loader2 className="w-8 h-8 text-security animate-spin" />
-                 <p className="text-sm font-bold text-security animate-pulse">Decrypting Secure Payload...</p>
+              <div className="flex flex-col items-center justify-center space-y-4 py-4">
+                 <Loader2 className="w-9 h-9 text-white/60 animate-spin" />
+                 <p className="text-sm font-medium text-white/50 tracking-wide">Decrypting secure payload...</p>
               </div>
-              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-cyan-400" />
 
               <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto shadow-xl">
                 <Server className="w-8 h-8 text-blue-500 animate-pulse" />
@@ -1076,8 +1142,8 @@ const SharedFile = () => {
       </main>
 
       {/* Footer */}
-      <footer className="w-full text-center py-6 text-xs text-slate-600 font-mono border-t border-white/[0.02] relative z-10">
-        Zancrypt secure distributed node reassembly engine.
+      <footer className="w-full text-center py-5 text-[11px] text-white/20 font-mono border-t border-white/[0.04] relative z-10">
+        Zancrypt · Zero-Knowledge · All decryption is client-side only
       </footer>
     </div>
   );
