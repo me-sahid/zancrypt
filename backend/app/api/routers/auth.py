@@ -15,67 +15,90 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+# ── Cookie constants ───────────────────────────────────────────────
+COOKIE_DOMAIN   = ".zancrypt.in" 
+COOKIE_PATH     = "/"
+COOKIE_MAX_AGE  = 7 * 24 * 60 * 60  
+
+
+def _set_refresh_cookie(response: Response, token: str) -> None:
+    response.set_cookie(
+        key="refresh_token",
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        domain=COOKIE_DOMAIN,
+        path=COOKIE_PATH,
+        max_age=COOKIE_MAX_AGE,
+    )
+
+
+def _delete_refresh_cookie(response: Response) -> None:
+    response.delete_cookie(
+        key="refresh_token",
+        httponly=True,
+        secure=True,
+        samesite="none",
+        domain=COOKIE_DOMAIN,
+        path=COOKIE_PATH,
+    )
+
+
+# ── Routes ────────────────────────────────────────────────────────
+
 @router.post("/register", response_model=UserResponse)
 @limiter.limit("3/minute")
-async def register_user(request: Request,payload: UserCreate, session: AsyncSession = Depends(get_async_session)) -> UserResponse:
+async def register_user(
+    request: Request,
+    payload: UserCreate,
+    session: AsyncSession = Depends(get_async_session)
+) -> UserResponse:
     user = await UserService(session).create_user(payload)
     return UserResponse.model_validate(user)
+
 
 @router.post("/login", response_model=TokenResponse)
 @limiter.limit("7/minute")
 async def login(
     request: Request,
     response: Response,
-    form_data: OAuth2PasswordRequestForm = Depends(), 
+    form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_async_session)
 ) -> TokenResponse:
-    tokens = await AuthService(session).authenticate_user(form_data.username, form_data.password)
-    
-    response.delete_cookie(
-        key="refresh_token",
-        domain="api.zancrypt.in"
+    tokens = await AuthService(session).authenticate_user(
+        form_data.username, form_data.password
     )
-    
-    response.set_cookie(
-        key="refresh_token",
-        value=tokens.refresh_token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        domain=".zancrypt.in",
-        max_age=7 * 24 * 60 * 60,
-    )
+    _set_refresh_cookie(response, tokens.refresh_token)
     return tokens
 
+
 @router.post("/refresh", response_model=TokenResponse)
-@limiter.limit("10/hour")
+@limiter.limit("20/hour")
 async def refresh_token(
     request: Request,
     response: Response,
     session: AsyncSession = Depends(get_async_session)
 ) -> TokenResponse:
-    # Read refresh token from HttpOnly cookie
+    # Validate Origin to prevent CSRF on this endpoint
+    origin = request.headers.get("origin", "")
+    allowed = [
+        "https://zancrypt.in",
+        "https://www.zancrypt.in",
+        "https://drive.zancrypt.in",
+        "https://zancrypt-front.pages.dev",
+    ]
+    if origin and origin not in allowed:
+        raise HTTPException(status_code=403, detail="Invalid request origin")
+
     token = request.cookies.get("refresh_token")
     if not token:
         raise HTTPException(status_code=401, detail="Refresh token missing")
-        
+
     tokens = await AuthService(session).refresh_tokens(token)
-    
-    response.delete_cookie(
-        key="refresh_token",
-        domain="api.zancrypt.in"
-    )
-    
-    response.set_cookie(
-        key="refresh_token",
-        value=tokens.refresh_token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        domain=".zancrypt.in",
-        max_age=7 * 24 * 60 * 60,
-    )
+    _set_refresh_cookie(response, tokens.refresh_token)
     return tokens
+
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 async def logout(
@@ -89,24 +112,24 @@ async def logout(
     auth_header = request.headers.get("Authorization", "")
     if auth_header.startswith("Bearer "):
         revoke_token(auth_header.split(" ", 1)[1])
+
     await SessionService(session).revoke_active_sessions(current_user.id)
-    
-    # Clear the refresh token cookie
-    response.delete_cookie(
-        key="refresh_token",
-        httponly=True,
-        secure=True,
-        samesite="none"
-    )
+
+    # Delete cookie — attributes MUST match set_cookie exactly
+    _delete_refresh_cookie(response)
+
 
 @router.get("/me", response_model=UserResponse)
-async def get_self(current_user = Depends(get_current_user)) -> UserResponse:
+async def get_self(
+    current_user=Depends(get_current_user)
+) -> UserResponse:
     return UserResponse.model_validate(current_user)
+
 
 @router.put("/profile", response_model=UserResponse)
 async def update_profile(
     payload: UserUpdate,
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session)
 ) -> UserResponse:
     if payload.full_name is not None:
