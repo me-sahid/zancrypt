@@ -132,3 +132,9 @@ seed_*.py
 .env.*
 backend/.env
 frontend/.env
+
+node_modules/
+
+frontend/node_modules/
+
+backend/node_modules/
