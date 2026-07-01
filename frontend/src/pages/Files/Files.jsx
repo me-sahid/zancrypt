@@ -701,7 +701,7 @@ const Files = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-4 md:pb-6">
         <div>
-          <div className="font-mono text-base sm:text-lg text-text-primary tracking-widest uppercase flex items-center flex-wrap gap-2">
+          <div className="font-sans text-sm sm:text-base font-light text-text-primary tracking-wide flex items-center flex-wrap gap-2">
             <RiSafeLine className="w-4 h-4 sm:w-5 sm:h-5 text-text-primary" />
             <span 
               onClick={handleNavigateToRoot} 
@@ -781,23 +781,7 @@ const Files = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border font-mono text-sm text-text-secondary">
-                {currentFolderId && (
-                  <tr 
-                    onClick={handleNavigateUp}
-                    className="hover:bg-surface-raised transition-colors cursor-pointer"
-                  >
-                    <td className="py-4 px-6 w-12 text-center"></td>
-                    <td className="py-4 px-6 flex items-center space-x-4">
-                      <div className="w-12 h-12 flex items-center justify-center border border-border bg-void shrink-0 rounded overflow-hidden shadow-md">
-                        <CornerLeftUp className="w-5 h-5 text-text-muted" />
-                      </div>
-                      <span className="font-semibold text-text-muted">..</span>
-                    </td>
-                    <td className="py-4 px-6"></td>
-                    <td className="py-4 px-6 hidden sm:table-cell"></td>
-                    <td className="py-4 px-6"></td>
-                  </tr>
-                )}
+
 
                 {folders && folders.map((folder) => (
                   <tr 
@@ -915,24 +899,14 @@ const Files = () => {
           <div className="space-y-6">
             {(currentFolderId || (folders && folders.length > 0)) && (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-1">
-                {currentFolderId && (
-                  <div 
-                    onClick={handleNavigateUp}
-                    className="bg-[#242424] rounded-xl p-3 flex items-center gap-3 hover:bg-surface-raised transition-all cursor-pointer border border-transparent hover:border-border"
-                  >
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <CornerLeftUp className="w-6 h-6 text-text-muted" />
-                    </div>
-                    <span className="font-semibold text-text-primary text-sm uppercase truncate flex-1">{t('vault', 'up')}</span>
-                  </div>
-                )}
+
 
                 {folders && folders.map((folder) => (
                   <div 
                     key={`folder-${folder.id}`}
                     onDoubleClick={() => handleNavigateInto(folder)}
                     onContextMenu={(e) => handleContextMenu(e, { ...folder, isFolder: true })}
-                    className={`bg-[#242424] rounded-xl p-3 flex items-center gap-3 hover:bg-surface-raised transition-all cursor-pointer border border-transparent hover:border-border relative group ${selectedIds[`folder_${folder.id}`] ? 'ring-2 ring-accent' : ''}`}
+                    className="bg-[#242424] rounded-xl p-3 flex items-center gap-3 hover:bg-surface-raised transition-all cursor-pointer border border-transparent hover:border-border relative group"
                   >
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
                       <Folder className="w-6 h-6 text-text-muted" fill="currentColor" />
@@ -946,20 +920,12 @@ const Files = () => {
                     >
                       <MoreVertical className="w-4 h-4" />
                     </button>
-                    <input
-                      type="checkbox"
-                      checked={!!selectedIds[`folder_${folder.id}`]}
-                      onChange={() => setSelectedIds(prev => ({ ...prev, [`folder_${folder.id}`]: !prev[`folder_${folder.id}`] }))}
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute top-2 left-2 accent-accent cursor-pointer w-3.5 h-3.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity rounded"
-                      style={{ opacity: selectedIds[`folder_${folder.id}`] ? 1 : undefined }}
-                    />
                   </div>
                 ))}
               </div>
             )}
             
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2.5 p-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 p-1">
 
             {isLoading ? (
               Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} className="aspect-square p-2" hasButton={false} />)

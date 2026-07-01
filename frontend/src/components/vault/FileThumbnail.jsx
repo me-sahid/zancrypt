@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { fileService } from '../../services/vaultServices';
+import { useAuthStore } from '../../store/useStore';
+import { deriveKey } from '../../utils/crypto';
 
 const hexToBytes = (hex) => {
   if (!hex) return new Uint8Array(0);
@@ -238,12 +240,33 @@ const FileThumbnail = ({ file, className, decryptedName }) => {
         setIsLoading(true);
         try {
           const res = await fileService.downloadFile(file.id);
-          if (res?.data && Array.isArray(res.data)) {
-            // Reassemble the file from local shards
-            const hexData = res.data.map(s => s.data).join('');
-            const bytes = hexToBytes(hexData);
-            const mimeType = getMimeType(filename);
-            let blob = new Blob([bytes], { type: mimeType });
+          if (res?.data) {
+            const encryptedBuffer = res.data;
+            let blob;
+            let bytes;
+
+            if (file.encrypted_filename) {
+              const { user } = useAuthStore.getState();
+              const keyMaterial = useAuthStore.getState().keyMaterial;
+              if (!keyMaterial) throw new Error('Encryption key not available');
+              const encKey = await deriveKey(user.email, keyMaterial);
+              const encBytes = new Uint8Array(encryptedBuffer);
+              const iv = encBytes.slice(0, 12);
+              const ciphertext = encBytes.slice(12);
+              const rawData = await window.crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv },
+                encKey,
+                ciphertext
+              );
+              bytes = new Uint8Array(rawData);
+              const mimeType = getMimeType(filename);
+              blob = new Blob([bytes], { type: mimeType });
+            } else {
+              // Fallback for unencrypted legacy files
+              bytes = new Uint8Array(encryptedBuffer);
+              const mimeType = getMimeType(filename);
+              blob = new Blob([bytes], { type: mimeType });
+            }
             
             const ext = filename.split('.').pop().toLowerCase();
             if (ext === 'heic' || ext === 'heif') {
