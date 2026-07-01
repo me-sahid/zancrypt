@@ -3,6 +3,7 @@ import SkeletonText from './SkeletonText';
 import SkeletonButton from './SkeletonButton';
 import SkeletonCard from './SkeletonCard';
 import SkeletonAvatar from './SkeletonAvatar';
+import { FeaturesGridSkeleton } from '../../pages/Landing/components/FeaturesGrid';
 
 const LandingPageSkeleton = () => {
   return (
@@ -43,25 +44,7 @@ const LandingPageSkeleton = () => {
       </section>
 
       {/* Features Grid Skeleton */}
-      <section className="py-24 bg-surface border-y border-border">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="mb-16 max-w-2xl">
-            <SkeletonText lines={1} width="120px" className="h-6 mb-4" />
-            <SkeletonText lines={1} width="80%" className="h-10 mb-4" />
-            <SkeletonText lines={2} width="100%" />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="p-8 border border-border bg-void">
-                <SkeletonAvatar size="48px" className="mb-6 rounded-xl" />
-                <SkeletonText lines={1} width="60%" className="h-6 mb-4" />
-                <SkeletonText lines={2} width="100%" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <FeaturesGridSkeleton />
 
       {/* Pricing Section Skeleton */}
       <section className="py-24 bg-void">

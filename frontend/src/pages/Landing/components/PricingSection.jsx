@@ -89,9 +89,9 @@ const PricingSection = () => {
       
       <div className="max-w-[1200px] mx-auto px-6 relative z-10">
         <div className="text-center mb-16 animate-on-scroll">
-          <h2 className="text-4xl md:text-6xl font-bold text-text-primary mb-6 font-display tracking-tight">
+          <div role="heading" aria-level="2" className="text-4xl md:text-6xl font-normal text-text-primary mb-6 font-display tracking-tight">
             Simple, Transparent Plans
-          </h2>
+          </div>
           <p className="text-lg text-text-secondary max-w-xl mx-auto font-sans leading-relaxed">
             Choose the capacity that fits your operation. Every plan includes absolute zero-knowledge encryption in the browser.
           </p>

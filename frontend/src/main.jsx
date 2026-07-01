@@ -163,9 +163,9 @@ async function init() {
 // On drive.zancrypt.in, enforce the new UUID-based URL structure BEFORE mounting.
 // Uses async IIFE instead of top-level await for wider browser/bundler compat.
 ;(async () => {
-  const ON_DRIVE = window.location.hostname === 'drive.zancrypt.in' ||
-                   window.location.hostname === 'localhost' ||
-                   window.location.hostname === '127.0.0.1';
+  const isDrive = window.location.hostname === 'drive.zancrypt.in';
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const ON_DRIVE = isDrive || isLocal;
 
   if (ON_DRIVE) {
     const { getWorkspaceId } = await import('./hooks/useWorkspace.js');
@@ -175,7 +175,6 @@ async function init() {
     // Map of old paths → new UUID-based paths
     // history.replaceState rewrites URL without a full page reload
     const LEGACY_REDIRECTS = {
-      '/':            `/home/${wid}`,
       '/dashboard':   `/home/${wid}`,
       '/vault':       `/drive/${wid}`,
       '/uploads':     `/drive/${wid}/upload`,
@@ -192,6 +191,10 @@ async function init() {
       '/register':    '/auth/register',
     };
 
+    if (isDrive) {
+      LEGACY_REDIRECTS['/'] = `/home/${wid}`;
+    }
+
     const newPath = LEGACY_REDIRECTS[path];
     if (newPath && newPath !== path) {
       window.history.replaceState(null, '', newPath + window.location.search);
@@ -200,3 +203,4 @@ async function init() {
 
   init();
 })();
+
