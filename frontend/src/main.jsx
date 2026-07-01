@@ -192,7 +192,7 @@ async function init() {
     };
 
     if (isDrive) {
-      LEGACY_REDIRECTS['/'] = `/home/${wid}`;
+      LEGACY_REDIRECTS['/'] = `/drive/${wid}`;
     }
 
     const newPath = LEGACY_REDIRECTS[path];

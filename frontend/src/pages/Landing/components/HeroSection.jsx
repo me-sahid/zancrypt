@@ -75,8 +75,8 @@ const HeroSection = ({ isLoading }) => {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: macOS Product Mockup Scene */}
-        <div className="relative w-full h-[400px] sm:h-[500px] lg:h-[620px] flex items-center justify-center select-none overflow-hidden sm:overflow-visible">
+        {/* RIGHT COLUMN: macOS Product Mockup Scene — hidden on mobile */}
+        <div className="hidden lg:flex relative w-full h-[620px] items-center justify-center select-none overflow-visible">
           {isLoading ? (
             <div className="w-full max-w-md h-[400px] bg-surface-raised border border-border/10 rounded-xl animate-pulse"></div>
           ) : (

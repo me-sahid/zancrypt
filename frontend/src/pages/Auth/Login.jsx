@@ -25,9 +25,9 @@ const Login = () => {
   // Use replace so the login page is NOT added to the history stack.
   useEffect(() => {
     if (!isInitializing && isAuthenticated) {
-      navigate(workspace.home, { replace: true });
+      navigate(workspace.drive, { replace: true });
     }
-  }, [isAuthenticated, isInitializing, navigate, workspace.home]);
+  }, [isAuthenticated, isInitializing, navigate, workspace.drive]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

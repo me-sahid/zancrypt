@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Shield, Fingerprint, Network, Code, Layers, Activity, Plus, ArrowRight } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -252,9 +253,9 @@ const FeaturesGrid = () => {
                 <p className="text-text-secondary text-sm md:text-base leading-relaxed">
                   {activeFeature.desc}
                 </p>
-                <a href="#" className="inline-flex items-center gap-2 text-text-primary font-bold text-sm hover:opacity-70 transition-opacity mt-2">
+                <Link to="/architecture" className="inline-flex items-center gap-2 text-text-primary font-bold text-sm hover:opacity-70 transition-opacity mt-2">
                   Read the spec <ArrowRight className="w-4 h-4" />
-                </a>
+                </Link>
               </div>
 
             </div>

@@ -50,6 +50,8 @@ export default function RecycleBin() {
   const [files, setFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, type: null, payload: null });
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const [selectedIds, setSelectedIds] = useState({});
   const [sortField, setSortField] = useState('deleted_at');
@@ -236,12 +238,12 @@ export default function RecycleBin() {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto p-4 md:p-6 text-slate-100">
+    <div className="space-y-6 max-w-6xl mx-auto p-4 md:p-6 text-text-primary">
       
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-white flex items-center">
+          <h2 className="text-xl font-bold tracking-tight text-text-primary flex items-center">
             <Trash2 className="w-5.5 h-5.5 mr-2.5 text-rose-500" />
             Recycle Bin
           </h2>
@@ -276,7 +278,7 @@ export default function RecycleBin() {
       </div>
 
       {/* Filter and Search Panel */}
-      <Card className="bg-[#0b0f19]/70 border-[#1e293b]/70 backdrop-blur-xl rounded-2xl">
+      <Card className="bg-surface border-border backdrop-blur-xl rounded-2xl">
         <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-4">
           <div className="relative w-full sm:flex-1">
             <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
@@ -285,28 +287,28 @@ export default function RecycleBin() {
               placeholder="Filter bin by filename..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-[#070913]/40 border-[#1e293b]/60 text-slate-200 placeholder-slate-500 rounded-xl focus:border-rose-500/40 text-xs w-full py-2.5"
+              className="pl-9 bg-background border-border text-text-primary placeholder-slate-500 rounded-xl focus:border-rose-500/40 text-xs w-full py-2.5"
             />
           </div>
         </CardContent>
       </Card>
 
       {/* Bin Files Table */}
-      <Card className="bg-[#0b0f19]/50 border-[#1e293b]/50 rounded-2xl overflow-hidden shadow-2xl">
+      <Card className="bg-surface border-border rounded-2xl overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr class="border-b border-[#1e293b]/60 text-xs font-bold text-slate-400 uppercase tracking-widest bg-[#0f172a]/20">
+              <tr class="border-b border-border text-xs font-bold text-slate-400 uppercase tracking-widest bg-surface-raised">
                 <th className="py-4 px-6 w-12 text-center select-none">
                   <input
                     type="checkbox"
                     checked={isAllSelected}
                     onChange={toggleSelectAll}
-                    className="w-4 h-4 rounded border-[#1e293b] bg-slate-900 text-blue-500 focus:ring-blue-500 cursor-pointer"
+                    className="w-4 h-4 rounded border-border bg-slate-900 text-blue-500 focus:ring-blue-500 cursor-pointer"
                   />
                 </th>
                 <th className="py-4 px-6 select-none cursor-pointer group/hdr" onClick={() => handleSort('name')}>
-                  <div className="flex items-center space-x-1.5 hover:text-slate-200 transition-colors">
+                  <div className="flex items-center space-x-1.5 hover:text-text-primary transition-colors">
                     <span>File Name</span>
                     <span className={`transition-all duration-200 ${sortField === 'name' ? 'text-blue-400 opacity-100' : 'text-slate-500 opacity-0 group-hover/hdr:opacity-100'}`}>
                       {sortField === 'name' ? (sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}
@@ -314,7 +316,7 @@ export default function RecycleBin() {
                   </div>
                 </th>
                 <th className="py-4 px-6 hidden sm:table-cell select-none cursor-pointer group/hdr" onClick={() => handleSort('size')}>
-                  <div className="flex items-center space-x-1.5 hover:text-slate-200 transition-colors">
+                  <div className="flex items-center space-x-1.5 hover:text-text-primary transition-colors">
                     <span>Original Size</span>
                     <span className={`transition-all duration-200 ${sortField === 'size' ? 'text-blue-400 opacity-100' : 'text-slate-500 opacity-0 group-hover/hdr:opacity-100'}`}>
                       {sortField === 'size' ? (sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}
@@ -322,7 +324,7 @@ export default function RecycleBin() {
                   </div>
                 </th>
                 <th className="py-4 px-6 hidden sm:table-cell select-none cursor-pointer group/hdr" onClick={() => handleSort('deleted_at')}>
-                  <div className="flex items-center space-x-1.5 hover:text-slate-200 transition-colors">
+                  <div className="flex items-center space-x-1.5 hover:text-text-primary transition-colors">
                     <span>Deleted At</span>
                     <span className={`transition-all duration-200 ${sortField === 'deleted_at' ? 'text-blue-400 opacity-100' : 'text-slate-500 opacity-0 group-hover/hdr:opacity-100'}`}>
                       {sortField === 'deleted_at' ? (sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}
@@ -353,7 +355,7 @@ export default function RecycleBin() {
                         type="checkbox"
                         checked={!!selectedIds[file.id]}
                         onChange={() => toggleSelectFile(file.id)}
-                        className="w-4 h-4 rounded border-[#1e293b] bg-slate-900 text-rose-500 focus:ring-blue-500 cursor-pointer"
+                        className="w-4 h-4 rounded border-border bg-slate-900 text-rose-500 focus:ring-blue-500 cursor-pointer"
                       />
                     </td>
                     
@@ -367,7 +369,7 @@ export default function RecycleBin() {
                           </div>
                         </div>
                         <div className="min-w-0 max-w-[200px] sm:max-w-xs md:max-w-md flex items-center space-x-2">
-                          <p className="font-bold text-sm text-slate-200 truncate" title={file.encrypted_filename}>
+                          <p className="font-bold text-sm text-text-primary truncate" title={file.encrypted_filename}>
                             {file.encrypted_filename}
                           </p>
                           <Lock className="w-3.5 h-3.5 text-blue-500/80 shrink-0" title="End-to-End Encrypted Shard" />
@@ -432,14 +434,14 @@ export default function RecycleBin() {
               initial={{ y: 80, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 80, opacity: 0 }}
-              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-2xl bg-[#0f1425]/95 border border-rose-500/30 rounded-2xl p-4 flex items-center justify-between shadow-2xl backdrop-blur-xl"
+              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-2xl bg-surface/95 border border-rose-500/30 rounded-2xl p-4 flex items-center justify-between shadow-2xl backdrop-blur-xl"
             >
               <div className="flex items-center space-x-3.5">
                 <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/25">
                   <Trash2 className="w-5 h-5 animate-pulse" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-100">
+                  <p className="text-sm font-bold text-text-primary">
                     {Object.values(selectedIds).filter(Boolean).length} items selected
                   </p>
                   <p className="text-xs text-slate-400">Recycle Bin bulk operations active</p>
@@ -449,14 +451,14 @@ export default function RecycleBin() {
               <div className="flex items-center space-x-3">
                 <Button
                   onClick={handleBulkRestore}
-                  className="py-2 px-4 font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-lg border border-emerald-500/30 flex items-center space-x-1.5 active:scale-95 transition-all cursor-pointer"
+                  className="py-2 px-4 font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-text-primary rounded-xl shadow-lg border border-emerald-500/30 flex items-center space-x-1.5 active:scale-95 transition-all cursor-pointer"
                 >
                   <RotateCcw className="w-4 h-4" />
                   <span>Restore All</span>
                 </Button>
                 <Button
                   onClick={handleBulkPurge}
-                  className="py-2 px-4 font-bold text-xs bg-rose-600 hover:bg-rose-500 text-white rounded-xl shadow-lg border border-rose-500/30 flex items-center space-x-1.5 active:scale-95 transition-all cursor-pointer"
+                  className="py-2 px-4 font-bold text-xs bg-rose-600 hover:bg-rose-500 text-text-primary rounded-xl shadow-lg border border-rose-500/30 flex items-center space-x-1.5 active:scale-95 transition-all cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span>Destroy Permanently</span>

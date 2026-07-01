@@ -263,8 +263,29 @@ const FileThumbnail = ({ file, className, decryptedName }) => {
               }
             }
             
-            objectUrl = URL.createObjectURL(blob);
-            setThumbnailUrl(objectUrl);
+            if (ext === 'pdf') {
+              try {
+                const pdfjsLib = await import('pdfjs-dist');
+                pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+                const loadingTask = pdfjsLib.getDocument({ data: bytes });
+                const pdf = await loadingTask.promise;
+                const page = await pdf.getPage(1);
+                const viewport = page.getViewport({ scale: 1.0 });
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                setThumbnailUrl(dataUrl);
+              } catch (pdfErr) {
+                console.error('Failed to generate PDF thumbnail client-side:', pdfErr);
+                setHasError(true);
+              }
+            } else {
+              objectUrl = URL.createObjectURL(blob);
+              setThumbnailUrl(objectUrl);
+            }
           } else {
             setHasError(true);
           }

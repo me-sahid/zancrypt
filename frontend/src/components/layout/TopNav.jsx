@@ -100,7 +100,7 @@ const TopNav = () => {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center space-x-3 p-1.5 rounded-xl hover:bg-surface-elevated transition-all border border-transparent hover:border-border group"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-accent to-security flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-primary-accent/10">
+            <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs" style={{ backgroundColor: '#532F93' }}>
               {getInitials(user?.full_name || user?.username)}
             </div>
             <div className="hidden lg:block text-left">

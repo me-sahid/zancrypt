@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, 
@@ -27,6 +27,17 @@ const Sidebar = () => {
   const [isMobileView, setIsMobileView] = useState(false);
   const planConfig = getUserPlanConfig(user);
   const workspace = useWorkspace();
+  const location = useLocation();
+
+  const checkIsActive = (path) => {
+    if (path === workspace.drive) {
+      return location.pathname === path || location.pathname.startsWith(`${path}/folder/`) || location.pathname.startsWith(`${path}/file/`);
+    }
+    if (path === workspace.home) {
+      return location.pathname === path;
+    }
+    return location.pathname.startsWith(path);
+  };
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Overview',     path: workspace.home },
@@ -35,7 +46,6 @@ const Sidebar = () => {
     { icon: Share2,          label: 'Shared Links', path: workspace.shared },
     { icon: Key,             label: 'API Keys',     path: workspace.keys },
     { icon: Trash2,          label: 'Recycle Bin',  path: workspace.bin },
-    { icon: ShieldCheck,     label: 'Security',     path: workspace.security },
     { icon: Settings,        label: 'Settings',     path: workspace.settings },
   ];
 
@@ -84,47 +94,45 @@ const Sidebar = () => {
 
       {/* Navigation */}
       <nav className="flex-1 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-        {menuItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            end={item.path === '/dashboard'}
-            onClick={() => {
-              if (isMobileView) setSidebarOpenMobile(false);
-            }}
-            className={({ isActive }) => twMerge(
-              'flex items-center px-6 py-3 transition-colors group relative border-l-2',
-              isActive 
-                ? 'bg-surface-raised border-accent text-text-primary' 
-                : 'border-transparent text-text-muted hover:text-text-primary hover:bg-surface-raised'
-            )}
-          >
-            {({ isActive }) => (
-              <>
-                <item.icon className={twMerge(
-                  'w-4 h-4 min-w-[16px] transition-colors',
-                  isActive ? 'text-accent' : 'text-text-muted group-hover:text-text-primary'
-                )} />
-                
-                <AnimatePresence>
-                  {(!isCollapsed || isMobileView) && (
-                    <motion.span
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className={twMerge(
-                        "ml-4 whitespace-nowrap font-mono text-xs uppercase tracking-widest",
-                        isActive ? "text-accent" : ""
-                      )}
-                    >
-                      {isActive ? <CipherText text={item.label} duration={500} /> : item.label}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </>
-            )}
-          </NavLink>
-        ))}
+        {menuItems.map((item) => {
+          const isActive = checkIsActive(item.path);
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => {
+                if (isMobileView) setSidebarOpenMobile(false);
+              }}
+              className={twMerge(
+                'flex items-center px-6 py-3 transition-colors group relative border-l-2',
+                isActive 
+                  ? 'bg-surface-raised border-accent text-text-primary' 
+                  : 'border-transparent text-text-muted hover:text-text-primary hover:bg-surface-raised'
+              )}
+            >
+              <item.icon className={twMerge(
+                'w-4 h-4 min-w-[16px] transition-colors',
+                isActive ? 'text-accent' : 'text-text-muted group-hover:text-text-primary'
+              )} />
+              
+              <AnimatePresence>
+                {(!isCollapsed || isMobileView) && (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className={twMerge(
+                      "ml-4 whitespace-nowrap font-mono text-xs uppercase tracking-widest",
+                      isActive ? "text-accent" : ""
+                    )}
+                  >
+                    {isActive ? <CipherText text={item.label} duration={500} /> : item.label}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Storage Quota Block */}

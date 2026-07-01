@@ -147,7 +147,7 @@ const Files = () => {
   const [sortDirection, setSortDirection] = useState('desc');
   const [decryptedNames, setDecryptedNames] = useState({});
   const [isDecrypting, setIsDecrypting] = useState(false);
-  const [viewMode, setViewMode] = useState('list'); // 'list' | 'grid'
+  const [viewMode, setViewMode] = useState('grid'); // 'list' | 'grid'
   const [folderPath, setFolderPath] = useState([]);
 
   
@@ -701,11 +701,11 @@ const Files = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-4 md:pb-6">
         <div>
-          <div className="font-mono text-xl sm:text-2xl text-text-primary tracking-widest uppercase flex items-center flex-wrap gap-2">
-            <RiSafeLine className="w-5 h-5 sm:w-6 sm:h-6 text-text-primary" />
+          <div className="font-mono text-base sm:text-lg text-text-primary tracking-widest uppercase flex items-center flex-wrap gap-2">
+            <RiSafeLine className="w-4 h-4 sm:w-5 sm:h-5 text-text-primary" />
             <span 
               onClick={handleNavigateToRoot} 
-              className={`cursor-pointer hover:text-accent transition-colors ${folderPath.length === 0 ? 'font-bold' : 'text-text-muted'}`}
+              className={`cursor-pointer hover:text-accent transition-colors ${folderPath.length === 0 ? 'font-normal' : 'text-text-muted'}`}
             >
               {t('vault', 'title')}
             </span>
@@ -714,7 +714,7 @@ const Files = () => {
                 <span className="text-text-muted">&gt;</span>
                 <span 
                   onClick={() => handleNavigateToBreadcrumb(index)}
-                  className={`cursor-pointer hover:text-accent transition-colors truncate max-w-[100px] sm:max-w-[200px] ${index === folderPath.length - 1 ? 'font-bold text-text-primary' : 'text-text-muted'}`}
+                  className={`cursor-pointer hover:text-accent transition-colors ${index === folderPath.length - 1 ? 'font-normal text-text-primary' : 'text-text-muted'}`}
                 >
                   {folder.name}
                 </span>
@@ -912,38 +912,54 @@ const Files = () => {
             </table>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-1">
-            {currentFolderId && (
-              <div 
-                onClick={handleNavigateUp}
-                className="border border-border bg-void rounded-xl p-4 flex flex-col items-center justify-center hover:border-accent/50 hover:bg-surface-raised transition-all cursor-pointer aspect-square shadow-lg"
-              >
-                <CornerLeftUp className="w-10 h-10 text-text-muted mb-3" />
-                <span className="font-bold tracking-widest text-text-muted text-sm uppercase">{t('vault', 'up')}</span>
+          <div className="space-y-6">
+            {(currentFolderId || (folders && folders.length > 0)) && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-1">
+                {currentFolderId && (
+                  <div 
+                    onClick={handleNavigateUp}
+                    className="bg-[#242424] rounded-xl p-3 flex items-center gap-3 hover:bg-surface-raised transition-all cursor-pointer border border-transparent hover:border-border"
+                  >
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <CornerLeftUp className="w-6 h-6 text-text-muted" />
+                    </div>
+                    <span className="font-semibold text-text-primary text-sm uppercase truncate flex-1">{t('vault', 'up')}</span>
+                  </div>
+                )}
+
+                {folders && folders.map((folder) => (
+                  <div 
+                    key={`folder-${folder.id}`}
+                    onDoubleClick={() => handleNavigateInto(folder)}
+                    onContextMenu={(e) => handleContextMenu(e, { ...folder, isFolder: true })}
+                    className={`bg-[#242424] rounded-xl p-3 flex items-center gap-3 hover:bg-surface-raised transition-all cursor-pointer border border-transparent hover:border-border relative group ${selectedIds[`folder_${folder.id}`] ? 'ring-2 ring-accent' : ''}`}
+                  >
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Folder className="w-6 h-6 text-text-muted" fill="currentColor" />
+                    </div>
+                    <span className="truncate text-sm font-semibold text-text-primary flex-1">
+                      {folder.encrypted_name}
+                    </span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleContextMenu(e, { ...folder, isFolder: true }); }}
+                      className="p-1.5 text-text-muted hover:text-text-primary hover:bg-[#333] rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
+                    <input
+                      type="checkbox"
+                      checked={!!selectedIds[`folder_${folder.id}`]}
+                      onChange={() => setSelectedIds(prev => ({ ...prev, [`folder_${folder.id}`]: !prev[`folder_${folder.id}`] }))}
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute top-2 left-2 accent-accent cursor-pointer w-3.5 h-3.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity rounded"
+                      style={{ opacity: selectedIds[`folder_${folder.id}`] ? 1 : undefined }}
+                    />
+                  </div>
+                ))}
               </div>
             )}
-
-            {folders && folders.map((folder) => (
-              <div 
-                key={`folder-${folder.id}`}
-                onDoubleClick={() => handleNavigateInto(folder)}
-                onContextMenu={(e) => handleContextMenu(e, { ...folder, isFolder: true })}
-                className={`border border-border bg-void rounded-xl p-4 flex flex-col items-center justify-center hover:border-accent/50 hover:bg-surface-raised transition-all cursor-pointer aspect-square shadow-lg relative group ${selectedIds[`folder_${folder.id}`] ? 'ring-2 ring-accent border-accent' : ''}`}
-              >
-                <input
-                  type="checkbox"
-                  checked={!!selectedIds[`folder_${folder.id}`]}
-                  onChange={() => setSelectedIds(prev => ({ ...prev, [`folder_${folder.id}`]: !prev[`folder_${folder.id}`] }))}
-                  onClick={(e) => e.stopPropagation()}
-                  className="absolute top-3 left-3 accent-accent cursor-pointer w-4 h-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
-                  style={{ opacity: selectedIds[`folder_${folder.id}`] ? 1 : undefined }}
-                />
-                <Folder className="w-12 h-12 text-accent mb-4 group-hover:scale-110 transition-transform" />
-                <p className="truncate text-xs font-semibold tracking-wide text-text-primary w-full text-center px-2">
-                  {folder.encrypted_name}
-                </p>
-              </div>
-            ))}
+            
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2.5 p-1">
 
             {isLoading ? (
               Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} className="aspect-square p-2" hasButton={false} />)
@@ -1015,6 +1031,7 @@ const Files = () => {
                   </Link>
                 </div>
               )
+              </div>
             )}
           </div>
         )}
