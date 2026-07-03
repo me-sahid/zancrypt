@@ -219,6 +219,23 @@ const FileThumbnail = ({ file, className, decryptedName }) => {
 
   const isStaticImage = thumbnailUrl && (thumbnailUrl.startsWith('data:image/') || thumbnailUrl.startsWith('data:'));
 
+  if (category === 'text') {
+    return (
+      <div className={`${className} bg-void flex items-center justify-center rounded-md border border-border/20`}>
+        <FileText className="w-10 h-10 text-text-muted/60" strokeWidth={1.5} />
+      </div>
+    );
+  }
+  
+  if (category === 'pdf') {
+    return (
+      <div className={`${className} bg-void flex flex-col items-center justify-center rounded-md border border-border/20`}>
+        <FileText className="w-9 h-9 text-status-danger/70 mb-1.5" strokeWidth={1.5} />
+        <span className="text-[9px] font-bold text-status-danger/80 tracking-widest uppercase bg-status-danger/10 px-2 py-0.5 rounded">PDF</span>
+      </div>
+    );
+  }
+
   // Update thumbnailUrl state if file.thumbnail changes
   useEffect(() => {
     if (file.thumbnail) {
@@ -330,24 +347,6 @@ const FileThumbnail = ({ file, className, decryptedName }) => {
   }, [file.id, filename, category, file.thumbnail]);
 
   if (hasError || !thumbnailUrl) {
-    if (category === 'text') {
-      return (
-        <div className={`${className} bg-void flex items-center justify-center rounded-md border border-border/20`}>
-          <FileText className="w-10 h-10 text-text-muted/60" strokeWidth={1.5} />
-        </div>
-      );
-    }
-    
-    if (category === 'pdf') {
-      return (
-        <div className={`${className} bg-void flex flex-col items-center justify-center rounded-md border border-border/20`}>
-          <FileText className="w-9 h-9 text-status-danger/70 mb-1.5" strokeWidth={1.5} />
-          <span className="text-[9px] font-bold text-status-danger/80 tracking-widest uppercase bg-status-danger/10 px-2 py-0.5 rounded">PDF</span>
-        </div>
-      );
-    }
-
-    return (
       <img 
         src={generatedPlaceholder} 
         alt={filename} 
