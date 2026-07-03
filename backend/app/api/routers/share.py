@@ -212,9 +212,7 @@ async def clear_share_history(
     current_user=Security(get_current_user_or_api_key, scopes=["share"]),
     session: AsyncSession = Depends(get_async_session)
 ):
-    """
-    Hard-deletes all revoked or expired shares for the current user to clear their history.
-    """
+
     from sqlalchemy import or_, and_, delete
     now = datetime.now(timezone.utc)
     
@@ -237,11 +235,13 @@ async def revoke_share(
     current_user=Security(get_current_user_or_api_key, scopes=["share"]),
     session: AsyncSession = Depends(get_async_session)
 ):
-    """
-    Revokes an active share link (soft-delete by setting is_active=false).
-    """
     import hashlib
-    token_hash = hashlib.sha256(token.encode('utf-8')).hexdigest()
+    # If the token is 64 chars long, it's likely already a SHA-256 hash (sent by frontend list view)
+    if len(token) == 64:
+        token_hash = token
+    else:
+        token_hash = hashlib.sha256(token.encode('utf-8')).hexdigest()
+        
     stmt = select(Share).where(Share.share_token_hash == token_hash, Share.owner_user_id == current_user.id)
     result = await session.execute(stmt)
     db_share = result.scalar_one_or_none()

@@ -384,17 +384,6 @@ const SharedFile = () => {
     setIsProcessing(true);
     
     try {
-      setDecryptStep(1);
-      await new Promise(r => setTimeout(r, 600));
-      
-      setDecryptStep(2);
-      await new Promise(r => setTimeout(r, 800));
-      
-      setDecryptStep(3);
-      await new Promise(r => setTimeout(r, 600));
-      
-      setDecryptStep(4);
-      await new Promise(r => setTimeout(r, 900));
       
       if (isMultiShare) {
         const decryptedList = [];
@@ -672,7 +661,7 @@ const SharedFile = () => {
     const activeFile = isMultiDecrypted ? decryptedFile[activeMultiIndex] : decryptedFile;
 
     return (
-      <div className="min-h-screen bg-primary-bg text-text-primary flex flex-col justify-between relative overflow-hidden font-sans">
+      <div className="min-h-screen bg-[#080808] text-white flex flex-col justify-between relative overflow-hidden font-sans">
         {/* Background Gradients */}
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
@@ -931,27 +920,7 @@ const SharedFile = () => {
                     </p>
                   </div>
 
-                  {/* Nodes diagram */}
-                  <div className="bg-[#080b13] border border-[#1e293b]/40 rounded-2xl p-4 flex flex-col space-y-2.5">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-border pb-2">
-                      <span>VM cluster location</span>
-                      <span className="text-emerald-400">Reassembled</span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="p-2 rounded-xl bg-white/[0.02] border border-border text-center">
-                        <p className="text-[11px] text-slate-500 uppercase tracking-widest font-bold">Mumbai</p>
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mx-auto mt-1" />
-                      </div>
-                      <div className="p-2 rounded-xl bg-white/[0.02] border border-border text-center">
-                        <p className="text-[11px] text-slate-500 uppercase tracking-widest font-bold">Frankfurt</p>
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mx-auto mt-1" />
-                      </div>
-                      <div className="p-2 rounded-xl bg-white/[0.02] border border-border text-center">
-                        <p className="text-[11px] text-slate-500 uppercase tracking-widest font-bold">Tokyo</p>
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mx-auto mt-1" />
-                      </div>
-                    </div>
-                  </div>
+
 
                   {allowDownloads ? (
                     <Button

@@ -24,14 +24,6 @@ const HeroSection = ({ isLoading }) => {
         { y: 0, opacity: 1, duration: 0.6, stagger: 0.1, ease: 'power3.out' }
       );
 
-      // Marquee animation
-      gsap.to('.marquee-content', {
-        xPercent: -50,
-        repeat: -1,
-        duration: 20,
-        ease: 'linear'
-      });
-
     }, containerRef);
 
     return () => ctx.revert();
@@ -288,32 +280,6 @@ const HeroSection = ({ isLoading }) => {
           </div>
             </motion.div>
           )}
-        </div>
-      </div>
-
-      {/* Marquee Ticker */}
-      <div className="w-full border-t border-border py-4 overflow-hidden mt-12 bg-void z-10">
-        <div className="marquee-container flex whitespace-nowrap">
-          <div className="marquee-content flex items-center space-x-12 px-6 font-mono text-xs text-text-muted">
-            {[...Array(4)].map((_, i) => (
-              <React.Fragment key={i}>
-                <span>{t('hero', 'securedBy')}</span>
-                <span>·</span>
-                <span className="text-text-primary">WebAuthn</span>
-                <span>·</span>
-                <span className="text-text-primary">AES-256-GCM</span>
-                <span>·</span>
-                <span className="text-text-primary">FIDO2</span>
-                <span>·</span>
-                <span className="text-text-primary">Passkey</span>
-                <span>·</span>
-                <span className="text-text-primary">Zero-Knowledge</span>
-                <span>·</span>
-                <span className="text-text-primary">OpenTelemetry</span>
-                <span>·</span>
-              </React.Fragment>
-            ))}
-          </div>
         </div>
       </div>
 
