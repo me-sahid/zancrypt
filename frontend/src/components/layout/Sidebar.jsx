@@ -84,7 +84,7 @@ const Sidebar = () => {
               exit={{ opacity: 0, x: -10 }}
               className="ml-3"
             >
-              <h2 className="font-sans text-[20px] font-semibold text-text-primary tracking-[0.15em] leading-none uppercase">
+              <h2 className="text-[20px] font-bold text-text-primary tracking-tight leading-none uppercase">
                 ZAN<span className="text-accent">CRYPT</span>
               </h2>
             </motion.div>
