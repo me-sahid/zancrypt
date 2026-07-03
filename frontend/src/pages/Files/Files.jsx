@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { 
   Database, File, Search, Filter, Share2, 
   Download, Trash2, Lock, CheckCircle2,
-  Eye, Calendar, FileVideo, FileImage, FileText,
+  Eye, Calendar, FileVideo, FileImage, FileText, FileCode, FileAudio, FileSpreadsheet, FileArchive,
   Loader2, ArrowUp, ArrowDown, ArrowUpDown, Info,
   Copy, FolderOpen, ClipboardPaste, Folder, Scissors, FolderPlus, CornerLeftUp,
   LayoutGrid, List, X, MoreVertical
@@ -27,6 +27,32 @@ import FileManagerSkeleton from '../../components/skeletons/FileManagerSkeleton'
 import SkeletonTableRow from '../../components/skeletons/SkeletonTableRow';
 import SkeletonCard from '../../components/skeletons/SkeletonCard';
 import { useWorkspace } from '../../hooks/useWorkspace';
+
+const getFileIcon = (filename) => {
+  const ext = filename?.split('.').pop()?.toLowerCase()
+  const iconMap = {
+    pdf: { icon: FileText, class: 'text-red-400' },
+    txt: { icon: FileText, class: 'text-text-muted' },
+    md: { icon: FileText, class: 'text-text-muted' },
+    png: { icon: FileImage, class: 'text-blue-400' },
+    jpg: { icon: FileImage, class: 'text-blue-400' },
+    jpeg: { icon: FileImage, class: 'text-blue-400' },
+    gif: { icon: FileImage, class: 'text-blue-400' },
+    webp: { icon: FileImage, class: 'text-blue-400' },
+    docx: { icon: FileText, class: 'text-blue-500' },
+    doc: { icon: FileText, class: 'text-blue-500' },
+    xlsx: { icon: FileSpreadsheet, class: 'text-green-400' },
+    csv: { icon: FileSpreadsheet, class: 'text-green-400' },
+    zip: { icon: FileArchive, class: 'text-yellow-400' },
+    rar: { icon: FileArchive, class: 'text-yellow-400' },
+    js: { icon: FileCode, class: 'text-purple-400' },
+    ts: { icon: FileCode, class: 'text-purple-400' },
+    py: { icon: FileCode, class: 'text-purple-400' },
+    mp4: { icon: FileVideo, class: 'text-pink-400' },
+    mp3: { icon: FileAudio, class: 'text-pink-400' },
+  }
+  return iconMap[ext] || { icon: File, class: 'text-text-muted' }
+}
 
 // Category Sniffer
 const getFileCategory = (filename) => {
@@ -937,49 +963,74 @@ const Files = () => {
                 return (
                   <div 
                     key={file.id}
+                    onClick={(e) => { if (e.button === 0 && !e.ctrlKey) handlePreview(file); }}
                     onContextMenu={(e) => handleContextMenu(e, file)}
-                    className={`border border-border bg-surface rounded-xl overflow-hidden hover:border-accent/50 transition-all cursor-pointer shadow-md relative group flex flex-col aspect-square ${selectedIds[file.id] ? 'ring-2 ring-accent border-accent' : ''}`}
+                    className={`relative bg-surface border border-border rounded-sm hover:border-accent/40 transition-all cursor-pointer group w-[160px] h-[140px] ${selectedIds[file.id] ? 'ring-2 ring-accent border-accent' : ''}`}
                   >
                     <input
                       type="checkbox"
                       checked={!!selectedIds[file.id]}
                       onChange={() => setSelectedIds(prev => ({ ...prev, [file.id]: !prev[file.id] }))}
                       onClick={(e) => e.stopPropagation()}
-                      className="absolute top-10 left-3 accent-accent cursor-pointer w-4 h-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-3 left-3 accent-accent cursor-pointer w-4 h-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
                       style={{ opacity: selectedIds[file.id] ? 1 : undefined }}
                     />
 
-                    {/* Top name bar — matches screenshot style */}
-                    <div className="flex items-center justify-between px-3 py-2 bg-surface border-b border-border flex-shrink-0">
-                      <p className={`truncate text-[11px] font-semibold ${isDecrypted ? 'text-text-primary' : 'text-text-muted opacity-60'}`}>
+                    {/* Top section */}
+                    <div className="flex items-center justify-between p-3 pb-0">
+                      {/* Left: file type icon */}
+                      {(() => {
+                        const { icon: Icon, class: iconClass } = getFileIcon(displayName);
+                        return <Icon className={`w-5 h-5 stroke-[1.5] ${iconClass}`} />;
+                      })()}
+                      {/* Right: lock & menu */}
+                      <div className="flex items-center space-x-1">
+                        <Lock className={`w-3 h-3 stroke-[1.5] ${isDecrypted ? 'text-accent' : 'text-text-muted'}`} />
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleContextMenu(e, file); }}
+                          className="text-text-muted hover:text-text-primary opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Middle section */}
+                    <div className="flex-1 flex items-center justify-center p-2 h-16">
+                      {['image', 'video', 'pdf'].includes(getFileCategory(displayName)) ? (
+                        <FileThumbnail file={file} decryptedName={displayName} className="w-full h-16 object-cover" />
+                      ) : (
+                        (() => {
+                          const { icon: Icon } = getFileIcon(displayName);
+                          return <Icon className="w-10 h-10 mx-auto text-text-muted stroke-[1]" />;
+                        })()
+                      )}
+                    </div>
+
+                    {/* Bottom section */}
+                    <div className="p-3 pt-0">
+                      <p className="truncate text-text-primary text-xs font-mono">
                         {isDecrypted ? displayName : <CipherText text={displayName} duration={2000} />}
                       </p>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleContextMenu(e, file); }}
-                        className="flex-shrink-0 ml-1 p-1 text-text-muted hover:text-text-primary rounded transition-colors"
-                      >
-                        <MoreVertical className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-
-                    {/* Main thumbnail — fills the rest */}
-                    <div
-                      className="flex-1 w-full relative bg-surface-raised overflow-hidden"
-                      onClick={(e) => { if (e.button === 0 && !e.ctrlKey) handlePreview(file); }}
-                    >
-                      <div className="w-full h-full group-hover:scale-[1.02] transition-transform duration-300">
-                        <FileThumbnail file={file} decryptedName={displayName} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="absolute top-2 right-2 p-1 rounded bg-void/80 border border-border/40 backdrop-blur-sm z-10">
-                        <Lock className={`w-2.5 h-2.5 ${isDecrypted ? 'text-accent' : 'text-text-muted'}`} />
-                      </div>
-                    </div>
-
-                    {/* Bottom size strip */}
-                    <div className="px-3 py-1.5 border-t border-border bg-surface flex-shrink-0">
-                      <p className="text-[9px] text-text-muted uppercase tracking-widest">
+                      <p className="text-text-muted text-xs font-mono">
                         {file.file_size ? (file.file_size / 1024).toFixed(1) + ' KB' : '0 KB'}
                       </p>
+                    </div>
+
+                    {/* Hover state */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-surface/95 border-t border-border p-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity justify-center z-10">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleDownload(file); }} 
+                        className="p-1 hover:bg-surface-raised rounded text-text-muted hover:text-text-primary transition-colors"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setShareFilesTarget(file); setIsShareModalOpen(true); }} 
+                        className="p-1 hover:bg-surface-raised rounded text-text-muted hover:text-text-primary transition-colors"
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 );
