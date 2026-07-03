@@ -83,11 +83,6 @@ const TopNav = () => {
 
       {/* Right Side Actions */}
       <div className="flex items-center space-x-2 sm:space-x-4 md:space-x-6">
-        <div className="hidden lg:flex items-center px-3 py-1.5 rounded-full bg-status-success/5 border border-status-success/20">
-          <Globe className="w-4 h-4 text-status-success mr-2" />
-          <span className="text-xs font-medium text-status-success">System Healthy</span>
-          <div className="ml-2 w-1.5 h-1.5 rounded-full bg-status-success animate-pulse" />
-        </div>
 
         <NotificationBell />
 
@@ -134,14 +129,7 @@ const TopNav = () => {
                   <span>View Profile</span>
                 </Link>
 
-                <Link 
-                  to="/security" 
-                  onClick={() => setIsDropdownOpen(false)}
-                  className="flex items-center space-x-3 px-4 py-2.5 text-sm text-text-secondary hover:text-primary-accent hover:bg-primary-accent/5 transition-all"
-                >
-                  <Shield className="w-4 h-4" />
-                  <span>Security Status</span>
-                </Link>
+
 
                 <Link 
                   to="/settings" 
