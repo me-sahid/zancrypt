@@ -347,6 +347,7 @@ const FileThumbnail = ({ file, className, decryptedName }) => {
   }, [file.id, filename, category, file.thumbnail]);
 
   if (hasError || !thumbnailUrl) {
+    return (
       <img 
         src={generatedPlaceholder} 
         alt={filename} 
