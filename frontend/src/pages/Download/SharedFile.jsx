@@ -389,6 +389,17 @@ const SharedFile = () => {
         const decryptedList = [];
         const keyList = key ? key.split(',') : [];
         
+        const base64ToBuffer = (b64) => {
+          let s = b64.replace(/-/g, '+').replace(/_/g, '/');
+          while (s.length % 4) s += '=';
+          const raw = atob(s);
+          const result = new Uint8Array(raw.length);
+          for (let i = 0; i < raw.length; i++) {
+            result[i] = raw.charCodeAt(i);
+          }
+          return result.buffer;
+        };
+
         for (let i = 0; i < fileDetails.length; i++) {
           const detail = fileDetails[i];
           
@@ -412,11 +423,29 @@ const SharedFile = () => {
           }
           
           const fullHex = shards.map(s => s.data).join('');
-          const bytes = hexToBytes(fullHex);
+          const encBytes = hexToBytes(fullHex);
           
+          const rawKeyBuffer = base64ToBuffer(activeKey);
+          const cryptoKey = await window.crypto.subtle.importKey(
+            'raw',
+            rawKeyBuffer,
+            { name: 'AES-GCM' },
+            false,
+            ['decrypt']
+          );
+
+          const iv = encBytes.slice(0, 12);
+          const ciphertext = encBytes.slice(12);
+
+          const decryptedBuffer = await window.crypto.subtle.decrypt(
+            { name: 'AES-GCM', iv },
+            cryptoKey,
+            ciphertext
+          );
+
           const category = getFileCategory(detail.encrypted_filename);
           const mime = getMimeType(detail.encrypted_filename);
-          let blob = new Blob([bytes], { type: mime });
+          let blob = new Blob([decryptedBuffer], { type: mime });
           
           const ext = (detail.encrypted_filename || '').split('.').pop().toLowerCase();
           if (ext === 'heic' || ext === 'heif') {
@@ -455,9 +484,10 @@ const SharedFile = () => {
         setDecryptedFile(decryptedList);
         setActiveMultiIndex(0);
       } else {
+        let activeKey = key;
         if (fileDetails.wrapped_content_key) {
           try {
-            await unwrapKeyWithPassword(
+            activeKey = await unwrapKeyWithPassword(
               fileDetails.wrapped_content_key, 
               fileDetails.kdf_salt, 
               fileDetails.kdf_iterations, 
@@ -474,11 +504,40 @@ const SharedFile = () => {
         }
         
         const fullHex = shards.map(s => s.data).join('');
-        const bytes = hexToBytes(fullHex);
+        const encBytes = hexToBytes(fullHex);
+
+        const base64ToBuffer = (b64) => {
+          let s = b64.replace(/-/g, '+').replace(/_/g, '/');
+          while (s.length % 4) s += '=';
+          const raw = atob(s);
+          const result = new Uint8Array(raw.length);
+          for (let i = 0; i < raw.length; i++) {
+            result[i] = raw.charCodeAt(i);
+          }
+          return result.buffer;
+        };
+
+        const rawKeyBuffer = base64ToBuffer(activeKey);
+        const cryptoKey = await window.crypto.subtle.importKey(
+          'raw',
+          rawKeyBuffer,
+          { name: 'AES-GCM' },
+          false,
+          ['decrypt']
+        );
+
+        const iv = encBytes.slice(0, 12);
+        const ciphertext = encBytes.slice(12);
+
+        const decryptedBuffer = await window.crypto.subtle.decrypt(
+          { name: 'AES-GCM', iv },
+          cryptoKey,
+          ciphertext
+        );
         
         const category = getFileCategory(fileDetails.encrypted_filename);
         const mime = getMimeType(fileDetails.encrypted_filename);
-        let blob = new Blob([bytes], { type: mime });
+        let blob = new Blob([decryptedBuffer], { type: mime });
         
         const ext = (fileDetails.encrypted_filename || '').split('.').pop().toLowerCase();
         if (ext === 'heic' || ext === 'heif') {
