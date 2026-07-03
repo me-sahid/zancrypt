@@ -13,8 +13,6 @@ import {
   Settings, 
   HelpCircle, 
   ExternalLink, 
-  LogOut,
-  LayoutDashboard,
   Sun,
   Moon,
   Layers,
@@ -27,7 +25,6 @@ import {
   Newspaper
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAuthStore } from '../../../store/useStore';
 import { useLanguageStore } from '../../../store/useLanguageStore';
 import { useThemeStore } from '../../../store/useThemeStore';
 import ThemeToggle from '../../../components/ui/ThemeToggle';
@@ -44,7 +41,6 @@ const Navbar = () => {
   const [mobileSolutionsOpen, setMobileSolutionsOpen] = useState(false);
   const [mobileResourcesOpen, setMobileResourcesOpen] = useState(false);
 
-  const { isAuthenticated, user, logout } = useAuthStore();
   const { currentLanguage, setLanguage, t } = useLanguageStore();
   const { theme, toggleTheme } = useThemeStore();
   const isDark = theme === 'dark';
@@ -309,106 +305,26 @@ const Navbar = () => {
           {/* Divider */}
           <div className="h-5 w-px bg-border/60 mx-0.5" />
 
-          {/* Authentication State */}
-          {isAuthenticated ? (
-            <div className="flex items-center gap-3">
-              <div className="relative" ref={userDropdownRef}>
-                <button 
-                  onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                  className="flex items-center gap-2 h-9 px-2.5 rounded-lg border border-border hover:border-border-active bg-surface-raised/40 hover:bg-surface-raised transition-all group cursor-pointer"
-                >
-                  <div className="w-5 h-5 shrink-0 rounded-lg bg-accent/20 border border-accent/40 flex items-center justify-center font-bold text-accent text-xs uppercase">
-                    {user?.full_name?.[0] || user?.username?.[0] || '?'}
-                  </div>
-                  <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary transition-colors">
-                    {user?.full_name || user?.username || 'User'}
-                  </span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-text-muted transition-transform duration-150 shrink-0 ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
+          {/* Always show Sign In + Get Started — auth lives on drive subdomain */}
+          <div className="flex items-center gap-3">
+            <a
+              href="https://drive.zancrypt.in/login"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-10 px-4 flex items-center text-text-secondary hover:text-text-primary font-sans text-sm font-medium transition-colors"
+            >
+              Sign In
+            </a>
 
-                <AnimatePresence>
-                  {isUserDropdownOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 6, scale: 0.97 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 6, scale: 0.97 }}
-                      transition={{ duration: 0.12 }}
-                      className="absolute right-0 top-full mt-2 w-56 bg-surface border border-border shadow-2xl py-1.5 z-50 rounded-xl overflow-hidden backdrop-blur-xl"
-                    >
-                      <div className="px-4 py-1.5 mb-1 border-b border-border/40">
-                        <p className="font-sans text-xs font-semibold uppercase tracking-wider text-text-muted">{t('nav', 'vaults')}</p>
-                      </div>
-
-                      <div className="space-y-px px-1.5">
-                        {userMenuItems.map(({ to, icon: Icon, label }) => (
-                          <Link
-                            key={to}
-                            to={to}
-                            onClick={() => setIsUserDropdownOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-raised transition-colors"
-                          >
-                            <Icon className="w-4 h-4 text-accent shrink-0" />
-                            <span className="font-sans text-xs font-medium">{label}</span>
-                          </Link>
-                        ))}
-                      </div>
-
-                      <div className="border-t border-border/40 mt-1 mx-3" />
-
-                      <div className="px-1.5 mt-1 space-y-px">
-                        <a
-                          href="#support"
-                          onClick={() => setIsUserDropdownOpen(false)}
-                          className="flex items-center justify-between px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-raised transition-colors"
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <HelpCircle className="w-4 h-4 shrink-0 text-text-muted" />
-                            <span className="font-sans text-xs font-medium">{t('nav', 'support')}</span>
-                          </div>
-                          <ExternalLink className="w-3.5 h-3.5 opacity-40 text-text-muted" />
-                        </a>
-
-                        <button
-                          onClick={() => { setIsUserDropdownOpen(false); logout(); }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-danger hover:bg-danger/8 transition-colors text-left cursor-pointer"
-                        >
-                          <LogOut className="w-4 h-4 shrink-0" />
-                          <span className="font-sans text-xs font-medium">{t('nav', 'signOut')}</span>
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              <Link
-                to="/download"
-                className="h-9 px-4 flex items-center border border-accent/50 text-accent hover:bg-accent hover:text-void font-sans text-xs font-semibold transition-all rounded-lg"
-              >
-                {t('nav', 'download')}
-              </Link>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <a
-                href="https://drive.zancrypt.in/login"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="h-10 px-4 flex items-center text-text-secondary hover:text-text-primary font-sans text-sm font-medium transition-colors"
-              >
-                Sign In
-              </a>
-
-              <a
-                href="https://drive.zancrypt.in/register"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="h-10 px-5 flex items-center bg-accent hover:bg-accent/90 text-void font-sans text-sm font-medium rounded-lg transition-all shadow-lg shadow-accent/20"
-              >
-                Get Started
-              </a>
-            </div>
-          )}
+            <a
+              href="https://drive.zancrypt.in/register"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-10 px-5 flex items-center bg-accent hover:bg-accent/90 text-void font-sans text-sm font-medium rounded-lg transition-all shadow-lg shadow-accent/20"
+            >
+              Get Started
+            </a>
+          </div>
         </div>
 
         {/* ── Mobile Menu Controls ── */}
@@ -511,53 +427,27 @@ const Navbar = () => {
 
               <div className="border-t border-border/30 pt-4" />
 
-              {/* Auth section */}
-              {isAuthenticated ? (
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2 p-3 bg-surface-raised rounded-lg">
-                    <div className="w-8 h-8 bg-accent/20 border border-accent/40 rounded-lg flex items-center justify-center font-bold text-accent text-xs uppercase">
-                      {user?.full_name?.[0] || user?.username?.[0] || '?'}
-                    </div>
-                    <span className="font-sans text-xs font-medium text-text-primary">{user?.full_name || user?.username || 'User'}</span>
-                  </div>
-                  <a
-                    href="https://drive.zancrypt.in/auth/login"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-2.5 bg-accent text-void font-sans text-xs font-semibold rounded-lg text-center hover:bg-accent/90 transition-all"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Open Vault
-                  </a>
-                  <button
-                    onClick={() => { logout(); setIsMobileMenuOpen(false); }}
-                    className="w-full py-2.5 border border-danger/40 text-danger font-sans text-xs font-semibold rounded-lg hover:bg-danger/5 transition-colors"
-                  >
-                    {t('nav', 'signOut')}
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  <a
-                    href="https://drive.zancrypt.in/login"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full block py-2.5 border border-border text-text-primary font-sans text-xs font-semibold rounded-lg text-center hover:bg-surface-raised transition-all"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Sign In
-                  </a>
-                  <a
-                    href="https://drive.zancrypt.in/register"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full block py-2.5 bg-accent text-void font-sans text-xs font-semibold rounded-lg text-center hover:bg-accent/90 transition-all"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Get Started
-                  </a>
-                </div>
-              )}
+              {/* Always show Sign In + Get Started on mobile — auth lives on drive subdomain */}
+              <div className="flex flex-col gap-3">
+                <a
+                  href="https://drive.zancrypt.in/login"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full block py-2.5 border border-border text-text-primary font-sans text-xs font-semibold rounded-lg text-center hover:bg-surface-raised transition-all"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Sign In
+                </a>
+                <a
+                  href="https://drive.zancrypt.in/register"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full block py-2.5 bg-accent text-void font-sans text-xs font-semibold rounded-lg text-center hover:bg-accent/90 transition-all"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Get Started
+                </a>
+              </div>
             </div>
           </motion.div>
         )}

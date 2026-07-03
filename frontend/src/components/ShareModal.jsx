@@ -12,6 +12,7 @@ import { useAuthStore } from '../store/useStore';
 import { useUploadStore } from '../store/useUploadStore';
 import { getUserPlanConfig } from '../utils/planLimits';
 import { wrapKeyWithPassword } from '../utils/shareCrypto';
+import { deriveKey } from '../utils/crypto';
 
 const ShareModal = ({ file, onClose }) => {
   const ttlOptions = [
@@ -100,13 +101,27 @@ const ShareModal = ({ file, onClose }) => {
     return window.location.origin;
   };
 
-  const [encryptionKey] = useState(() => {
-    if (isMulti) return '';
-    if (file?.encryption_key_b64) return file.encryption_key_b64;
-    const keyBytes = new Uint8Array(32);
-    window.crypto.getRandomValues(keyBytes);
-    return btoa(String.fromCharCode.apply(null, keyBytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  });
+  const [encryptionKey, setEncryptionKey] = useState('');
+
+  // Derive and export the SAME AES key that was used to encrypt the file during upload.
+  // Must match: deriveKey(user.email, keyMaterial) used in useUploadStore.js
+  useEffect(() => {
+    if (isMulti) return; // multi-share generates per-file random keys below
+    const { user: authUser, keyMaterial } = useAuthStore.getState();
+    if (!authUser?.email || !keyMaterial) {
+      // Fallback: this share link will not be decryptable — warn in console
+      console.warn('[ShareModal] keyMaterial not available. Share link will not decrypt correctly.');
+      return;
+    }
+    deriveKey(authUser.email, keyMaterial).then(async (cryptoKey) => {
+      const rawBuffer = await window.crypto.subtle.exportKey('raw', cryptoKey);
+      const b64 = btoa(String.fromCharCode(...new Uint8Array(rawBuffer)))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      setEncryptionKey(b64);
+    }).catch(err => {
+      console.error('[ShareModal] Failed to export encryption key:', err);
+    });
+  }, [isMulti]);
 
   const shareUrl = React.useMemo(() => {
     if (isMulti) {
@@ -155,14 +170,21 @@ const ShareModal = ({ file, onClose }) => {
 
       if (isMulti) {
         const tokens = []; const keys = [];
+
+        // Export the real encryption key used during upload (same PBKDF2 derivation)
+        const { user: authUser, keyMaterial } = useAuthStore.getState();
+        let realKeyB64 = '';
+        if (authUser?.email && keyMaterial) {
+          const cryptoKey = await deriveKey(authUser.email, keyMaterial);
+          const rawBuffer = await window.crypto.subtle.exportKey('raw', cryptoKey);
+          realKeyB64 = btoa(String.fromCharCode(...new Uint8Array(rawBuffer)))
+            .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+
         for (const item of file) {
-          const keyBytes = new Uint8Array(32);
-          window.crypto.getRandomValues(keyBytes);
-          const derivedKey = btoa(String.fromCharCode.apply(null, keyBytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-          
           let wrapPayload = {};
           if (enablePassword && password) {
-            wrapPayload = await wrapKeyWithPassword(derivedKey, password);
+            wrapPayload = await wrapKeyWithPassword(realKeyB64, password);
             const pwdBuf = new TextEncoder().encode(password);
             const hashBuf = await window.crypto.subtle.digest('SHA-256', pwdBuf);
             const hashHex = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -179,7 +201,7 @@ const ShareModal = ({ file, onClose }) => {
             ...wrapPayload
           });
           tokens.push(res.data.share_token);
-          keys.push(derivedKey);
+          keys.push(realKeyB64); // same key for all files — all encrypted with the user's master key
         }
         setMultiTokens(tokens); setMultiKeys(keys);
         toast.success('Multi-Asset share link created!');
