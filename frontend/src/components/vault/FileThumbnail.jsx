@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { fileService } from '../../services/vaultServices';
 import { useAuthStore } from '../../store/useStore';
 import { deriveKey } from '../../utils/crypto';
+import { FileText } from 'lucide-react';
 
 const hexToBytes = (hex) => {
   if (!hex) return new Uint8Array(0);
@@ -329,6 +330,23 @@ const FileThumbnail = ({ file, className, decryptedName }) => {
   }, [file.id, filename, category, file.thumbnail]);
 
   if (hasError || !thumbnailUrl) {
+    if (category === 'text') {
+      return (
+        <div className={`${className} bg-void flex items-center justify-center rounded-md border border-border/20`}>
+          <FileText className="w-10 h-10 text-text-muted/60" strokeWidth={1.5} />
+        </div>
+      );
+    }
+    
+    if (category === 'pdf') {
+      return (
+        <div className={`${className} bg-void flex flex-col items-center justify-center rounded-md border border-border/20`}>
+          <FileText className="w-9 h-9 text-status-danger/70 mb-1.5" strokeWidth={1.5} />
+          <span className="text-[9px] font-bold text-status-danger/80 tracking-widest uppercase bg-status-danger/10 px-2 py-0.5 rounded">PDF</span>
+        </div>
+      );
+    }
+
     return (
       <img 
         src={generatedPlaceholder} 

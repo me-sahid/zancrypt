@@ -72,7 +72,7 @@ const Sidebar = () => {
       )}
     >
       {/* Logo Section */}
-      <Link to="/" className="flex items-center h-20 px-6 hover:bg-surface-raised transition-colors">
+      <Link to="/" className="flex items-center h-20 px-6 border-b border-border hover:bg-surface-raised transition-colors">
         <div className="flex items-center justify-center w-7 h-7 rounded-sm overflow-hidden">
           <img src="/favi/zancr.png" alt="Zancrypt Logo" className="w-full h-full object-cover" />
         </div>
@@ -84,8 +84,8 @@ const Sidebar = () => {
               exit={{ opacity: 0, x: -10 }}
               className="ml-3"
             >
-              <h2 className="text-[20px] font-semibold text-text-primary tracking-tight leading-none uppercase flex items-center gap-1">
-                <span>ZAN</span><span className="text-accent">CRYPT</span>
+              <h2 className="text-[20px] font-semibold text-text-primary tracking-[0.2em] leading-none uppercase ml-1">
+                ZAN<span className="text-accent">CRYPT</span>
               </h2>
             </motion.div>
           )}
