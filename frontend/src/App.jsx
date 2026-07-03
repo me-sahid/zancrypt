@@ -27,7 +27,7 @@ const Register = lazy(() => import('./pages/Auth/Register'));
 const Files = lazy(() => import('./pages/Files/Files'));
 const Upload = lazy(() => import('./pages/Upload/Upload'));
 const Nodes = lazy(() => import('./pages/Nodes/Nodes'));
-const Security = lazy(() => import('./pages/Security/Security'));
+
 const Monitoring = lazy(() => import('./pages/Monitoring/Monitoring'));
 const Analytics = lazy(() => import('./pages/Analytics/Analytics'));
 const Audit = lazy(() => import('./pages/Audit/Audit'));
@@ -142,7 +142,7 @@ function App() {
             {/* Workspace settings area */}
             <Route path="/workspace/:wid/settings"   element={<Suspense fallback={<SettingsPageSkeleton />}><Settings /></Suspense>} />
             <Route path="/workspace/:wid/profile"    element={<Suspense fallback={<SettingsPageSkeleton />}><Profile /></Suspense>} />
-            <Route path="/workspace/:wid/security"   element={<Security />} />
+
             <Route path="/workspace/:wid/nodes"      element={<Nodes />} />
             <Route path="/workspace/:wid/monitor"    element={<Monitoring />} />
             <Route path="/workspace/:wid/analytics"  element={<Analytics />} />
@@ -156,7 +156,7 @@ function App() {
             <Route path="/uploads"    element={<Navigate to={workspace.upload} replace />} />
             <Route path="/settings"   element={<Navigate to={workspace.settings} replace />} />
             <Route path="/profile"    element={<Navigate to={workspace.profile} replace />} />
-            <Route path="/security"   element={<Navigate to={workspace.security} replace />} />
+
             <Route path="/nodes"      element={<Navigate to={workspace.nodes} replace />} />
             <Route path="/monitoring" element={<Navigate to={workspace.monitor} replace />} />
             <Route path="/analytics"  element={<Navigate to={workspace.analytics} replace />} />
