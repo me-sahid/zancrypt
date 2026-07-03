@@ -68,12 +68,6 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const getUserDisplayName = () => {
-    if (!user) return 'User';
-    const name = user.name || user.username || user.email || 'User';
-    return name.includes('@') ? name.split('@')[0] : name;
-  };
-  const displayName = getUserDisplayName();
 
   const handleNavClick = (href) => {
     setIsMobileMenuOpen(false);
@@ -114,16 +108,6 @@ const Navbar = () => {
     { label: 'Taiwan',   code: 'TW' },
   ];
 
-  const driveBase = 'https://drive.zancrypt.in';
-
-  const userMenuItems = [
-    { to: `${driveBase}/auth/login`, icon: Lock,            label: t('nav', 'privateVault') },
-    { to: `${driveBase}/auth/login`, icon: LayoutDashboard, label: t('nav', 'dashboard') },
-    { to: `${driveBase}/auth/login`, icon: Cloud,           label: t('nav', 'multiCloud') },
-    { to: `${driveBase}/auth/login`, icon: Key,             label: t('nav', 'secCreds') },
-    { to: `${driveBase}/auth/login`, icon: FileText,        label: t('nav', 'audit') },
-    { to: `${driveBase}/auth/login`, icon: Settings,        label: t('nav', 'settings') },
-  ];
 
   return (
     <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
