@@ -421,8 +421,10 @@ const SharedFile = () => {
           if (!shards || !Array.isArray(shards)) {
             throw new Error(`Shard blocks missing for file: ${detail.encrypted_filename}`);
           }
-          
-          const fullHex = shards.map(s => s.data).join('');
+
+          // Sort shards by shard_id to guarantee sequential order (asyncio.gather returns unordered)
+          const sortedShards = [...shards].sort((a, b) => a.shard_id.localeCompare(b.shard_id));
+          const fullHex = sortedShards.map(s => s.data).join('');
           const encBytes = hexToBytes(fullHex);
           
           const rawKeyBuffer = base64ToBuffer(activeKey);
@@ -502,8 +504,10 @@ const SharedFile = () => {
         if (!shards || !Array.isArray(shards)) {
           throw new Error('No shard binary data available in response payload.');
         }
-        
-        const fullHex = shards.map(s => s.data).join('');
+
+        // Sort shards by shard_id to guarantee sequential order (asyncio.gather returns unordered)
+        const sortedShards = [...shards].sort((a, b) => a.shard_id.localeCompare(b.shard_id));
+        const fullHex = sortedShards.map(s => s.data).join('');
         const encBytes = hexToBytes(fullHex);
 
         const base64ToBuffer = (b64) => {
