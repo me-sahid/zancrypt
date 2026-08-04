@@ -1,183 +1,133 @@
 <div align="center">
 
-# 🔐 Zancrypt
+# Zancrypt
 
 ### Zero-Knowledge Distributed Cloud Storage
 
-Secure your files with end-to-end encryption before they ever leave your device.
-Store them across multiple cloud providers while keeping complete ownership of your data.
+Secure cloud storage with client-side encryption, distributed storage, and privacy by design.
 
 <p align="center">
-  <a href="https://zancrypt.in">
-    <img src="https://img.shields.io/badge/Live-zancrypt.in-0A84FF?style=for-the-badge&logo=googlechrome&logoColor=white">
-  </a>
-  <a href="LICENSE">
-    <img src="https://img.shields.io/github/license/me-sahid/zancrypt?style=for-the-badge">
-  </a>
-  <img src="https://img.shields.io/badge/Encryption-AES--256--GCM-success?style=for-the-badge">
-  <img src="https://img.shields.io/badge/Zero--Knowledge-Enabled-blueviolet?style=for-the-badge">
+    <a href="https://zancrypt.in"><strong>Website</strong></a> •
+    <a href="#features"><strong>Features</strong></a> •
+    <a href="#architecture"><strong>Architecture</strong></a> •
+    <a href="#getting-started"><strong>Getting Started</strong></a> •
+    <a href="#roadmap"><strong>Roadmap</strong></a>
 </p>
 
----
-
-### 🌐 Website
-
-## https://zancrypt.in
+<p align="center">
+    <img src="https://img.shields.io/github/license/me-sahid/zancrypt?style=flat-square">
+    <img src="https://img.shields.io/badge/Encryption-AES--256--GCM-blue?style=flat-square">
+    <img src="https://img.shields.io/badge/Architecture-Zero--Knowledge-success?style=flat-square">
+    <img src="https://img.shields.io/badge/Status-Active-success?style=flat-square">
+</p>
 
 </div>
 
 ---
 
-# 📖 Overview
+## Overview
 
-Most cloud storage services can access your files because encryption happens **after upload**.
+Zancrypt is a modern cloud storage platform built around a simple principle:
 
-**Zancrypt** changes that.
+**Your files should belong only to you.**
 
-Every file is encrypted **inside your browser** before transmission, meaning the server never sees your original data or encryption keys.
-
-Your encrypted file is then intelligently split into encrypted shards and distributed across multiple storage providers for increased privacy, redundancy, and resilience.
-
-> **Your files. Your keys. Your privacy.**
+Unlike traditional cloud storage providers, every file is encrypted locally before upload. The server never has access to your original data or encryption keys. Encrypted files are fragmented and distributed across multiple storage providers, providing additional privacy, redundancy, and fault tolerance.
 
 ---
 
-# ✨ Features
+## Features
 
-## 🔒 Zero-Knowledge Encryption
+### Client-side Encryption
 
-- Client-side AES-256-GCM encryption
-- Server never receives plaintext files
-- Encryption keys never leave your device
-- Cryptographically secure random key generation
+- AES-256-GCM encryption
+- Encryption performed entirely in the browser
+- Encryption keys never leave the client
+- Zero-knowledge architecture
 
----
+### Distributed Storage
 
-## ☁️ Distributed Storage
+- File fragmentation
+- Multi-cloud storage
+- Increased redundancy
+- Improved fault tolerance
+- No single provider stores the complete file
 
-Instead of storing an entire encrypted file in one place,
+### Secure Authentication
 
-Zancrypt:
+- JWT authentication
+- Refresh token rotation
+- HttpOnly secure cookies
+- Session management
+- Password hashing
 
-- Encrypts your file
-- Splits it into secure shards
-- Stores shards across multiple cloud providers
+### File Management
 
-Benefits:
-
-- Better redundancy
-- Increased availability
-- Improved privacy
-- No single storage provider possesses your complete file
-
----
-
-## 🛡 Secure Authentication
-
-- JWT Authentication
-- Refresh Token Rotation
-- Secure HttpOnly Cookies
-- Password Hashing
-- Session Management
-
----
-
-## ⚡ High Performance
-
-- Parallel uploads
-- Chunked file transfer
-- Background processing
-- Async workers
-- Optimized API responses
-
----
-
-## 📂 Modern File Manager
-
-- Folder hierarchy
-- Drag & Drop uploads
+- Folder organization
+- Drag and drop uploads
 - File previews
 - Search
 - Sorting
 - Storage analytics
 - Recently accessed files
 
----
+### Secure Sharing
 
-## 🔗 Secure Sharing
-
-Share files without sacrificing privacy.
-
-Features include:
-
-- Public encrypted links
-- Password protected links
+- Public links
+- Password-protected links
 - Expiration dates
 - Download limits
 - View limits
-- One-time links
-- Disable downloads
+- One-time access
+- Download restrictions
+
+### Performance
+
+- Parallel uploads
+- Chunked file transfer
+- Background processing
+- Asynchronous workers
+- Optimized API responses
 
 ---
 
-## 🔄 Automatic Recovery
+## Security Model
 
-If a storage provider becomes unavailable,
+Zancrypt follows a zero-knowledge security architecture.
 
-Zancrypt reconstructs your file using the remaining encrypted shards whenever possible.
-
----
-
-## 🌙 Modern Interface
-
-- Responsive UI
-- Dark Mode
-- Smooth animations
-- Fast navigation
-- Dashboard analytics
+- Files are encrypted before leaving the user's device.
+- Servers never receive plaintext files.
+- Encryption keys are never stored on the backend.
+- Storage providers only store encrypted fragments.
+- User data remains inaccessible without the user's credentials.
 
 ---
 
-# 🏗 Architecture
+## Architecture
 
 ```
-                User
-                  │
-                  ▼
-        Client-Side Encryption
-          (AES-256-GCM)
-                  │
-                  ▼
-         File Fragmentation
-                  │
-      ┌───────────┼───────────┐
-      ▼           ▼           ▼
- Storage A    Storage B   Storage C
-      │           │           │
-      └────── Gateway API ────┘
-                  │
-              Metadata DB
+                 User
+                   │
+                   ▼
+        Client-side Encryption
+             (AES-256-GCM)
+                   │
+                   ▼
+           File Fragmentation
+                   │
+        ┌──────────┼──────────┐
+        ▼          ▼          ▼
+   Storage A   Storage B   Storage C
+        │          │          │
+        └──────── Gateway ────────┘
+                   │
+              Metadata Database
 ```
 
 ---
 
-# 🔐 Security
+## Technology Stack
 
-Zancrypt follows a **Zero-Knowledge Architecture**, meaning:
-
-✅ Files are encrypted before upload
-
-✅ Encryption keys never leave your browser
-
-✅ Server stores only encrypted data
-
-✅ Storage providers never possess complete files
-
----
-
-# 🚀 Tech Stack
-
-## Frontend
+### Frontend
 
 - React
 - Vite
@@ -185,9 +135,7 @@ Zancrypt follows a **Zero-Knowledge Architecture**, meaning:
 - Zustand
 - React Router
 
----
-
-## Backend
+### Backend
 
 - FastAPI
 - Python
@@ -196,91 +144,35 @@ Zancrypt follows a **Zero-Knowledge Architecture**, meaning:
 - Redis
 - Celery
 - APScheduler
-- JWT Authentication
 
----
-
-## Infrastructure
+### Infrastructure
 
 - Docker
 - Nginx
 - Cloud Storage Providers
-- Background Workers
 
 ---
 
-# 📷 Screenshots
-
-> Add screenshots here
-
-```
-Dashboard
-
-Upload
-
-File Manager
-
-Sharing
-
-Security
-
-Settings
-```
-
----
-
-# 🚀 Getting Started
-
-Clone the repository
-
-```bash
-git clone https://github.com/me-sahid/zancrypt.git
-```
-
-Move into the project
-
-```bash
-cd zancrypt
-```
-
-Install dependencies
-
-```bash
-npm install
-```
-
-Run frontend
-
-```bash
-npm run dev
-```
-
-Run backend
-
-```bash
-uvicorn app.main:app --reload
-```
-
----
-
-# 📁 Project Structure
+## Project Structure
 
 ```
 zancrypt/
-
+│
 ├── frontend/
 │   ├── components/
 │   ├── pages/
 │   ├── hooks/
+│   ├── services/
 │   ├── store/
 │   └── assets/
 │
 ├── backend/
 │   ├── api/
-│   ├── services/
-│   ├── models/
+│   ├── core/
 │   ├── database/
 │   ├── middleware/
+│   ├── models/
+│   ├── services/
 │   └── workers/
 │
 ├── docker/
@@ -290,62 +182,100 @@ zancrypt/
 
 ---
 
-# 🎯 Roadmap
+## Screenshots
+
+| Dashboard | File Manager |
+|-----------|--------------|
+| Add screenshot | Add screenshot |
+
+| Upload | Sharing |
+|--------|----------|
+| Add screenshot | Add screenshot |
+
+---
+
+## Getting Started
+
+### Clone the repository
+
+```bash
+git clone https://github.com/me-sahid/zancrypt.git
+cd zancrypt
+```
+
+### Frontend
+
+```bash
+npm install
+npm run dev
+```
+
+### Backend
+
+```bash
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+---
+
+## Roadmap
 
 - [x] Client-side encryption
-- [x] Multi-cloud storage
+- [x] Distributed storage
 - [x] Secure authentication
-- [x] File sharing
 - [x] Dashboard
+- [x] File sharing
 - [x] Storage analytics
-- [ ] Desktop Client
-- [ ] Mobile Apps
-- [ ] Real-time Collaboration
-- [ ] Version History
-- [ ] AI-powered File Search
+- [ ] Desktop application
+- [ ] Mobile application
+- [ ] Version history
+- [ ] Real-time collaboration
+- [ ] AI-powered search
 
 ---
 
-# 🤝 Contributing
+## Contributing
 
-Contributions are welcome!
+Contributions are welcome.
 
-1. Fork the repository
-
-2. Create your feature branch
-
-```bash
-git checkout -b feature/amazing-feature
-```
-
-3. Commit your changes
+1. Fork the repository.
+2. Create a feature branch.
 
 ```bash
-git commit -m "Add amazing feature"
+git checkout -b feature/new-feature
 ```
 
-4. Push to your branch
+3. Commit your changes.
 
 ```bash
-git push origin feature/amazing-feature
+git commit -m "Add new feature"
 ```
 
-5. Open a Pull Request
+4. Push your branch.
+
+```bash
+git push origin feature/new-feature
+```
+
+5. Open a Pull Request.
 
 ---
 
-# 📜 License
+## License
 
 This project is licensed under the MIT License.
 
 ---
 
-<div align="center">
+## Author
 
-**Privacy is not a feature. It's a fundamental right.**
+**Sahid Al Hassan**
 
-⭐ If you like Zancrypt, consider starring the repository.
+Website: https://zancrypt.in
 
-https://zancrypt.in
+---
 
-</div>
+<p align="center">
+Built with a privacy-first approach.
+</p>
