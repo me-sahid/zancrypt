@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
@@ -169,6 +169,18 @@ const SharedFile = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState('1');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showVideoControls, setShowVideoControls] = useState(false);
+  const videoControlsTimeoutRef = useRef(null);
+
+  // PDF canvas rendering state (for mobile where blob iframe is blocked)
+  const [pdfCanvasUrl, setPdfCanvasUrl] = useState(null);
+  const [pdfPage, setPdfPage] = useState(1);
+  const [pdfTotalPages, setPdfTotalPages] = useState(1);
+  const [isPdfRendering, setIsPdfRendering] = useState(false);
+  const pdfDocRef = useRef(null);
+
+  // Mobile detection
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   const searchParams = new URLSearchParams(window.location.search);
   const tokensParam = searchParams.get('tokens') || '';
@@ -643,6 +655,49 @@ const SharedFile = () => {
     }
   };
 
+  // Show video controls on touch (mobile) with auto-hide
+  const handleVideoTouch = () => {
+    setShowVideoControls(true);
+    if (videoControlsTimeoutRef.current) clearTimeout(videoControlsTimeoutRef.current);
+    videoControlsTimeoutRef.current = setTimeout(() => setShowVideoControls(false), 3500);
+  };
+
+  // Render PDF page to canvas (mobile-compatible)
+  const renderPdfPage = useCallback(async (pdfDoc, pageNum) => {
+    if (!pdfDoc) return;
+    setIsPdfRendering(true);
+    try {
+      const page = await pdfDoc.getPage(pageNum);
+      const viewport = page.getViewport({ scale: window.devicePixelRatio || 1.5 });
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      setPdfCanvasUrl(canvas.toDataURL('image/jpeg', 0.92));
+    } catch (e) {
+      console.error('PDF page render error:', e);
+    } finally {
+      setIsPdfRendering(false);
+    }
+  }, []);
+
+  // Load PDF for mobile canvas rendering
+  const loadPdfForMobile = useCallback(async (blobUrl) => {
+    try {
+      const pdfjsLib = await import('pdfjs-dist');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+      const loadingTask = pdfjsLib.getDocument(blobUrl);
+      const pdfDoc = await loadingTask.promise;
+      pdfDocRef.current = pdfDoc;
+      setPdfTotalPages(pdfDoc.numPages);
+      setPdfPage(1);
+      await renderPdfPage(pdfDoc, 1);
+    } catch (e) {
+      console.error('Failed to load PDF for mobile:', e);
+    }
+  }, [renderPdfPage]);
+
   const handleTimeUpdate = () => {
     if (!videoRef.current) return;
     const current = videoRef.current.currentTime;
@@ -718,6 +773,19 @@ const SharedFile = () => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
+  // Trigger mobile PDF load when activeFile changes to pdf type
+  useEffect(() => {
+    if (isMobile && decryptedFile) {
+      const isMultiDecrypted = Array.isArray(decryptedFile);
+      const activeFile = isMultiDecrypted ? decryptedFile[activeMultiIndex] : decryptedFile;
+      if (activeFile?.fileType === 'pdf' && activeFile?.blobUrl) {
+        setPdfCanvasUrl(null);
+        pdfDocRef.current = null;
+        loadPdfForMobile(activeFile.blobUrl);
+      }
+    }
+  }, [decryptedFile, activeMultiIndex, isMobile, loadPdfForMobile]);
+
   // Render Premium Decrypted Player Page
   if (decryptedFile) {
     const isMultiDecrypted = Array.isArray(decryptedFile);
@@ -729,17 +797,17 @@ const SharedFile = () => {
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
 
-        {/* Header */}
-        <header className="w-full max-w-7xl mx-auto px-6 py-4 flex items-center justify-between border-b border-border relative z-10">
-          <div className="flex items-center space-x-3.5">
-            <Link to="/" className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg animate-pulse">
+        {/* Header — mobile responsive */}
+        <header className="w-full max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between border-b border-border relative z-10 gap-2">
+          <div className="flex items-center space-x-2 sm:space-x-3.5 min-w-0">
+            <Link to="/" className="w-8 h-8 shrink-0 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg animate-pulse">
               <Lock className="w-4 h-4 text-white" />
             </Link>
-            <div>
-              <span className="font-bold text-xs text-slate-200 block truncate max-w-[200px] sm:max-w-[400px]">
+            <div className="min-w-0">
+              <span className="font-bold text-xs text-slate-200 block truncate max-w-[120px] xs:max-w-[160px] sm:max-w-[400px]">
                 {activeFile.fileName}
               </span>
-              <div className="flex items-center space-x-3.5 mt-0.5 text-xs text-slate-500 font-bold uppercase tracking-wider">
+              <div className="hidden sm:flex items-center space-x-3.5 mt-0.5 text-xs text-slate-500 font-bold uppercase tracking-wider">
                 <span className="hover:text-slate-300 transition-colors">File</span>
                 <span className="hover:text-slate-300 transition-colors">View</span>
                 <span className="hover:text-slate-300 transition-colors">Help</span>
@@ -747,7 +815,7 @@ const SharedFile = () => {
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <span className="hidden sm:inline-flex items-center text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full px-2.5 py-1 font-bold uppercase tracking-wider">
               <ShieldCheck className="w-3.5 h-3.5 mr-1" />
               Fully Decrypted locally
@@ -755,26 +823,26 @@ const SharedFile = () => {
             {isMultiDecrypted && allowDownloads && (
               <Button
                 onClick={triggerDownloadAll}
-                className="py-2 px-4 font-bold text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg border border-indigo-500/30 flex items-center space-x-1.5 active:scale-95 transition-all"
+                className="py-1.5 sm:py-2 px-2.5 sm:px-4 font-bold text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg border border-indigo-500/30 flex items-center space-x-1 sm:space-x-1.5 active:scale-95 transition-all"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>Download All ({decryptedFile.length})</span>
+                <span className="hidden sm:inline">Download All ({decryptedFile.length})</span>
               </Button>
             )}
             {allowDownloads && (
               <Button
                 onClick={() => triggerNativeDownload()}
-                className="py-2 px-4 font-bold text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg border border-blue-500/30 flex items-center space-x-1.5 active:scale-95 transition-all"
+                className="py-1.5 sm:py-2 px-2.5 sm:px-4 font-bold text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg border border-blue-500/30 flex items-center space-x-1 sm:space-x-1.5 active:scale-95 transition-all"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>Download Active</span>
+                <span className="hidden sm:inline">Download</span>
               </Button>
             )}
           </div>
         </header>
 
         {/* Content Panel */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-4 gap-6 relative z-10 overflow-hidden">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 relative z-10 overflow-y-auto">
           
           {/* Side Bar Panel (only for Multi Decrypted Assets) */}
           {isMultiDecrypted && (
@@ -829,15 +897,21 @@ const SharedFile = () => {
             <div className="w-full bg-surface-elevated border border-border rounded-3xl overflow-hidden shadow-2xl relative min-h-[50vh] flex flex-col items-center justify-center p-6 backdrop-blur-md">
               
               {activeFile.fileType === 'video' ? (
-                // Video player component
-                <div className="relative w-full max-w-4xl rounded-2xl overflow-hidden border border-border bg-black/40 group aspect-video flex items-center justify-center">
+                // Video player component — with mobile touch support for controls
+                <div 
+                  className="relative w-full max-w-4xl rounded-2xl overflow-hidden border border-border bg-black/40 group aspect-video flex items-center justify-center"
+                  onTouchStart={handleVideoTouch}
+                  onMouseMove={() => !isMobile && setShowVideoControls(true)}
+                  onMouseLeave={() => !isMobile && setShowVideoControls(false)}
+                >
                   <video 
                     ref={videoRef}
                     src={activeFile.blobUrl}
                     className="w-full h-full max-h-[60vh] object-contain"
                     onTimeUpdate={handleTimeUpdate}
                     onLoadedMetadata={handleLoadedMetadata}
-                    onClick={togglePlay}
+                    onClick={isMobile ? handleVideoTouch : togglePlay}
+                    playsInline
                   />
 
                   {/* Play Overlay Button */}
@@ -848,19 +922,21 @@ const SharedFile = () => {
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.8, opacity: 0 }}
                         onClick={togglePlay}
-                        className="absolute p-5 bg-blue-600/90 hover:bg-blue-500 rounded-full text-white shadow-xl hover:scale-105 active:scale-95 transition-all z-20 cursor-pointer"
+                        className="absolute p-4 sm:p-5 bg-blue-600/90 hover:bg-blue-500 rounded-full text-white shadow-xl hover:scale-105 active:scale-95 transition-all z-20 cursor-pointer"
                       >
-                        <Play className="w-8 h-8 fill-current" />
+                        <Play className="w-6 h-6 sm:w-8 sm:h-8 fill-current" />
                       </motion.button>
                     )}
                   </AnimatePresence>
 
-                  {/* Video Control Bar */}
-                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col space-y-3 z-30">
+                  {/* Video Control Bar — always visible on mobile, hover on desktop */}
+                  <div className={`absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3 sm:p-4 flex flex-col space-y-2 sm:space-y-3 z-30 transition-opacity duration-300 ${
+                    isMobile ? (showVideoControls ? 'opacity-100' : 'opacity-0') : 'opacity-0 group-hover:opacity-100'
+                  }`}>
                     {/* Scrub Slider Container */}
                     <div 
                       onClick={handleScrub}
-                      className="h-1 w-full bg-white/20 hover:h-1.5 rounded-full overflow-hidden cursor-pointer relative transition-all"
+                      className="h-1.5 w-full bg-white/20 rounded-full overflow-hidden cursor-pointer relative"
                     >
                       <div 
                         style={{ width: `${progress}%` }}
@@ -870,11 +946,11 @@ const SharedFile = () => {
 
                     <div className="flex items-center justify-between">
                       {/* Left: Buttons, Timing */}
-                      <div className="flex items-center space-x-4">
-                        <button onClick={togglePlay} className="text-white hover:text-blue-400 transition-colors cursor-pointer">
+                      <div className="flex items-center space-x-3 sm:space-x-4">
+                        <button onClick={togglePlay} className="text-white active:text-blue-400 transition-colors cursor-pointer">
                           {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 fill-current" />}
                         </button>
-                        <button onClick={() => skipTime(-10)} className="text-white hover:text-blue-400 transition-colors cursor-pointer">
+                        <button onClick={() => skipTime(-10)} className="text-white active:text-blue-400 transition-colors cursor-pointer">
                           <RotateCcw className="w-4 h-4" />
                         </button>
                         <span className="text-xs text-slate-300 font-mono">
@@ -882,9 +958,9 @@ const SharedFile = () => {
                         </span>
                       </div>
 
-                      {/* Right: Volume, Speed, Fullscreen */}
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-2">
+                      {/* Right: Volume (hidden on mobile), Speed, Fullscreen */}
+                      <div className="flex items-center space-x-2 sm:space-x-4">
+                        <div className="hidden sm:flex items-center space-x-2">
                           <button onClick={toggleMute} className="text-white hover:text-blue-400 transition-colors cursor-pointer">
                             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                           </button>
@@ -895,12 +971,12 @@ const SharedFile = () => {
                             step="0.05"
                             value={isMuted ? 0 : volume}
                             onChange={handleVolumeChange}
-                            className="hidden sm:block w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                            className="w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-blue-500"
                           />
                         </div>
                         
                         <div className="flex items-center space-x-1">
-                          <Settings className="w-3.5 h-3.5 text-slate-400" />
+                          <Settings className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400" />
                           <select 
                             value={playbackSpeed}
                             onChange={handleSpeedChange}
@@ -913,7 +989,7 @@ const SharedFile = () => {
                           </select>
                         </div>
 
-                        <button onClick={toggleFullscreen} className="text-white hover:text-blue-400 transition-colors cursor-pointer">
+                        <button onClick={toggleFullscreen} className="text-white active:text-blue-400 transition-colors cursor-pointer">
                           {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
                         </button>
                       </div>
@@ -922,17 +998,17 @@ const SharedFile = () => {
                 </div>
               ) : activeFile.fileType === 'image' ? (
                 // Image viewer component
-                <div className="relative max-w-3xl rounded-2xl overflow-hidden border border-border bg-[#080a13] shadow-2xl flex items-center justify-center p-2 group">
+                <div className="relative w-full max-w-3xl rounded-2xl overflow-hidden border border-border bg-[#080a13] shadow-2xl flex items-center justify-center p-2">
                   <div className="absolute inset-0 bg-cover bg-center filter blur-3xl opacity-20 pointer-events-none" style={{ backgroundImage: `url(${activeFile.blobUrl})` }} />
                   <img 
                     src={activeFile.blobUrl} 
                     alt={activeFile.fileName}
-                    className="max-h-[60vh] rounded-xl object-contain relative z-10 transition-transform duration-500 hover:scale-102"
+                    className="max-h-[60vh] w-full rounded-xl object-contain relative z-10"
                   />
                 </div>
               ) : activeFile.fileType === 'audio' ? (
                 // Audio player component
-                <div className="max-w-md w-full bg-surface-secondary border border-border p-8 rounded-3xl text-center space-y-6 shadow-2xl">
+                <div className="max-w-md w-full bg-surface-secondary border border-border p-6 sm:p-8 rounded-3xl text-center space-y-5 sm:space-y-6 shadow-2xl">
                   <div className="w-16 h-16 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center mx-auto shadow-lg">
                     <FileText className="w-8 h-8 text-fuchsia-400" />
                   </div>
@@ -943,14 +1019,51 @@ const SharedFile = () => {
                   <audio src={activeFile.blobUrl} controls controlsList="nodownload" className="w-full" autoPlay />
                 </div>
               ) : activeFile.fileType === 'pdf' ? (
-                // PDF viewer component
-                <div className="w-full max-w-4xl h-[65vh] rounded-2xl overflow-hidden border border-border bg-[#0a0c16] shadow-xl">
-                  <iframe 
-                    src={activeFile.blobUrl}
-                    title={activeFile.fileName}
-                    className="w-full h-full border-none"
-                  />
-                </div>
+                // PDF viewer — iframe on desktop, canvas on mobile (blob iframes blocked on mobile browsers)
+                isMobile ? (
+                  <div className="w-full max-w-4xl flex flex-col items-center space-y-3">
+                    {/* Mobile PDF: canvas-based rendering */}
+                    <div className="w-full rounded-2xl overflow-hidden border border-border bg-[#0a0c16] shadow-xl flex items-center justify-center min-h-[50vh]">
+                      {isPdfRendering ? (
+                        <div className="flex flex-col items-center space-y-3 py-10">
+                          <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+                          <p className="text-xs text-slate-400 font-mono">Rendering PDF...</p>
+                        </div>
+                      ) : pdfCanvasUrl ? (
+                        <img src={pdfCanvasUrl} alt="PDF Preview" className="w-full h-auto object-contain rounded-xl" />
+                      ) : (
+                        <div className="flex flex-col items-center space-y-3 py-10">
+                          <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+                          <p className="text-xs text-slate-400 font-mono">Loading PDF...</p>
+                        </div>
+                      )}
+                    </div>
+                    {/* PDF Page Controls */}
+                    {pdfTotalPages > 1 && (
+                      <div className="flex items-center space-x-4 bg-[#111]/80 border border-border rounded-xl px-4 py-2">
+                        <button
+                          onClick={async () => { const p = Math.max(1, pdfPage - 1); setPdfPage(p); await renderPdfPage(pdfDocRef.current, p); }}
+                          disabled={pdfPage <= 1 || isPdfRendering}
+                          className="text-slate-300 disabled:opacity-30 active:text-blue-400 transition-colors px-2 py-1 text-sm"
+                        >←</button>
+                        <span className="text-xs text-slate-400 font-mono">{pdfPage} / {pdfTotalPages}</span>
+                        <button
+                          onClick={async () => { const p = Math.min(pdfTotalPages, pdfPage + 1); setPdfPage(p); await renderPdfPage(pdfDocRef.current, p); }}
+                          disabled={pdfPage >= pdfTotalPages || isPdfRendering}
+                          className="text-slate-300 disabled:opacity-30 active:text-blue-400 transition-colors px-2 py-1 text-sm"
+                        >→</button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="w-full max-w-4xl h-[65vh] rounded-2xl overflow-hidden border border-border bg-[#0a0c16] shadow-xl">
+                    <iframe 
+                      src={activeFile.blobUrl}
+                      title={activeFile.fileName}
+                      className="w-full h-full border-none"
+                    />
+                  </div>
+                )
               ) : activeFile.fileType === 'text' ? (
                 // Text viewer component
                 <div className="w-full max-w-4xl h-[60vh] rounded-2xl border border-[#1e293b] bg-slate-950 p-6 overflow-y-auto font-mono text-xs text-slate-300 relative shadow-inner">

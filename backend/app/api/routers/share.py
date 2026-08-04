@@ -545,6 +545,13 @@ async def generate_wrapper(
 
     # 5. Reassemble storage shards in parallel
     storage_router = StorageRouter()
+    from app.models.shard_registry import ShardRegistry
+    _shard_ids_1 = [info["shard_id"] for info in db_manifest.replication_mapping]
+    _hash_result_1 = await session.execute(
+        select(ShardRegistry.shard_id, ShardRegistry.shard_hash)
+        .where(ShardRegistry.shard_id.in_(_shard_ids_1))
+    )
+    shard_hash_map_1 = {row.shard_id: row.shard_hash for row in _hash_result_1}
     
     async def fetch_one(shard_info):
         shard_id = shard_info["shard_id"]
@@ -789,6 +796,13 @@ async def download_public_wrapper(
 
     # Reassemble shards in parallel
     storage_router = StorageRouter()
+    from app.models.shard_registry import ShardRegistry
+    _shard_ids_2 = [info["shard_id"] for info in db_manifest.replication_mapping]
+    _hash_result_2 = await session.execute(
+        select(ShardRegistry.shard_id, ShardRegistry.shard_hash)
+        .where(ShardRegistry.shard_id.in_(_shard_ids_2))
+    )
+    shard_hash_map_2 = {row.shard_id: row.shard_hash for row in _hash_result_2}
     
     async def fetch_one(shard_info):
         shard_id = shard_info["shard_id"]
