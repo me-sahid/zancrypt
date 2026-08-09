@@ -72,141 +72,26 @@ const getMimeType = (filename) => {
   return mimeTypes[ext] || 'video/mp4';
 };
 
-const getPlaceholderThumbnail = (filename) => {
+export const getFileIcon = (filename) => {
+  if (!filename) return 'documents.svg';
   const ext = filename.split('.').pop().toLowerCase();
-  const category = getFileCategory(filename);
   
-  const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 512;
-  const ctx = canvas.getContext('2d');
+  if (['mp4', 'mov', 'webm', 'mkv', 'avi', 'wmv', 'flv', 'mts', 'm2ts', 'm4v', 'mpg', 'mpeg', '3gp'].includes(ext)) return 'video.svg';
+  if (['jpg', 'jpeg', 'png', 'webp', 'avif', 'svg', 'gif', 'heic', 'heif', 'tiff', 'tif', 'raw', 'cr3', 'arw', 'bmp', 'ico'].includes(ext)) return 'image.svg';
+  if (['mp3', 'wav', 'flac', 'aac', 'ogg', 'm4a', 'wma'].includes(ext)) return 'audio.svg';
+  if (['pdf'].includes(ext)) return 'pdf.svg';
+  if (['txt', 'rtf', 'md', 'csv'].includes(ext)) return 'text.svg';
+  if (['docx', 'doc'].includes(ext)) return 'word.svg';
+  if (['xlsx', 'xls'].includes(ext)) return 'excel.svg';
+  if (['pptx', 'ppt', 'key', 'odp'].includes(ext)) return 'powerpoint.svg';
+  if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return 'zip.svg';
+  if (['html', 'css', 'js', 'jsx', 'ts', 'tsx', 'json', 'py', 'java', 'c', 'cpp'].includes(ext)) return 'code.svg';
   
-  // 1. Determine gradient colors based on category/extension
-  let colorStart = '#1e1b4b'; // Deep Indigo
-  let colorEnd = '#311042';   // Deep Violet
-  let accentColor = '#a855f7'; // Purple
-  let extLabel = ext.toUpperCase() || 'FILE';
-  
-  if (category === 'video') {
-    colorStart = '#0b1329'; // Slate / Dark Navy
-    colorEnd = '#072a40';   // Deep Cyber Blue
-    accentColor = '#06b6d4'; // Glowing Cyan
-  } else if (category === 'image') {
-    colorStart = '#022c22'; // Deep Forest
-    colorEnd = '#064e3b';   // Dark Emerald
-    accentColor = '#10b981'; // Emerald Green
-  } else if (category === 'audio') {
-    colorStart = '#2e1065'; // Purple
-    colorEnd = '#4c1d95';   // Indigo
-    accentColor = '#d946ef'; // Fuchsia
-  } else if (category === 'pdf') {
-    colorStart = '#450a0a'; // Dark Red
-    colorEnd = '#7f1d1d';   // Red
-    accentColor = '#ef4444'; // Bright Red
-  } else if (category === 'text') {
-    colorStart = '#172554'; // Dark Blue
-    colorEnd = '#1e3a8a';   // Blue
-    accentColor = '#3b82f6'; // Bright Blue
-  } else {
-    colorStart = '#1c1917'; // Dark Stone
-    colorEnd = '#451a03';   // Dark Rust
-    accentColor = '#f59e0b'; // Amber Gold
-  }
+  return 'documents.svg';
+};
 
-  // 2. Draw gradient background
-  const grad = ctx.createLinearGradient(0, 0, 512, 512);
-  grad.addColorStop(0, colorStart);
-  grad.addColorStop(1, colorEnd);
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 512, 512);
-
-  // 3. Draw a modern glowing grid pattern
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
-  ctx.lineWidth = 3.2;
-  const gridSpacing = 64;
-  for (let x = 0; x < 512; x += gridSpacing) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, 512);
-    ctx.stroke();
-  }
-  for (let y = 0; y < 512; y += gridSpacing) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(512, y);
-    ctx.stroke();
-  }
-
-  // 4. Draw glowing inner border
-  ctx.strokeStyle = accentColor;
-  ctx.lineWidth = 6.4;
-  ctx.globalAlpha = 0.25;
-  ctx.strokeRect(12.8, 12.8, 486.4, 486.4);
-  ctx.globalAlpha = 1.0;
-
-  // 5. Draw clean vector-like icon in the center
-  ctx.fillStyle = accentColor;
-  ctx.strokeStyle = accentColor;
-  ctx.lineWidth = 11.2;
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-
-  if (category === 'video') {
-    // Draw Play Button Icon
-    ctx.beginPath();
-    ctx.moveTo(224, 166.4);
-    ctx.lineTo(307.2, 217.6);
-    ctx.lineTo(224, 268.8);
-    ctx.closePath();
-    ctx.fill();
-  } else if (category === 'image') {
-    // Draw double mountain landscape
-    ctx.beginPath();
-    ctx.rect(185.6, 153.6, 140.8, 108.8);
-    ctx.stroke();
-    // Sun
-    ctx.beginPath();
-    ctx.arc(281.6, 185.6, 12.8, 0, Math.PI * 2);
-    ctx.fill();
-    // Mountains
-    ctx.beginPath();
-    ctx.moveTo(198.4, 249.6);
-    ctx.lineTo(236.8, 204.8);
-    ctx.lineTo(262.4, 230.4);
-    ctx.lineTo(294.4, 185.6);
-    ctx.lineTo(313.6, 249.6);
-    ctx.stroke();
-  } else {
-    // Draw Document Shape
-    ctx.beginPath();
-    ctx.moveTo(198.4, 153.6);
-    ctx.lineTo(275.2, 153.6);
-    ctx.lineTo(313.6, 192);
-    ctx.lineTo(313.6, 281.6);
-    ctx.lineTo(198.4, 281.6);
-    ctx.closePath();
-    ctx.stroke();
-    // folded corner line
-    ctx.beginPath();
-    ctx.moveTo(275.2, 153.6);
-    ctx.lineTo(275.2, 192);
-    ctx.lineTo(313.6, 192);
-    ctx.stroke();
-  }
-
-  // 6. Draw clean extension badge
-  ctx.fillStyle = 'rgba(7, 9, 19, 0.85)';
-  ctx.beginPath();
-  ctx.roundRect(128, 358.4, 256, 70.4, 19.2);
-  ctx.fill();
-  
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 28.8px Inter, system-ui, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(extLabel, 256, 393.6);
-
-  return canvas.toDataURL('image/jpeg', 0.85);
+const getPlaceholderThumbnail = (filename) => {
+  return `/asset/zancrypt_svg_icon_pack/${getFileIcon(filename)}`;
 };
 
 const FileThumbnail = ({ file, className, decryptedName }) => {
@@ -219,22 +104,8 @@ const FileThumbnail = ({ file, className, decryptedName }) => {
 
   const isStaticImage = thumbnailUrl && (thumbnailUrl.startsWith('data:image/') || thumbnailUrl.startsWith('data:'));
 
-  if (category === 'text') {
-    return (
-      <div className={`${className} bg-void flex items-center justify-center rounded-md border border-border/20`}>
-        <FileText className="w-10 h-10 text-text-muted/60" strokeWidth={1.5} />
-      </div>
-    );
-  }
-  
-  if (category === 'pdf') {
-    return (
-      <div className={`${className} bg-void flex flex-col items-center justify-center rounded-md border border-border/20`}>
-        <FileText className="w-9 h-9 text-status-danger/70 mb-1.5" strokeWidth={1.5} />
-        <span className="text-[9px] font-bold text-status-danger/80 tracking-widest uppercase bg-status-danger/10 px-2 py-0.5 rounded">PDF</span>
-      </div>
-    );
-  }
+  // Custom SVG renderers not needed as they fallback gracefully to getPlaceholderThumbnail
+
 
   // Update thumbnailUrl state if file.thumbnail changes
   useEffect(() => {

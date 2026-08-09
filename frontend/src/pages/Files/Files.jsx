@@ -129,6 +129,17 @@ const assembleShardsAsync = async (shards) => {
   return bytes;
 };
 
+const getFolderIcon = (folderName) => {
+  if (!folderName) return 'folder.svg';
+  const name = folderName.toLowerCase();
+  if (name.includes('photo') || name.includes('image') || name.includes('picture')) return 'photos.svg';
+  if (name.includes('video') || name.includes('movie')) return 'videos.svg';
+  if (name.includes('music') || name.includes('audio') || name.includes('song')) return 'music.svg';
+  if (name.includes('doc')) return 'documents.svg';
+  if (name.includes('download')) return 'download.svg';
+  return 'folder.svg';
+};
+
 const Files = () => {
   const { 
     files, setFiles, searchQuery, setSearchQuery, 
@@ -817,7 +828,7 @@ const Files = () => {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center space-x-3">
-                        <Folder className="w-5 h-5 text-yellow-500 fill-yellow-500/20" />
+                        <img src={`/asset/zancrypt_svg_icon_pack/${getFolderIcon(folder.encrypted_name)}`} alt="folder" className="w-5 h-5 object-contain opacity-80" />
                         <div className="min-w-0 max-w-[120px] sm:max-w-[240px] md:max-w-md truncate">
                           <p className="truncate text-[14px] text-text-primary font-medium">
                             {folder.encrypted_name}
@@ -928,7 +939,7 @@ const Files = () => {
                     className="bg-[#242424] rounded-xl p-3 flex items-center gap-3 hover:bg-surface-raised transition-all cursor-pointer border border-transparent hover:border-border relative group"
                   >
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Folder className="w-6 h-6 text-text-muted" fill="currentColor" />
+                      <img src={`/asset/zancrypt_svg_icon_pack/${getFolderIcon(folder.encrypted_name)}`} alt="folder" className="w-8 h-8 object-contain opacity-90" />
                     </div>
                     <span className="truncate text-sm font-semibold text-text-primary flex-1">
                       {folder.encrypted_name}
