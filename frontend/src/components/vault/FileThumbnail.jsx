@@ -103,7 +103,7 @@ const FileThumbnail = ({ file, className, decryptedName }) => {
     <img 
       src={iconPath} 
       alt={filename} 
-      className={`${className} object-contain p-2 rounded-md`}
+      className={`${className} object-contain rounded-md`}
       onError={(e) => { e.target.src = '/asset/zancrypt_svg_icon_pack/documents.svg'; }}
     />
   );

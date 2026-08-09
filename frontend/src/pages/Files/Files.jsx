@@ -718,7 +718,7 @@ const Files = () => {
               onClick={handleNavigateToRoot} 
               className={`cursor-pointer hover:text-accent transition-colors ${folderPath.length === 0 ? 'text-text-primary' : 'text-text-muted'}`}
             >
-              {t('vault', 'title')}
+              {t('vault', 'title') || 'Vault'}
             </span>
             {folderPath.map((folder, index) => (
               <React.Fragment key={folder.id}>
@@ -727,7 +727,7 @@ const Files = () => {
                   onClick={() => handleNavigateToBreadcrumb(index)}
                   className={`cursor-pointer hover:text-accent transition-colors ${index === folderPath.length - 1 ? 'text-text-primary' : 'text-text-muted'}`}
                 >
-                  {folder.name}
+                  {folder.name || folder.encrypted_name || 'Folder'}
                 </span>
               </React.Fragment>
             ))}
@@ -736,8 +736,8 @@ const Files = () => {
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-2">
-            <button className="px-3 py-1.5 border border-border rounded text-sm text-text-primary hover:bg-surface-raised transition-colors flex items-center">
-              Modified <ChevronDown className="w-4 h-4 ml-2 text-text-muted" />
+            <button onClick={() => handleSort('uploaded_at')} className="px-3 py-1.5 border border-border rounded text-sm text-text-primary hover:bg-surface-raised transition-colors flex items-center">
+              Modified {sortField === 'uploaded_at' ? (sortDirection === 'asc' ? <ArrowUp className="w-4 h-4 ml-2 text-text-muted" /> : <ArrowDown className="w-4 h-4 ml-2 text-text-muted" />) : <ChevronDown className="w-4 h-4 ml-2 text-text-muted" />}
             </button>
             <button className="px-3 py-1.5 border border-border rounded text-sm text-text-primary hover:bg-surface-raised transition-colors flex items-center">
               <Lock className="w-3.5 h-3.5 mr-2 text-text-muted" /> Encrypted only <X className="w-3.5 h-3.5 ml-2 text-text-muted" />
@@ -784,7 +784,7 @@ const Files = () => {
               <thead>
                 <tr className="border-b border-border text-[13px] text-text-muted bg-transparent">
                   <th className="py-3 px-4 w-12 text-center">
-                    <input type="checkbox" checked={filteredFiles.length > 0 && filteredFiles.every(f => selectedIds[f.id])} onChange={toggleSelectAll} className="accent-accent cursor-pointer w-4 h-4 rounded-sm" />
+                    <input type="checkbox" checked={filteredFiles.length > 0 && filteredFiles.every(f => selectedIds[f.id])} onChange={toggleSelectAll} className="appearance-none bg-transparent border border-border/70 rounded-sm w-4 h-4 checked:bg-accent checked:border-accent transition-all cursor-pointer bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%224%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%2220 6 9 17 4 12%22></polyline></svg>')] bg-no-repeat bg-center bg-[length:0px_0px] checked:bg-[length:12px_12px]" />
                   </th>
                   <th className="py-3 px-4 cursor-pointer hover:text-accent font-medium" onClick={() => handleSort('name')}>
                     <div className="flex items-center space-x-1">
@@ -824,11 +824,11 @@ const Files = () => {
                     className={`group hover:bg-surface-raised transition-colors cursor-pointer ${selectedIds[`folder_${folder.id}`] ? 'bg-accent/5' : ''}`}
                   >
                     <td className="py-3 px-4 w-12 text-center" onClick={(e) => e.stopPropagation()}>
-                      <input type="checkbox" checked={!!selectedIds[`folder_${folder.id}`]} onChange={() => setSelectedIds(prev => ({ ...prev, [`folder_${folder.id}`]: !prev[`folder_${folder.id}`] }))} className="accent-accent cursor-pointer w-4 h-4 rounded-sm" />
+                      <input type="checkbox" checked={!!selectedIds[`folder_${folder.id}`]} onChange={() => setSelectedIds(prev => ({ ...prev, [`folder_${folder.id}`]: !prev[`folder_${folder.id}`] }))} className="appearance-none bg-transparent border border-border/70 rounded-sm w-4 h-4 checked:bg-accent checked:border-accent transition-all cursor-pointer bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%224%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%2220 6 9 17 4 12%22></polyline></svg>')] bg-no-repeat bg-center bg-[length:0px_0px] checked:bg-[length:12px_12px]" />
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center space-x-3">
-                        <img src={`/asset/zancrypt_svg_icon_pack/${getFolderIcon(folder.encrypted_name)}`} alt="folder" className="w-5 h-5 object-contain opacity-80" />
+                        <img src={`/asset/zancrypt_svg_icon_pack/${getFolderIcon(folder.encrypted_name)}`} alt="folder" className="w-8 h-8 object-contain" />
                         <div className="min-w-0 max-w-[120px] sm:max-w-[240px] md:max-w-md truncate">
                           <p className="truncate text-[14px] text-text-primary font-medium">
                             {folder.encrypted_name}
@@ -836,7 +836,7 @@ const Files = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-[13px]">—</td>
+                    <td className="py-3 px-4 text-[13px]">{folder.folder_size || folder.total_size || folder.size ? ( (folder.folder_size || folder.total_size || folder.size) / 1024 / 1024 > 1 ? ((folder.folder_size || folder.total_size || folder.size) / 1024 / 1024).toFixed(1) + ' MB' : ((folder.folder_size || folder.total_size || folder.size) / 1024).toFixed(1) + ' KB' ) : '—'}</td>
                     <td className="py-3 px-4 hidden sm:table-cell text-[13px] text-text-muted">
                       {new Date(folder.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
                     </td>
@@ -870,12 +870,12 @@ const Files = () => {
                         className={`group hover:bg-surface-raised transition-colors cursor-pointer ${selectedIds[file.id] ? 'bg-accent/5' : ''}`}
                       >
                         <td className="py-3 px-4 w-12 text-center" onClick={(e) => e.stopPropagation()}>
-                          <input type="checkbox" checked={!!selectedIds[file.id]} onChange={() => setSelectedIds(prev => ({ ...prev, [file.id]: !prev[file.id] }))} className="accent-accent cursor-pointer w-4 h-4 rounded-sm" />
+                          <input type="checkbox" checked={!!selectedIds[file.id]} onChange={() => setSelectedIds(prev => ({ ...prev, [file.id]: !prev[file.id] }))} className="appearance-none bg-transparent border border-border/70 rounded-sm w-4 h-4 checked:bg-accent checked:border-accent transition-all cursor-pointer bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%224%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%2220 6 9 17 4 12%22></polyline></svg>')] bg-no-repeat bg-center bg-[length:0px_0px] checked:bg-[length:12px_12px]" />
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 flex items-center justify-center shrink-0 rounded overflow-hidden bg-surface-raised border border-border">
-                              <FileThumbnail file={file} decryptedName={displayName} className="w-full h-full object-cover" />
+                            <div className="w-8 h-8 flex items-center justify-center shrink-0 rounded overflow-hidden">
+                              <FileThumbnail file={file} decryptedName={displayName} className="w-full h-full object-contain" />
                             </div>
                             <div className="min-w-0 max-w-[120px] sm:max-w-[240px] md:max-w-md truncate">
                               <p className={`truncate text-[14px] font-medium ${isDecrypted ? 'text-text-primary' : 'text-text-muted opacity-50'}`}>
@@ -939,7 +939,7 @@ const Files = () => {
                     className="bg-[#242424] rounded-xl p-3 flex items-center gap-3 hover:bg-surface-raised transition-all cursor-pointer border border-transparent hover:border-border relative group"
                   >
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <img src={`/asset/zancrypt_svg_icon_pack/${getFolderIcon(folder.encrypted_name)}`} alt="folder" className="w-8 h-8 object-contain opacity-90" />
+                      <img src={`/asset/zancrypt_svg_icon_pack/${getFolderIcon(folder.encrypted_name)}`} alt="folder" className="w-12 h-12 object-contain" />
                     </div>
                     <span className="truncate text-sm font-semibold text-text-primary flex-1">
                       {folder.encrypted_name}
@@ -970,14 +970,14 @@ const Files = () => {
                     onContextMenu={(e) => handleContextMenu(e, file)}
                     className={`border border-border bg-surface rounded-xl overflow-hidden hover:border-accent/50 transition-all cursor-pointer shadow-md relative group flex flex-col aspect-square ${selectedIds[file.id] ? 'ring-2 ring-accent border-accent' : ''}`}
                   >
-                    <input
-                      type="checkbox"
-                      checked={!!selectedIds[file.id]}
-                      onChange={() => setSelectedIds(prev => ({ ...prev, [file.id]: !prev[file.id] }))}
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute top-10 left-3 accent-accent cursor-pointer w-4 h-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
-                      style={{ opacity: selectedIds[file.id] ? 1 : undefined }}
-                    />
+                      <input
+                        type="checkbox"
+                        checked={!!selectedIds[file.id]}
+                        onChange={() => setSelectedIds(prev => ({ ...prev, [file.id]: !prev[file.id] }))}
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute top-10 left-3 appearance-none bg-black/40 border border-white/30 rounded-sm w-4 h-4 checked:bg-accent checked:border-accent z-20 opacity-0 group-hover:opacity-100 transition-all cursor-pointer bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%224%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%2220 6 9 17 4 12%22></polyline></svg>')] bg-no-repeat bg-center bg-[length:0px_0px] checked:bg-[length:12px_12px]"
+                        style={{ opacity: selectedIds[file.id] ? 1 : undefined }}
+                      />
 
                     {/* Top name bar — matches screenshot style */}
                     <div className="flex items-center justify-between px-3 py-2 bg-surface border-b border-border flex-shrink-0">
@@ -994,11 +994,11 @@ const Files = () => {
 
                     {/* Main thumbnail — fills the rest */}
                     <div
-                      className="flex-1 w-full relative bg-surface-raised overflow-hidden"
+                      className="flex-1 w-full relative overflow-hidden"
                       onClick={(e) => { if (e.button === 0 && !e.ctrlKey) handlePreview(file); }}
                     >
-                      <div className="w-full h-full group-hover:scale-[1.02] transition-transform duration-300">
-                        <FileThumbnail file={file} decryptedName={displayName} className="w-full h-full object-cover" />
+                      <div className="w-full h-full p-4 group-hover:scale-[1.05] transition-transform duration-300">
+                        <FileThumbnail file={file} decryptedName={displayName} className="w-full h-full object-contain" />
                       </div>
                       <div className="absolute top-2 right-2 p-1 rounded bg-void/80 border border-border/40 backdrop-blur-sm z-10">
                         <Lock className={`w-2.5 h-2.5 ${isDecrypted ? 'text-accent' : 'text-text-muted'}`} />
