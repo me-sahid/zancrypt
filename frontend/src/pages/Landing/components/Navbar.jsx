@@ -56,6 +56,22 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setIsMobileMenuOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = 'unset';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMobileMenuOpen]);
+
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
         setIsUserDropdownOpen(false);
@@ -328,111 +344,177 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* ── Mobile Menu ── */}
+      {/* ── Mobile Menu (Premium Fullscreen Overlay) ── */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.15 }}
-            className="lg:hidden absolute top-full left-0 w-full bg-surface border-b border-border px-6 py-6 shadow-2xl z-50 backdrop-blur-xl max-h-96 overflow-y-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="lg:hidden fixed inset-0 z-40 bg-surface/95 backdrop-blur-xl flex flex-col overflow-y-auto"
+            aria-modal="true"
+            role="dialog"
           >
-            <div className="flex flex-col gap-4">
-
-              {/* PRODUCT ACCORDION */}
-              <div className="border-b border-border/30 pb-3">
-                <button 
-                  onClick={() => setMobileProductsOpen(!mobileProductsOpen)}
-                  className="flex items-center justify-between w-full font-sans text-sm font-semibold text-text-primary py-1"
-                >
-                  <span>Product</span>
-                  <ChevronDown className={`w-4 h-4 text-text-secondary transition-transform duration-200 ${mobileProductsOpen ? 'rotate-180' : ''}`} />
-                </button>
-                <AnimatePresence>
-                  {mobileProductsOpen && (
-                    <motion.div 
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden pl-3 mt-2 space-y-2"
-                    >
-                      <Link to="/product" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <img src={isDark ? '/icons/zk-sheild-lock-dark.png' : '/zk-shield-lock.png'} alt="Secure Vault" className="w-4 h-4 object-contain" />
-                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Secure Vault</span>
-                      </Link>
-                      <Link to="/api" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <img src={isDark ? '/icons/Code-Bracket-dark.png' : '/Code-Bracket.png'} alt="Developer API" className="w-4 h-4 object-contain" />
-                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Developer API</span>
-                      </Link>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* COMPANY ACCORDION */}
-              <div className="border-b border-border/30 pb-3">
-                <button 
-                  onClick={() => setMobileSolutionsOpen(!mobileSolutionsOpen)}
-                  className="flex items-center justify-between w-full font-sans text-sm font-semibold text-text-primary py-1"
-                >
-                  <span>Company</span>
-                  <ChevronDown className={`w-4 h-4 text-text-secondary transition-transform duration-200 ${mobileSolutionsOpen ? 'rotate-180' : ''}`} />
-                </button>
-                <AnimatePresence>
-                  {mobileSolutionsOpen && (
-                    <motion.div 
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden pl-3 mt-2 space-y-2"
-                    >
-                      <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <i className="ri-group-line text-base text-text-secondary group-hover:text-text-primary transition-colors" />
-                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">About Us</span>
-                      </a>
-                      <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 py-1 group">
-                        <i className="ri-question-line text-base text-text-secondary group-hover:text-text-primary transition-colors" />
-                        <span className="font-sans text-xs font-medium text-text-secondary group-hover:text-text-primary">Contact Support</span>
-                      </a>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* PRICING LINK */}
-              <Link
-                to="/pricing"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="font-sans text-sm font-semibold text-text-primary border-b border-border/30 pb-3 block py-1"
+            <motion.div 
+              className="flex flex-col pt-32 pb-12 px-8 min-h-full"
+              initial={{ y: 20 }}
+              animate={{ y: 0 }}
+              exit={{ y: 20 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <motion.div 
+                className="flex flex-col gap-8 w-full max-w-sm mx-auto flex-1"
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={{
+                  initial: { opacity: 0 },
+                  animate: {
+                    opacity: 1,
+                    transition: { staggerChildren: 0.05, delayChildren: 0.1 }
+                  },
+                  exit: {
+                    opacity: 0,
+                    transition: { staggerChildren: 0.03, staggerDirection: -1 }
+                  }
+                }}
               >
-                Pricing
-              </Link>
-
-              <div className="border-t border-border/30 pt-4" />
-
-              {/* Always show Sign In + Get Started on mobile — auth lives on drive subdomain */}
-              <div className="flex flex-col gap-3">
-                <a
-                  href="https://drive.zancrypt.in/login"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full block py-2.5 border border-border text-text-primary font-sans text-xs font-semibold rounded-lg text-center hover:bg-surface-raised transition-all"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                {/* PRODUCT ACCORDION */}
+                <motion.div 
+                  variants={{
+                    initial: { opacity: 0, y: 12 },
+                    animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
+                    exit: { opacity: 0, y: 12, transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] } }
+                  }}
+                  className="border-b border-border/40 pb-5"
                 >
-                  Sign In
-                </a>
-                <a
-                  href="https://drive.zancrypt.in/register"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full block py-2.5 bg-accent text-void font-sans text-xs font-semibold rounded-lg text-center hover:bg-accent/90 transition-all"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  <button 
+                    onClick={() => setMobileProductsOpen(!mobileProductsOpen)}
+                    className="flex items-center justify-between w-full font-sans text-2xl font-medium text-text-primary py-2 hover:text-accent transition-colors duration-300"
+                  >
+                    <span>Product</span>
+                    <ChevronDown className={`w-6 h-6 text-text-secondary transition-transform duration-400 ease-out ${mobileProductsOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  <AnimatePresence>
+                    {mobileProductsOpen && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                        className="overflow-hidden mt-4 space-y-4"
+                      >
+                        <Link to="/product" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-4 py-2 group hover:translate-x-1 transition-transform duration-300 ease-out">
+                          <div className="shrink-0 p-2.5 rounded-xl bg-surface-raised border border-border/80 group-hover:border-accent/50 transition-colors duration-300">
+                            <img src={isDark ? '/icons/zk-sheild-lock-dark.png' : '/zk-shield-lock.png'} alt="Secure Vault" className="w-5 h-5 object-contain" />
+                          </div>
+                          <span className="font-sans text-lg font-medium text-text-secondary group-hover:text-text-primary transition-colors duration-300">Secure Vault</span>
+                        </Link>
+                        <Link to="/api" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-4 py-2 group hover:translate-x-1 transition-transform duration-300 ease-out">
+                          <div className="shrink-0 p-2.5 rounded-xl bg-surface-raised border border-border/80 group-hover:border-accent/50 transition-colors duration-300">
+                            <img src={isDark ? '/icons/Code-Bracket-dark.png' : '/Code-Bracket.png'} alt="Developer API" className="w-5 h-5 object-contain" />
+                          </div>
+                          <span className="font-sans text-lg font-medium text-text-secondary group-hover:text-text-primary transition-colors duration-300">Developer API</span>
+                        </Link>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+
+                {/* COMPANY ACCORDION */}
+                <motion.div 
+                  variants={{
+                    initial: { opacity: 0, y: 12 },
+                    animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
+                    exit: { opacity: 0, y: 12, transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] } }
+                  }}
+                  className="border-b border-border/40 pb-5"
                 >
-                  Get Started
-                </a>
-              </div>
-            </div>
+                  <button 
+                    onClick={() => setMobileSolutionsOpen(!mobileSolutionsOpen)}
+                    className="flex items-center justify-between w-full font-sans text-2xl font-medium text-text-primary py-2 hover:text-accent transition-colors duration-300"
+                  >
+                    <span>Company</span>
+                    <ChevronDown className={`w-6 h-6 text-text-secondary transition-transform duration-400 ease-out ${mobileSolutionsOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  <AnimatePresence>
+                    {mobileSolutionsOpen && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                        className="overflow-hidden mt-4 space-y-4"
+                      >
+                        <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-4 py-2 group hover:translate-x-1 transition-transform duration-300 ease-out">
+                          <div className="shrink-0 p-2.5 rounded-xl bg-surface-raised border border-border/80 group-hover:border-accent/50 transition-colors duration-300">
+                            <i className="ri-group-line text-xl text-text-primary" />
+                          </div>
+                          <span className="font-sans text-lg font-medium text-text-secondary group-hover:text-text-primary transition-colors duration-300">About Us</span>
+                        </a>
+                        <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-4 py-2 group hover:translate-x-1 transition-transform duration-300 ease-out">
+                          <div className="shrink-0 p-2.5 rounded-xl bg-surface-raised border border-border/80 group-hover:border-accent/50 transition-colors duration-300">
+                            <i className="ri-question-line text-xl text-text-primary" />
+                          </div>
+                          <span className="font-sans text-lg font-medium text-text-secondary group-hover:text-text-primary transition-colors duration-300">Contact Support</span>
+                        </a>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+
+                {/* PRICING LINK */}
+                <motion.div 
+                  variants={{
+                    initial: { opacity: 0, y: 12 },
+                    animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
+                    exit: { opacity: 0, y: 12, transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] } }
+                  }}
+                  className="border-b border-border/40 pb-5"
+                >
+                  <Link
+                    to="/pricing"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex w-full font-sans text-2xl font-medium text-text-primary py-2 hover:text-accent hover:translate-x-1 transition-all duration-300 ease-out"
+                  >
+                    Pricing
+                  </Link>
+                </motion.div>
+                
+                {/* Spacer */}
+                <div className="flex-1" />
+
+                {/* AUTH BUTTONS */}
+                <motion.div 
+                  variants={{
+                    initial: { opacity: 0, y: 12 },
+                    animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
+                    exit: { opacity: 0, y: 12, transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] } }
+                  }}
+                  className="flex flex-col gap-4 mt-8"
+                >
+                  <a
+                    href="https://drive.zancrypt.in/login"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full block py-4 border border-border/80 text-text-primary font-sans text-base font-semibold rounded-xl text-center hover:bg-surface-raised hover:border-text-secondary transition-all duration-300"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Sign In
+                  </a>
+                  <a
+                    href="https://drive.zancrypt.in/register"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full block py-4 bg-accent text-void font-sans text-base font-semibold rounded-xl text-center hover:bg-accent/90 hover:shadow-lg hover:shadow-accent/20 transition-all duration-300"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Get Started
+                  </a>
+                </motion.div>
+              </motion.div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

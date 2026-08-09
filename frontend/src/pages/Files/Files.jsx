@@ -7,7 +7,7 @@ import {
   Eye, Calendar, FileVideo, FileImage, FileText,
   Loader2, ArrowUp, ArrowDown, ArrowUpDown, Info,
   Copy, FolderOpen, ClipboardPaste, Folder, Scissors, FolderPlus, CornerLeftUp,
-  LayoutGrid, List, X, MoreVertical
+  LayoutGrid, List, X, MoreVertical, ChevronDown, Users
 } from 'lucide-react';
 import { RiSafeLine, RiUpload2Line } from 'react-icons/ri';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -147,7 +147,7 @@ const Files = () => {
   const [sortDirection, setSortDirection] = useState('desc');
   const [decryptedNames, setDecryptedNames] = useState({});
   const [isDecrypting, setIsDecrypting] = useState(false);
-  const [viewMode, setViewMode] = useState('grid'); // 'list' | 'grid'
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'grid'
   const [folderPath, setFolderPath] = useState([]);
 
   
@@ -699,22 +699,22 @@ const Files = () => {
   return (
     <div className="space-y-6 pb-20">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-4 md:pb-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 pb-4">
         <div>
-          <div className="font-sans text-sm sm:text-base font-light text-text-primary tracking-wide flex items-center flex-wrap gap-2">
-            <RiSafeLine className="w-4 h-4 sm:w-5 sm:h-5 text-text-primary" />
+          <div className="font-sans text-lg sm:text-xl font-medium text-text-primary tracking-wide flex items-center flex-wrap gap-2">
             <span 
               onClick={handleNavigateToRoot} 
-              className={`cursor-pointer hover:text-accent transition-colors ${folderPath.length === 0 ? 'font-normal' : 'text-text-muted'}`}
+              className={`cursor-pointer hover:text-accent transition-colors ${folderPath.length === 0 ? 'text-text-primary' : 'text-text-muted'}`}
             >
               {t('vault', 'title')}
             </span>
             {folderPath.map((folder, index) => (
               <React.Fragment key={folder.id}>
-                <span className="text-text-muted">&gt;</span>
+                <span className="text-text-muted">/</span>
                 <span 
                   onClick={() => handleNavigateToBreadcrumb(index)}
-                  className={`cursor-pointer hover:text-accent transition-colors ${index === folderPath.length - 1 ? 'font-normal text-text-primary' : 'text-text-muted'}`}
+                  className={`cursor-pointer hover:text-accent transition-colors ${index === folderPath.length - 1 ? 'text-text-primary' : 'text-text-muted'}`}
                 >
                   {folder.name}
                 </span>
@@ -723,64 +723,86 @@ const Files = () => {
           </div>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')} className="flex-none p-3 border border-border text-text-primary hover:bg-surface-raised transition-colors flex items-center justify-center">
-            {viewMode === 'list' ? <LayoutGrid className="w-4 h-4" /> : <List className="w-4 h-4" />}
-          </button>
-
-          {clipboard.files.length > 0 && (
-            <button onClick={handlePaste} className="flex-1 md:flex-none px-4 md:px-6 py-3 border border-border text-text-primary font-mono text-[10px] md:text-xs uppercase tracking-widest hover:bg-surface-raised transition-colors flex items-center justify-center whitespace-nowrap">
-              <ClipboardPaste className="w-4 h-4 md:mr-2" /> <span className="hidden sm:inline">{t('vault', 'paste')}</span> ({clipboard.files.length})
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <button className="px-3 py-1.5 border border-border rounded text-sm text-text-primary hover:bg-surface-raised transition-colors flex items-center">
+              Modified <ChevronDown className="w-4 h-4 ml-2 text-text-muted" />
             </button>
-          )}
-          <button onClick={() => setIsNewFolderModalOpen(true)} className="flex-1 md:flex-none px-4 md:px-6 py-3 border border-border text-text-primary font-mono text-[10px] md:text-xs uppercase tracking-widest hover:bg-surface-raised transition-colors flex items-center justify-center whitespace-nowrap">
-            <FolderPlus className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">{t('vault', 'newFolder')}</span>
-          </button>
-          <Link to={workspace.upload} className="flex-1 md:flex-none px-4 md:px-6 py-3 border border-accent text-accent text-center font-mono text-[10px] md:text-xs uppercase tracking-widest hover:bg-white hover:text-black hover:border-white transition-colors whitespace-nowrap">
-            {t('vault', 'upload')}
-          </Link>
+            <button className="px-3 py-1.5 border border-border rounded text-sm text-text-primary hover:bg-surface-raised transition-colors flex items-center">
+              <Lock className="w-3.5 h-3.5 mr-2 text-text-muted" /> Encrypted only <X className="w-3.5 h-3.5 ml-2 text-text-muted" />
+            </button>
+            <button className="px-3 py-1.5 border border-border rounded text-sm text-text-primary hover:bg-surface-raised transition-colors flex items-center">
+              <Users className="w-3.5 h-3.5 mr-2 text-text-muted" /> Shared <X className="w-3.5 h-3.5 ml-2 text-text-muted" />
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex border border-border rounded overflow-hidden">
+              <button onClick={() => setViewMode('list')} className={`p-2 transition-colors ${viewMode === 'list' ? 'bg-surface-raised text-text-primary' : 'text-text-muted hover:text-text-primary'}`}>
+                <List className="w-4 h-4" />
+              </button>
+              <button onClick={() => setViewMode('grid')} className={`p-2 transition-colors ${viewMode === 'grid' ? 'bg-surface-raised text-text-primary' : 'text-text-muted hover:text-text-primary'}`}>
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+            </div>
+
+            {clipboard.files.length > 0 && (
+              <button onClick={handlePaste} className="px-4 py-2 border border-border rounded text-text-primary text-sm hover:bg-surface-raised transition-colors flex items-center justify-center whitespace-nowrap">
+                <ClipboardPaste className="w-4 h-4 mr-2" /> <span>{t('vault', 'paste')}</span> ({clipboard.files.length})
+              </button>
+            )}
+            <button onClick={() => setIsNewFolderModalOpen(true)} className="px-4 py-2 border border-border rounded text-text-primary text-sm hover:bg-surface-raised transition-colors flex items-center justify-center whitespace-nowrap">
+              <FolderPlus className="w-4 h-4 mr-2" /> <span>{t('vault', 'newFolder')}</span>
+            </button>
+            <Link to={workspace.upload} className="px-4 py-2 border border-border rounded text-text-primary text-sm hover:bg-surface-raised transition-colors whitespace-nowrap flex items-center justify-center">
+              <RiUpload2Line className="w-4 h-4 mr-2" />
+              {t('vault', 'upload')}
+            </Link>
+          </div>
         </div>
       </div>
 
 
 
       {/* Vault Table */}
-      <div className="overflow-hidden">
+      {/* Vault Table */}
+      <div className="overflow-hidden border border-border rounded-xl">
         {viewMode === 'list' ? (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto bg-surface">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-border text-xs font-mono text-text-muted uppercase tracking-widest bg-surface-raised">
-                  <th className="py-4 px-6 w-12 text-center">
-                    <input
-                      type="checkbox"
-                      checked={filteredFiles.length > 0 && filteredFiles.every(f => selectedIds[f.id])}
-                      onChange={toggleSelectAll}
-                      className="accent-accent cursor-pointer w-4 h-4"
-                    />
+                <tr className="border-b border-border text-[13px] text-text-muted bg-transparent">
+                  <th className="py-3 px-4 w-12 text-center">
+                    <input type="checkbox" checked={filteredFiles.length > 0 && filteredFiles.every(f => selectedIds[f.id])} onChange={toggleSelectAll} className="accent-accent cursor-pointer w-4 h-4 rounded-sm" />
                   </th>
-                  <th className="py-4 px-6 cursor-pointer hover:text-accent" onClick={() => handleSort('name')}>
-                    <div className="flex items-center space-x-2">
-                      <span>{t('vault', 'filename')}</span>
-                      {sortField === 'name' && (sortDirection === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />)}
+                  <th className="py-3 px-4 cursor-pointer hover:text-accent font-medium" onClick={() => handleSort('name')}>
+                    <div className="flex items-center space-x-1">
+                      <span>Name</span>
+                      {sortField === 'name' && (sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
                     </div>
                   </th>
-                  <th className="py-4 px-6 cursor-pointer hover:text-accent" onClick={() => handleSort('size')}>
-                    <div className="flex items-center space-x-2">
-                      <span>{t('vault', 'size')}</span>
-                      {sortField === 'size' && (sortDirection === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />)}
+                  <th className="py-3 px-4 cursor-pointer hover:text-accent font-medium w-24" onClick={() => handleSort('size')}>
+                    <div className="flex items-center space-x-1">
+                      <span>Size</span>
+                      {sortField === 'size' && (sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
                     </div>
                   </th>
-                  <th className="py-4 px-6 cursor-pointer hover:text-accent hidden sm:table-cell" onClick={() => handleSort('uploaded_at')}>
-                    <div className="flex items-center space-x-2">
-                      <span>{t('vault', 'timestamp')}</span>
-                      {sortField === 'uploaded_at' && (sortDirection === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />)}
+                  <th className="py-3 px-4 cursor-pointer hover:text-accent font-medium hidden sm:table-cell" onClick={() => handleSort('uploaded_at')}>
+                    <div className="flex items-center space-x-1">
+                      <span>Modified</span>
+                      {sortField === 'uploaded_at' && (sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
                     </div>
                   </th>
-                  <th className="py-4 px-6 text-right"></th>
+                  <th className="py-3 px-4 font-medium hidden md:table-cell w-32">
+                    Encryption
+                  </th>
+                  <th className="py-3 px-4 font-medium hidden lg:table-cell w-24">
+                    Shared
+                  </th>
+                  <th className="py-3 px-4 w-12 text-right"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border font-mono text-sm text-text-secondary">
+              <tbody className="divide-y divide-border text-sm text-text-secondary">
 
 
                 {folders && folders.map((folder) => (
@@ -790,34 +812,33 @@ const Files = () => {
                     onContextMenu={(e) => handleContextMenu(e, { ...folder, isFolder: true })}
                     className={`group hover:bg-surface-raised transition-colors cursor-pointer ${selectedIds[`folder_${folder.id}`] ? 'bg-accent/5' : ''}`}
                   >
-                    <td className="py-4 px-6 w-12 text-center" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={!!selectedIds[`folder_${folder.id}`]}
-                        onChange={() => setSelectedIds(prev => ({ ...prev, [`folder_${folder.id}`]: !prev[`folder_${folder.id}`] }))}
-                        className="accent-accent cursor-pointer w-4 h-4"
-                      />
+                    <td className="py-3 px-4 w-12 text-center" onClick={(e) => e.stopPropagation()}>
+                      <input type="checkbox" checked={!!selectedIds[`folder_${folder.id}`]} onChange={() => setSelectedIds(prev => ({ ...prev, [`folder_${folder.id}`]: !prev[`folder_${folder.id}`] }))} className="accent-accent cursor-pointer w-4 h-4 rounded-sm" />
                     </td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 flex items-center justify-center border border-border bg-void shrink-0 rounded overflow-hidden relative shadow-md">
-                          <Folder className="w-6 h-6 text-accent" />
-                        </div>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center space-x-3">
+                        <Folder className="w-5 h-5 text-yellow-500 fill-yellow-500/20" />
                         <div className="min-w-0 max-w-[120px] sm:max-w-[240px] md:max-w-md truncate">
-                          <p className="truncate text-sm font-semibold tracking-wide text-text-primary">
+                          <p className="truncate text-[14px] text-text-primary font-medium">
                             {folder.encrypted_name}
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-sm font-medium">-</td>
-                    <td className="py-4 px-6 hidden sm:table-cell text-sm text-text-muted">
-                      {new Date(folder.created_at).toLocaleDateString()}
+                    <td className="py-3 px-4 text-[13px]">—</td>
+                    <td className="py-3 px-4 hidden sm:table-cell text-[13px] text-text-muted">
+                      {new Date(folder.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
                     </td>
-                    <td className="py-4 px-6 text-right opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="flex items-center justify-end space-x-2">
-                        <button onClick={(e) => { e.stopPropagation(); openDeleteModal({ type: 'folder', id: folder.id, name: decryptedFolderNames[folder.id] || folder.encrypted_name }); }} className="p-2 hover:bg-danger/10 hover:text-danger text-text-muted rounded transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
-                      </div>
+                    <td className="py-3 px-4 hidden md:table-cell">
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border border-green-500/30 text-green-500 bg-green-500/10">E2EE</span>
+                    </td>
+                    <td className="py-3 px-4 hidden lg:table-cell text-[13px] text-text-muted">
+                      —
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <button onClick={(e) => { e.stopPropagation(); handleContextMenu(e, { ...folder, isFolder: true }); }} className="p-1 hover:bg-surface-raised text-text-muted hover:text-text-primary rounded transition-colors">
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -837,41 +858,39 @@ const Files = () => {
                         onContextMenu={(e) => handleContextMenu(e, file)}
                         className={`group hover:bg-surface-raised transition-colors cursor-pointer ${selectedIds[file.id] ? 'bg-accent/5' : ''}`}
                       >
-                        <td className="py-4 px-6 w-12 text-center" onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            checked={!!selectedIds[file.id]}
-                            onChange={() => setSelectedIds(prev => ({ ...prev, [file.id]: !prev[file.id] }))}
-                            className="accent-accent cursor-pointer w-4 h-4"
-                          />
+                        <td className="py-3 px-4 w-12 text-center" onClick={(e) => e.stopPropagation()}>
+                          <input type="checkbox" checked={!!selectedIds[file.id]} onChange={() => setSelectedIds(prev => ({ ...prev, [file.id]: !prev[file.id] }))} className="accent-accent cursor-pointer w-4 h-4 rounded-sm" />
                         </td>
-                        <td className="py-4 px-6">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 flex items-center justify-center border border-border bg-void shrink-0 rounded overflow-hidden relative shadow-md">
+                        <td className="py-3 px-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 flex items-center justify-center shrink-0 rounded overflow-hidden bg-surface-raised border border-border">
                               <FileThumbnail file={file} decryptedName={displayName} className="w-full h-full object-cover" />
-                              <div className="absolute top-0.5 right-0.5 p-0.5 rounded bg-void/80 border border-border/40">
-                                <Lock className={`w-2.5 h-2.5 ${isDecrypted ? 'text-accent' : 'text-text-muted'}`} />
-                              </div>
                             </div>
                             <div className="min-w-0 max-w-[120px] sm:max-w-[240px] md:max-w-md truncate">
-                              <p className={`truncate text-sm font-semibold tracking-wide ${isDecrypted ? 'text-text-primary' : 'text-text-muted opacity-50'}`}>
+                              <p className={`truncate text-[14px] font-medium ${isDecrypted ? 'text-text-primary' : 'text-text-muted opacity-50'}`}>
                                 {isDecrypted ? displayName : <CipherText text={displayName} duration={2000} />}
                               </p>
                             </div>
                           </div>
                         </td>
-                        <td className="py-4 px-6 text-sm font-medium">
-                          {file.file_size ? (file.file_size / 1024).toFixed(1) + ' KB' : '0 KB'}
+                        <td className="py-3 px-4 text-[13px]">
+                          {file.file_size ? (file.file_size / 1024 / 1024 > 1 ? (file.file_size / 1024 / 1024).toFixed(1) + ' MB' : (file.file_size / 1024).toFixed(1) + ' KB') : '0 KB'}
                         </td>
-                        <td className="py-4 px-6 hidden sm:table-cell text-sm text-text-muted">
-                          {file.upload_time ? new Date(file.upload_time).toLocaleDateString() : 'Unknown'}
+                        <td className="py-3 px-4 hidden sm:table-cell text-[13px] text-text-muted">
+                          {file.upload_time ? new Date(file.upload_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown'}
                         </td>
-                        <td className="py-4 px-6 text-right opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                          <div className="flex items-center justify-end space-x-2">
-                            <button onClick={(e) => { e.stopPropagation(); handlePreview(file); }} className="p-2 hover:bg-surface-raised hover:text-accent text-text-muted rounded transition-colors" title="Preview"><Eye className="w-4 h-4" /></button>
-                            <button onClick={(e) => { e.stopPropagation(); setShareFilesTarget(file); setIsShareModalOpen(true); }} className="p-2 hover:bg-surface-raised hover:text-accent text-text-muted rounded transition-colors" title="Share"><Share2 className="w-4 h-4" /></button>
-                            <button onClick={(e) => { e.stopPropagation(); openDeleteModal({ type: 'file', id: file.id, name: decryptedNames[file.id] || file.encrypted_filename }); }} className="p-2 hover:bg-danger/10 hover:text-danger text-text-muted rounded transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
-                          </div>
+                        <td className="py-3 px-4 hidden md:table-cell">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border border-green-500/30 text-green-500 bg-green-500/10">E2EE</span>
+                        </td>
+                        <td className="py-3 px-4 hidden lg:table-cell text-[13px] text-text-muted">
+                           <div className="flex items-center">
+                             <Users className="w-3.5 h-3.5 mr-1.5" /> 2
+                           </div>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <button onClick={(e) => { e.stopPropagation(); handleContextMenu(e, file); }} className="p-1 hover:bg-surface-raised text-text-muted hover:text-text-primary rounded transition-colors">
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
                         </td>
                       </tr>
                     );
