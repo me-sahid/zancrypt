@@ -62,8 +62,8 @@ const Sidebar = () => {
     <motion.aside
       initial={false}
       animate={{ 
-        width: isMobileView ? 280 : (isCollapsed ? 80 : 260),
-        x: isMobileView ? (isSidebarOpenMobile ? 0 : -280) : 0
+        width: isMobileView ? 320 : (isCollapsed ? 88 : 300),
+        x: isMobileView ? (isSidebarOpenMobile ? 0 : -320) : 0
       }}
       transition={{ duration: 0.2, ease: "easeInOut" }}
       className={twMerge(
@@ -72,8 +72,8 @@ const Sidebar = () => {
       )}
     >
       {/* Logo Section */}
-      <Link to="/" className="flex items-center h-20 px-6 border-b border-border hover:bg-surface-raised transition-colors">
-        <div className="flex items-center justify-center w-7 h-7 rounded-sm overflow-hidden">
+      <Link to="/" className="flex items-center h-20 px-7 border-b border-border hover:bg-surface-raised transition-colors">
+        <div className="flex items-center justify-center w-9 h-9 rounded-sm overflow-hidden flex-shrink-0">
           <img src="/favi/zancr.png" alt="Zancrypt Logo" className="w-full h-full object-cover" />
         </div>
         <AnimatePresence>
@@ -82,9 +82,9 @@ const Sidebar = () => {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
-              className="ml-3"
+              className="ml-4"
             >
-              <h2 className="text-[20px] font-semibold text-text-primary tracking-[0.2em] leading-none uppercase ml-1">
+              <h2 className="text-[22px] font-semibold text-text-primary tracking-[0.2em] leading-none uppercase ml-1">
                 ZAN<span className="text-accent">CRYPT</span>
               </h2>
             </motion.div>
@@ -93,7 +93,7 @@ const Sidebar = () => {
       </Link>
 
       {/* Navigation */}
-      <nav className="flex-1 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+      <nav className="flex-1 py-5 space-y-0.5 overflow-y-auto custom-scrollbar">
         {menuItems.map((item) => {
           const isActive = checkIsActive(item.path);
           return (
@@ -104,14 +104,14 @@ const Sidebar = () => {
                 if (isMobileView) setSidebarOpenMobile(false);
               }}
               className={twMerge(
-                'flex items-center px-6 py-3 transition-colors group relative border-l-2',
+                'flex items-center px-7 py-3.5 transition-colors group relative border-l-2',
                 isActive 
                   ? 'bg-surface-raised border-accent text-text-primary' 
                   : 'border-transparent text-text-muted hover:text-text-primary hover:bg-surface-raised'
               )}
             >
               <item.icon className={twMerge(
-                'w-4 h-4 min-w-[16px] transition-colors',
+                'w-5 h-5 min-w-[20px] transition-colors',
                 isActive ? 'text-accent' : 'text-text-muted group-hover:text-text-primary'
               )} />
               
@@ -122,7 +122,7 @@ const Sidebar = () => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     className={twMerge(
-                      "ml-4 whitespace-nowrap font-mono text-xs uppercase tracking-widest",
+                      "ml-4 whitespace-nowrap font-mono text-[13px] uppercase tracking-widest",
                       isActive ? "text-accent" : ""
                     )}
                   >
@@ -139,13 +139,13 @@ const Sidebar = () => {
       {(!isCollapsed || isMobileView) && (
         <div 
           onClick={() => setStorageManagerOpen(true)}
-          className="px-6 py-6 border-t border-border hover:bg-surface-raised cursor-pointer transition-colors group relative"
+          className="px-7 py-6 border-t border-border hover:bg-surface-raised cursor-pointer transition-colors group relative"
         >
-          <div className="flex items-center justify-between text-[11px] font-mono mb-2 uppercase tracking-widest text-text-muted group-hover:text-text-primary transition-colors">
+          <div className="flex items-center justify-between text-[12px] font-mono mb-2.5 uppercase tracking-widest text-text-muted group-hover:text-text-primary transition-colors">
             <span>Storage Usage</span>
             <span className="opacity-0 group-hover:opacity-100 transition-opacity text-accent">Manage</span>
           </div>
-          <div className="flex items-center justify-between font-mono text-xs mb-3">
+          <div className="flex items-center justify-between font-mono text-sm mb-3">
             <span className="text-text-primary">
               {(() => {
                 const realTotalStorage = (files || []).reduce((acc, f) => acc + (f.file_size || 0), 0);

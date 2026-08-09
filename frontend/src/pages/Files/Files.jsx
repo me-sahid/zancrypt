@@ -713,7 +713,7 @@ const Files = () => {
       {/* Header */}
       <div className="flex flex-col gap-4 pb-4">
         <div>
-          <div className="font-sans text-lg sm:text-xl font-medium text-text-primary tracking-wide flex items-center flex-wrap gap-2">
+          <div className="font-sans text-xl sm:text-2xl font-semibold text-text-primary tracking-wide flex items-center flex-wrap gap-2">
             <span 
               onClick={handleNavigateToRoot} 
               className={`cursor-pointer hover:text-accent transition-colors ${folderPath.length === 0 ? 'text-text-primary' : 'text-text-muted'}`}
@@ -736,14 +736,14 @@ const Files = () => {
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={() => handleSort('uploaded_at')} className="px-3 py-1.5 border border-border rounded text-sm text-text-primary hover:bg-surface-raised transition-colors flex items-center">
+            <button onClick={() => handleSort('uploaded_at')} className="px-4 py-2 border border-border rounded text-sm text-text-primary hover:bg-surface-raised transition-colors flex items-center font-medium">
               Modified {sortField === 'uploaded_at' ? (sortDirection === 'asc' ? <ArrowUp className="w-4 h-4 ml-2 text-text-muted" /> : <ArrowDown className="w-4 h-4 ml-2 text-text-muted" />) : <ChevronDown className="w-4 h-4 ml-2 text-text-muted" />}
             </button>
-            <button className="px-3 py-1.5 border border-border rounded text-sm text-text-primary hover:bg-surface-raised transition-colors flex items-center">
-              <Lock className="w-3.5 h-3.5 mr-2 text-text-muted" /> Encrypted only <X className="w-3.5 h-3.5 ml-2 text-text-muted" />
+            <button className="px-4 py-2 border border-border rounded text-sm text-text-primary hover:bg-surface-raised transition-colors flex items-center font-medium">
+              <Lock className="w-4 h-4 mr-2 text-text-muted" /> Encrypted only <X className="w-4 h-4 ml-2 text-text-muted" />
             </button>
-            <button className="px-3 py-1.5 border border-border rounded text-sm text-text-primary hover:bg-surface-raised transition-colors flex items-center">
-              <Users className="w-3.5 h-3.5 mr-2 text-text-muted" /> Shared <X className="w-3.5 h-3.5 ml-2 text-text-muted" />
+            <button className="px-4 py-2 border border-border rounded text-sm text-text-primary hover:bg-surface-raised transition-colors flex items-center font-medium">
+              <Users className="w-4 h-4 mr-2 text-text-muted" /> Shared <X className="w-4 h-4 ml-2 text-text-muted" />
             </button>
           </div>
 
@@ -782,7 +782,7 @@ const Files = () => {
           <div className="overflow-x-auto bg-surface">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-border text-[13px] text-text-muted bg-transparent">
+                <tr className="border-b border-border text-sm text-text-muted bg-transparent">
                   <th className="py-3 px-4 w-12 text-center">
                     <input type="checkbox" checked={filteredFiles.length > 0 && filteredFiles.every(f => selectedIds[f.id])} onChange={toggleSelectAll} className="appearance-none bg-transparent border border-border/70 rounded-sm w-4 h-4 checked:bg-accent checked:border-accent transition-all cursor-pointer bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%224%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%2220 6 9 17 4 12%22></polyline></svg>')] bg-no-repeat bg-center bg-[length:0px_0px] checked:bg-[length:12px_12px]" />
                   </th>
@@ -826,18 +826,18 @@ const Files = () => {
                     <td className="py-3 px-4 w-12 text-center" onClick={(e) => e.stopPropagation()}>
                       <input type="checkbox" checked={!!selectedIds[`folder_${folder.id}`]} onChange={() => setSelectedIds(prev => ({ ...prev, [`folder_${folder.id}`]: !prev[`folder_${folder.id}`] }))} className="appearance-none bg-transparent border border-border/70 rounded-sm w-4 h-4 checked:bg-accent checked:border-accent transition-all cursor-pointer bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%224%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%2220 6 9 17 4 12%22></polyline></svg>')] bg-no-repeat bg-center bg-[length:0px_0px] checked:bg-[length:12px_12px]" />
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-2.5 px-4">
                       <div className="flex items-center space-x-3">
-                        <img src={`/asset/zancrypt_svg_icon_pack/${getFolderIcon(folder.encrypted_name)}`} alt="folder" className="w-8 h-8 object-contain" />
+                        <img src={`/asset/zancrypt_svg_icon_pack/${getFolderIcon(folder.encrypted_name)}`} alt="folder" className="w-9 h-9 object-contain" />
                         <div className="min-w-0 max-w-[120px] sm:max-w-[240px] md:max-w-md truncate">
-                          <p className="truncate text-[14px] text-text-primary font-medium">
+                          <p className="truncate text-[15px] text-text-primary font-semibold">
                             {folder.encrypted_name}
                           </p>
                         </div>
                       </div>
                     </td>
                     <td className="py-3 px-4 text-[13px]">{folder.folder_size || folder.total_size || folder.size ? ( (folder.folder_size || folder.total_size || folder.size) / 1024 / 1024 > 1 ? ((folder.folder_size || folder.total_size || folder.size) / 1024 / 1024).toFixed(1) + ' MB' : ((folder.folder_size || folder.total_size || folder.size) / 1024).toFixed(1) + ' KB' ) : '—'}</td>
-                    <td className="py-3 px-4 hidden sm:table-cell text-[13px] text-text-muted">
+                    <td className="py-2.5 px-4 hidden sm:table-cell text-sm text-text-muted">
                       {new Date(folder.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
                     </td>
                     <td className="py-3 px-4 hidden md:table-cell">
@@ -874,20 +874,20 @@ const Files = () => {
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 flex items-center justify-center shrink-0 rounded overflow-hidden">
+                            <div className="w-9 h-9 flex items-center justify-center shrink-0 rounded overflow-hidden">
                               <FileThumbnail file={file} decryptedName={displayName} className="w-full h-full object-contain" />
                             </div>
                             <div className="min-w-0 max-w-[120px] sm:max-w-[240px] md:max-w-md truncate">
-                              <p className={`truncate text-[14px] font-medium ${isDecrypted ? 'text-text-primary' : 'text-text-muted opacity-50'}`}>
+                              <p className={`truncate text-[15px] font-semibold ${isDecrypted ? 'text-text-primary' : 'text-text-muted opacity-50'}`}>
                                 {isDecrypted ? displayName : <CipherText text={displayName} duration={2000} />}
                               </p>
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-[13px]">
+                        <td className="py-2.5 px-4 text-sm font-medium">
                           {file.file_size ? (file.file_size / 1024 / 1024 > 1 ? (file.file_size / 1024 / 1024).toFixed(1) + ' MB' : (file.file_size / 1024).toFixed(1) + ' KB') : '0 KB'}
                         </td>
-                        <td className="py-3 px-4 hidden sm:table-cell text-[13px] text-text-muted">
+                        <td className="py-2.5 px-4 hidden sm:table-cell text-sm text-text-muted">
                           {file.upload_time ? new Date(file.upload_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown'}
                         </td>
                         <td className="py-3 px-4 hidden md:table-cell">
