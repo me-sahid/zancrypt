@@ -159,6 +159,8 @@ const Files = () => {
   const [decryptedNames, setDecryptedNames] = useState({});
   const [isDecrypting, setIsDecrypting] = useState(false);
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'grid'
+  const [filterEncrypted, setFilterEncrypted] = useState(false);
+  const [filterShared, setFilterShared] = useState(false);
   const [folderPath, setFolderPath] = useState([]);
 
   
@@ -705,7 +707,10 @@ const Files = () => {
   const filteredFiles = useMemo(() => {
     let filtered = files.filter(f => {
       const name = (decryptedNames[f.id] || f.encrypted_filename || '').toLowerCase();
-      return name.includes(searchQuery.toLowerCase());
+      if (!name.includes(searchQuery.toLowerCase())) return false;
+      if (filterEncrypted && !f.encrypted_filename?.includes(':')) return false;
+      if (filterShared && !f.is_shared) return false;
+      return true;
     });
 
     return filtered.sort((a, b) => {
@@ -775,14 +780,30 @@ const Files = () => {
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={() => handleSort('uploaded_at')} className="px-4 py-2 border border-border rounded text-sm text-text-primary hover:bg-surface-raised transition-colors flex items-center font-medium">
-              Modified {sortField === 'uploaded_at' ? (sortDirection === 'asc' ? <ArrowUp className="w-4 h-4 ml-2 text-text-muted" /> : <ArrowDown className="w-4 h-4 ml-2 text-text-muted" />) : <ChevronDown className="w-4 h-4 ml-2 text-text-muted" />}
+            <div className="relative group">
+              <button className="px-4 py-2 border border-border rounded text-sm text-text-primary hover:bg-surface-raised transition-colors flex items-center font-medium">
+                {sortField === 'name' ? 'Name' : sortField === 'size' ? 'Size' : 'Modified'} 
+                {sortDirection === 'asc' ? <ArrowUp className="w-4 h-4 ml-2 text-text-muted" /> : <ArrowDown className="w-4 h-4 ml-2 text-text-muted" />}
+              </button>
+              <div className="absolute left-0 mt-2 w-32 bg-surface border border-border rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                <button onClick={() => handleSort('uploaded_at')} className={`w-full text-left px-4 py-2 hover:bg-surface-raised text-sm transition-colors ${sortField === 'uploaded_at' ? 'text-accent font-medium bg-accent/5' : 'text-text-primary'}`}>Modified</button>
+                <button onClick={() => handleSort('name')} className={`w-full text-left px-4 py-2 hover:bg-surface-raised text-sm transition-colors ${sortField === 'name' ? 'text-accent font-medium bg-accent/5' : 'text-text-primary'}`}>Name</button>
+                <button onClick={() => handleSort('size')} className={`w-full text-left px-4 py-2 hover:bg-surface-raised text-sm transition-colors ${sortField === 'size' ? 'text-accent font-medium bg-accent/5' : 'text-text-primary'}`}>Size</button>
+              </div>
+            </div>
+            <button 
+              onClick={() => setFilterEncrypted(!filterEncrypted)}
+              className={`px-4 py-2 border rounded text-sm transition-colors flex items-center font-medium ${filterEncrypted ? 'border-accent/50 bg-accent/10 text-accent' : 'border-border text-text-primary hover:bg-surface-raised'}`}
+            >
+              <Lock className={`w-4 h-4 mr-2 ${filterEncrypted ? 'text-accent' : 'text-text-muted'}`} /> Encrypted only 
+              {filterEncrypted && <X className="w-4 h-4 ml-2 text-accent" />}
             </button>
-            <button className="px-4 py-2 border border-border rounded text-sm text-text-primary hover:bg-surface-raised transition-colors flex items-center font-medium">
-              <Lock className="w-4 h-4 mr-2 text-text-muted" /> Encrypted only <X className="w-4 h-4 ml-2 text-text-muted" />
-            </button>
-            <button className="px-4 py-2 border border-border rounded text-sm text-text-primary hover:bg-surface-raised transition-colors flex items-center font-medium">
-              <Users className="w-4 h-4 mr-2 text-text-muted" /> Shared <X className="w-4 h-4 ml-2 text-text-muted" />
+            <button 
+              onClick={() => setFilterShared(!filterShared)}
+              className={`px-4 py-2 border rounded text-sm transition-colors flex items-center font-medium ${filterShared ? 'border-accent/50 bg-accent/10 text-accent' : 'border-border text-text-primary hover:bg-surface-raised'}`}
+            >
+              <Users className={`w-4 h-4 mr-2 ${filterShared ? 'text-accent' : 'text-text-muted'}`} /> Shared 
+              {filterShared && <X className="w-4 h-4 ml-2 text-accent" />}
             </button>
           </div>
 
