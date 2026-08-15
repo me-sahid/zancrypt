@@ -7,7 +7,7 @@ import {
   Eye, Calendar, FileVideo, FileImage, FileText,
   Loader2, ArrowUp, ArrowDown, ArrowUpDown, Info,
   Copy, FolderOpen, ClipboardPaste, Folder, Scissors, FolderPlus, CornerLeftUp,
-  LayoutGrid, List, X, MoreVertical, ChevronDown, Users
+  LayoutGrid, List, X, MoreVertical, ChevronDown, ChevronRight, Users
 } from 'lucide-react';
 import { RiSafeLine, RiUpload2Line } from 'react-icons/ri';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -207,25 +207,37 @@ const Files = () => {
   }, [setFiles, setFolders, currentFolderId]);
 
   useEffect(() => {
-    const initFolder = async () => {
-      if (fid && !currentFolderId) {
+    const syncFolderFromUrl = async () => {
+      if (!fid) {
+        if (currentFolderId !== null) {
+          setCurrentFolderId(null);
+          setFolderPath([]);
+        }
+        return;
+      }
+      
+      const currentPathEnd = folderPath.length > 0 ? folderPath[folderPath.length - 1] : null;
+      if (currentPathEnd?.uuid !== fid && currentPathEnd?.folder_uuid !== fid) {
         try {
           const res = await folderService.getFolderByUuid(fid);
           if (res.data) {
             const folder = res.data;
             setCurrentFolderId(folder.id);
-            setFolderPath([{ id: folder.id, uuid: folder.folder_uuid, name: folder.encrypted_name }]);
+            
+            const existingIndex = folderPath.findIndex(f => f.uuid === fid || f.folder_uuid === fid);
+            if (existingIndex !== -1) {
+              setFolderPath(folderPath.slice(0, existingIndex + 1));
+            } else {
+              setFolderPath([{ id: folder.id, uuid: folder.folder_uuid, name: folder.encrypted_name }]);
+            }
           }
         } catch (error) {
           console.error("Failed to load folder by UUID", error);
         }
-      } else if (!fid && currentFolderId) {
-        setCurrentFolderId(null);
-        setFolderPath([]);
       }
     };
-    initFolder();
-  }, [fid]); // Only depend on fid to avoid loops, currentFolderId changes handled manually
+    syncFolderFromUrl();
+  }, [fid]);
 
   useEffect(() => {
     fetchFiles();
@@ -363,7 +375,13 @@ const Files = () => {
   const handleNavigateToBreadcrumb = (index) => {
     setFolderPath(prev => {
       const newPath = prev.slice(0, index + 1);
-      setCurrentFolderId(newPath[newPath.length - 1].id);
+      const targetFolder = newPath[newPath.length - 1];
+      setCurrentFolderId(targetFolder.id);
+      if (targetFolder.uuid || targetFolder.folder_uuid) {
+        navigate(workspace.folder(targetFolder.uuid || targetFolder.folder_uuid));
+      } else {
+        navigate(workspace.drive);
+      }
       return newPath;
     });
   };
@@ -743,7 +761,7 @@ const Files = () => {
             </span>
             {folderPath.map((folder, index) => (
               <React.Fragment key={folder.id}>
-                <span className="text-text-muted">/</span>
+                <ChevronRight className="w-4 h-4 text-text-muted mx-1" />
                 <span 
                   onClick={() => handleNavigateToBreadcrumb(index)}
                   className={`cursor-pointer hover:text-accent transition-colors ${index === folderPath.length - 1 ? 'text-text-primary' : 'text-text-muted'}`}
