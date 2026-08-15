@@ -204,7 +204,28 @@ const Files = () => {
       setIsLoading(false);
       isFetchingRef.current = false;
     }
-  }, [setFiles, currentFolderId]);
+  }, [setFiles, setFolders, currentFolderId]);
+
+  useEffect(() => {
+    const initFolder = async () => {
+      if (fid && !currentFolderId) {
+        try {
+          const res = await folderService.getFolderByUuid(fid);
+          if (res.data) {
+            const folder = res.data;
+            setCurrentFolderId(folder.id);
+            setFolderPath([{ id: folder.id, uuid: folder.folder_uuid, name: folder.encrypted_name }]);
+          }
+        } catch (error) {
+          console.error("Failed to load folder by UUID", error);
+        }
+      } else if (!fid && currentFolderId) {
+        setCurrentFolderId(null);
+        setFolderPath([]);
+      }
+    };
+    initFolder();
+  }, [fid]); // Only depend on fid to avoid loops, currentFolderId changes handled manually
 
   useEffect(() => {
     fetchFiles();

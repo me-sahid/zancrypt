@@ -36,6 +36,7 @@ export const folderService = {
   updateFolder: (id, folderData) => api.put(`/api/folders/${id}`, folderData),
   deleteFolder: (id) => api.delete(`/api/folders/${id}`),
   getFolderStats: (id) => api.get(`/api/folders/${id}/stats`),
+  getFolderByUuid: (uuid) => api.get(`/api/folders/by-uuid/${uuid}`),
 };
 
 export const adminService = {
