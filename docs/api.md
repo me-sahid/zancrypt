@@ -3,7 +3,7 @@
 Zancrypt provides a robust asynchronous REST API built with FastAPI. 
 
 ## Swagger Documentation
-When the backend server is running, FastAPI automatically generates comprehensive interactive API documentation. You can access it in your browser at:
+When the server server is running, FastAPI automatically generates comprehensive interactive API documentation. You can access it in your browser at:
 - **Swagger UI**: `http://localhost:8000/docs`
 - **ReDoc**: `http://localhost:8000/redoc`
 
@@ -28,4 +28,4 @@ Handles the creation of secure sharing links and Self-Destructing HTML wrappers.
 - `POST /share/destroyed`: A telemetry endpoint used by Self-Destructing HTML wrappers to report local deletion.
 
 ### Storage & Telemetry (`/storage`, `/metrics`)
-- Routes for fetching node health, connection latency traces, and capacity metrics used by the frontend dashboard visualizers (Recharts).
+- Routes for fetching node health, connection latency traces, and capacity metrics used by the web dashboard visualizers (Recharts).

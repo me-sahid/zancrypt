@@ -6,7 +6,7 @@ This document describes the high-level architecture of **Zancrypt (YuuVault)**.
 
 Zancrypt is designed to resolve traditional cloud storage concerns (single point of failure, data exposure, provider trust requirements) through a zero-knowledge, distributed architecture. 
 
-The architecture is composed of a decoupled frontend client, a highly concurrent backend API, and a distributed network of storage nodes.
+The architecture is composed of a decoupled web client, a highly concurrent server API, and a distributed network of storage nodes.
 
 ## High-Level Flow
 
@@ -14,7 +14,7 @@ The architecture is composed of a decoupled frontend client, a highly concurrent
 graph TD
     A[Client File Upload] --> B[Client-side Encryption AES-GCM 256]
     B --> C[Slice file into 10MB Chunks]
-    C --> D[Post to Backend /files/upload]
+    C --> D[Post to server /files/upload]
     D --> E[Storage Router]
     E --> F[Rendezvous Hashing HRW]
     F --> G[Select top N Nodes]
@@ -26,7 +26,7 @@ graph TD
 
 ## Technology Stack
 
-### Frontend Architecture
+### web Architecture
 - **Core**: React 19 (Single Page Application) initialized and compiled using **Vite**.
 - **Styling**: **TailwindCSS v4** with a highly customized theme, utilizing glassmorphic layouts and dark mode parameters.
 - **Animations**: **GSAP** combined with `ScrollTrigger` and `MotionPathPlugin` and **Framer Motion** for transitions.
@@ -36,7 +36,7 @@ graph TD
 - **WebAuthn API**: `@github/webauthn-json` for easy serialization and deserialization of raw binary credentials.
 - **Decoders**: `heic-to` dynamically imported WASM HEIC-to-JPEG decoder.
 
-### Backend Architecture
+### server Architecture
 - **Core Framework**: **FastAPI** (Python 3.12) utilizing asynchronous routes (`async def`).
 - **Database ORM**: **SQLAlchemy 2.0** with **asyncpg** (PostgreSQL driver) for non-blocking database communication.
 - **Migrations**: **Alembic** for managing database schema evolution.

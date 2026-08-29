@@ -1,6 +1,6 @@
 # Secure Distributed File Vault
 
-Enterprise-grade backend for a zero-knowledge encrypted distributed storage platform.
+Enterprise-grade server for a zero-knowledge encrypted distributed storage platform.
 
 ## Architecture
 
@@ -26,7 +26,7 @@ Enterprise-grade backend for a zero-knowledge encrypted distributed storage plat
 2. Build and start with Docker Compose:
 
 ```bash
-cd backend
+cd server
 docker compose up --build
 ```
 
@@ -74,7 +74,7 @@ docker compose up --build
 ## Testing
 
 ```bash
-cd backend
+cd server
 pip install -r requirements/dev.txt
 pytest
 ```

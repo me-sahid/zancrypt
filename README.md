@@ -96,7 +96,7 @@ Zancrypt follows a zero-knowledge security architecture.
 
 - Files are encrypted before leaving the user's device.
 - Servers never receive plaintext files.
-- Encryption keys are never stored on the backend.
+- Encryption keys are never stored on the server.
 - Storage providers only store encrypted fragments.
 - User data remains inaccessible without the user's credentials.
 
@@ -127,7 +127,7 @@ Zancrypt follows a zero-knowledge security architecture.
 
 ## Technology Stack
 
-### Frontend
+### web
 
 - React
 - Vite
@@ -135,7 +135,7 @@ Zancrypt follows a zero-knowledge security architecture.
 - Zustand
 - React Router
 
-### Backend
+### server
 
 - FastAPI
 - Python
@@ -158,7 +158,7 @@ Zancrypt follows a zero-knowledge security architecture.
 ```
 zancrypt/
 │
-├── frontend/
+├── web/
 │   ├── components/
 │   ├── pages/
 │   ├── hooks/
@@ -166,7 +166,7 @@ zancrypt/
 │   ├── store/
 │   └── assets/
 │
-├── backend/
+├── server/
 │   ├── api/
 │   ├── core/
 │   ├── database/
@@ -203,14 +203,14 @@ git clone https://github.com/me-sahid/zancrypt.git
 cd zancrypt
 ```
 
-### Frontend
+### web
 
 ```bash
 npm install
 npm run dev
 ```
 
-### Backend
+### server
 
 ```bash
 pip install -r requirements.txt

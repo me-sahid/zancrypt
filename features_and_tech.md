@@ -7,7 +7,7 @@ This document provides a comprehensive technical guide to the features, architec
 ## 1. Architectural Philosophy & Goals
 
 Zancrypt is designed to resolve traditional cloud storage concerns (single point of failure, data exposure, provider trust requirements) through three main pillars:
-*   **Zero-Knowledge Authentication & Key Management**: User identities are anchored in hardware biometrics (FIDO2/WebAuthn), and encryption keys are derived client-side. The backend server never receives, stores, or processes cleartext encryption keys or raw passwords.
+*   **Zero-Knowledge Authentication & Key Management**: User identities are anchored in hardware biometrics (FIDO2/WebAuthn), and encryption keys are derived client-side. The server server never receives, stores, or processes cleartext encryption keys or raw passwords.
 *   **Distributed Shard Architecture**: Files are not stored as single units. Instead, they are chunked into shards, encrypted, and distributed globally across multiple independent storage clouds (e.g., Backblaze B2, Supabase S3) using priority routing and replication.
 *   **Self-Custody & Expiring Containers**: Files can be compiled into zero-dependency, self-contained HTML envelopes that self-destruct locally on opening, safeguarding file delivery from middleman interception.
 
@@ -15,7 +15,7 @@ Zancrypt is designed to resolve traditional cloud storage concerns (single point
 
 ## 2. Technology Stack & Directory Layout
 
-### Frontend Architecture
+### web Architecture
 *   **Core**: React 19 (Single Page Application) initialized and compiled using **Vite**.
 *   **Styling**: **TailwindCSS v4** with a highly customized theme, utilizing glassmorphic layouts, dark mode parameters, and responsive design systems.
 *   **Animations**: **GSAP** (GreenSock) combined with `ScrollTrigger` and `MotionPathPlugin` (for animated telemetry data paths on maps) and **Framer Motion** (for page transitions, loading states, and modal overlays).
@@ -25,7 +25,7 @@ Zancrypt is designed to resolve traditional cloud storage concerns (single point
 *   **WebAuthn API**: `@github/webauthn-json` for easy serialization and deserialization of raw binary credentials between browser WebAuthn API and JSON payloads.
 *   **Decoders**: `heic-to` dynamically imported WASM HEIC-to-JPEG decoder for in-browser client-side preview of iPhone photographs.
 
-### Backend Architecture
+### server Architecture
 *   **Core Framework**: **FastAPI** (Python 3.12) utilizing asynchronous routes (`async def`).
 *   **Database ORM**: **SQLAlchemy 2.0** with **asyncpg** (PostgreSQL driver) for non-blocking database communication.
 *   **Migrations**: **Alembic** for managing database schema evolution.
@@ -41,10 +41,10 @@ Zancrypt is designed to resolve traditional cloud storage concerns (single point
 *   **Docker & Docker Compose**: Configures a multi-container network:
     *   `db`: PostgreSQL 15 Alpine container.
     *   `redis`: Redis 7 Alpine container.
-    *   `backend`: Python 3.12 FastAPI ASGI server.
+    *   `server`: Python 3.12 FastAPI ASGI server.
     *   `worker`: Celery background task worker.
-    *   `frontend`: Nginx alpine container hosting the compiled React SPA files.
-    *   `nginx`: Edge reverse proxy routing `/auth`, `/files`, and `/api` requests to the backend, and static file requests to the frontend.
+    *   `web`: Nginx alpine container hosting the compiled React SPA files.
+    *   `nginx`: Edge reverse proxy routing `/auth`, `/files`, and `/api` requests to the server, and static file requests to the web.
 
 ---
 
@@ -53,14 +53,14 @@ Zancrypt is designed to resolve traditional cloud storage concerns (single point
 ### A. Zero-Knowledge Hardware Identity (FIDO2 / WebAuthn)
 Rather than relying on usernames and passwords sent over the network, Zancrypt implements hardware-bound biometric authentication:
 1.  **Registration Initiation (`/auth/register/start`)**:
-    *   The backend retrieves FIDO2 credential descriptors and challenges via the Python `fido2` library.
+    *   The server retrieves FIDO2 credential descriptors and challenges via the Python `fido2` library.
     *   A state payload containing the email, display name, and generated challenge is stored in Redis under a short-lived `session_id`.
-2.  **Biometric Ceremony (Frontend)**:
-    *   The frontend uses `@github/webauthn-json` to call the browser's native `navigator.credentials.create()`.
+2.  **Biometric Ceremony (web)**:
+    *   The web uses `@github/webauthn-json` to call the browser's native `navigator.credentials.create()`.
     *   The user authorizes using FaceID, TouchID, Windows Hello, or a YubiKey.
 3.  **Registration Verification (`/auth/register/verify`)**:
     *   The client sends the signed attestation back along with an `access_key` and a client-side generated `master_key_salt`.
-    *   The backend verifies the challenge signature.
+    *   The server verifies the challenge signature.
     *   The `access_key` is hashed using SHA-256 (to bypass bcrypt's 72-byte restriction) and then hashed using `bcrypt` to be stored in the database under `identity_verifier` for fallback authentication.
     *   A `WebAuthnCredential` model stores the public key and sign count.
 4.  **Fallback Login (`/auth/login/fallback`)**:
@@ -74,7 +74,7 @@ To enforce absolute privacy, file contents are processed using the browser's Web
 *   **Metadata Shielding**: File names and types are encrypted on the client and stored as ciphertext (`encrypted_filename`, `encrypted_metadata`), preventing metadata leaks.
 
 ### C. Client-Side Processing & Decryption Previews
-*   **WASM HEIC Translation**: If the user uploads a `.HEIC` image (common in iOS devices), the preview window uses a WASM module (`heic-to`) in-browser to translate the raw decrypted HEIC blob into standard JPEG before rendering, avoiding backend processing.
+*   **WASM HEIC Translation**: If the user uploads a `.HEIC` image (common in iOS devices), the preview window uses a WASM module (`heic-to`) in-browser to translate the raw decrypted HEIC blob into standard JPEG before rendering, avoiding server processing.
 *   **Apple MOV Decoding**: Custom MIME-mapping converts `.mov` containers to `video/quicktime` to enable HTML5 playback of decrypted iPhone video captures natively in Safari and Chrome engines.
 
 ---
@@ -84,7 +84,7 @@ To enforce absolute privacy, file contents are processed using the browser's Web
 ```mermaid
 graph TD
     A[Client File Upload] --> B[Slice file into 10MB Chunks]
-    B --> C[Post to Backend /files/upload]
+    B --> C[Post to server /files/upload]
     C --> D[Storage Router]
     D --> E[Rendezvous Hashing HRW]
     E --> F[Select top N Nodes]
@@ -99,7 +99,7 @@ graph TD
 *   The shards are transmitted inside a single multipart/form-data upload request containing a `manifest` mapping the files.
 
 ### B. Rendezvous Hashing (Highest Random Weight Hashing)
-To distribute shards without maintaining a centralized mapping of nodes, the backend implements Rendezvous Hashing in `app/storage/routing.py`:
+To distribute shards without maintaining a centralized mapping of nodes, the server implements Rendezvous Hashing in `app/storage/routing.py`:
 $$\text{Score}(S, N) = \text{SHA256}(S \mathbin{\Vert} N)$$
 For each shard:
 1.  A score is calculated for each healthy node by hashing the concatenation of the `shard_id` and the `node_name`.
@@ -113,7 +113,7 @@ For each shard:
 ### D. Transactional DB & Physical Shard Rollbacks
 To prevent orphaned files and database corruption:
 *   Physical shard uploads to cloud platforms (Backblaze B2, Supabase) are coordinated concurrently using `asyncio.gather`.
-*   If a shard upload fails on all target replica nodes, the backend triggers an emergency cleanup: it deletes all successfully uploaded shards for that request from cloud storage and rolls back the database transaction.
+*   If a shard upload fails on all target replica nodes, the server triggers an emergency cleanup: it deletes all successfully uploaded shards for that request from cloud storage and rolls back the database transaction.
 
 ---
 
@@ -128,7 +128,7 @@ Zancrypt includes a sharing protocol that wraps file payloads inside secure, sel
     *   The generated HTML page contains a visual countdown timer (configurable to 1h, 6h, 24h, 72h).
     *   Upon expiration, or if a clock rollback is detected (`now < lastTick - 2000`), the page triggers memory scrubbing: it nullifies all variables containing the base64-encoded payload and marks the ID as destroyed in browser `localStorage`.
 3.  **Destruction Telemetry**:
-    *   When self-destruction triggers, the client triggers a non-blocking `navigator.sendBeacon` request back to `/api/share/destroyed` to inform the backend, which registers the event in the audit system.
+    *   When self-destruction triggers, the client triggers a non-blocking `navigator.sendBeacon` request back to `/api/share/destroyed` to inform the server, which registers the event in the audit system.
 
 ---
 

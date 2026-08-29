@@ -6,10 +6,10 @@ This document outlines the deployment strategy for Zancrypt in a production envi
 A standard production deployment requires the following containers:
 - **PostgreSQL 15+**: Relational database for metadata, nodes, and audit logs.
 - **Redis 7+**: Key-value store for session state, Celery message brokering, and caching.
-- **FastAPI Backend**: Uvicorn/Gunicorn ASGI server running Python 3.12.
+- **FastAPI server**: Uvicorn/Gunicorn ASGI server running Python 3.12.
 - **Celery Worker**: Background task processors.
 - **Nginx**: Edge reverse proxy.
-- **React Frontend**: Served via Nginx as static compiled assets.
+- **React web**: Served via Nginx as static compiled assets.
 
 ## Docker Compose Configuration
 Zancrypt ships with a `docker-compose.yml` file designed to orchestrate these components seamlessly on a single VPS or a containerized environment.
@@ -20,8 +20,8 @@ docker-compose -f docker-compose.yml up -d --build
 ```
 
 Nginx acts as the edge router:
-- `/api/`, `/auth/`, `/files/` requests are reverse-proxied to the backend ASGI container.
-- All other requests are served by the frontend static container.
+- `/api/`, `/auth/`, `/files/` requests are reverse-proxied to the server ASGI container.
+- All other requests are served by the web static container.
 
 ## Environment Variables
 Security relies on properly configuring the production `.env` files. Ensure the following are securely set in the production environment:
@@ -31,5 +31,5 @@ Security relies on properly configuring the production `.env` files. Ensure the 
 - Storage credentials (e.g., AWS S3 credentials, Backblaze B2 Application Keys) used by the storage router.
 
 ## Observability & Logging
-- **Structured JSON Logs**: Ensure the backend loggers utilize `python-json-logger` for integration with ELK or Datadog.
-- **OpenTelemetry**: Configure OTLP exporters in the backend to trace FastAPI latencies in production if required.
+- **Structured JSON Logs**: Ensure the server loggers utilize `python-json-logger` for integration with ELK or Datadog.
+- **OpenTelemetry**: Configure OTLP exporters in the server to trace FastAPI latencies in production if required.

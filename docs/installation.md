@@ -18,14 +18,14 @@ cd zancrypt
 
 ## Step 2: Environment Configuration
 
-You will need to configure environment variables. Copy the `.env.example` file in the root and place the appropriate environment variable configurations in the respective frontend and backend folders.
+You will need to configure environment variables. Copy the `.env.example` file in the root and place the appropriate environment variable configurations in the respective web and server folders.
 
 ```bash
-cp .env.example backend/.env
-cp .env.example frontend/.env
+cp .env.example server/.env
+cp .env.example web/.env
 ```
 
-*Note: Update the backend `.env` file with your Postgres and Redis connection URIs, and any third-party cloud storage credentials (like B2 or AWS).*
+*Note: Update the server `.env` file with your Postgres and Redis connection URIs, and any third-party cloud storage credentials (like B2 or AWS).*
 
 ## Step 3: Infrastructure Setup
 
@@ -35,12 +35,12 @@ Zancrypt relies on Postgres and Redis. You can start these services using Docker
 docker-compose up -d db redis
 ```
 
-## Step 4: Backend Setup
+## Step 4: server Setup
 
-Navigate to the backend directory, install the Python dependencies, and run database migrations.
+Navigate to the server directory, install the Python dependencies, and run database migrations.
 
 ```bash
-cd backend
+cd server
 python -m venv venv
 
 # Windows
@@ -52,7 +52,7 @@ pip install -r requirements.txt
 alembic upgrade head
 ```
 
-Run the backend server using Uvicorn:
+Run the server server using Uvicorn:
 
 ```bash
 uvicorn app.main:app --reload --port 8000
@@ -63,14 +63,14 @@ uvicorn app.main:app --reload --port 8000
 celery -A app.core.celery_app worker --loglevel=info
 ```
 
-## Step 5: Frontend Setup
+## Step 5: web Setup
 
-Navigate to the frontend directory, install dependencies, and start the development server.
+Navigate to the web directory, install dependencies, and start the development server.
 
 ```bash
-cd ../frontend
+cd ../web
 npm install
 npm run dev
 ```
 
-The frontend will be available at `http://localhost:5173` and the backend API at `http://localhost:8000`.
+The web will be available at `http://localhost:5173` and the server API at `http://localhost:8000`.
