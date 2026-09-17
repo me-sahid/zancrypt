@@ -1,2 +1,2 @@
 name = "zancrypt"
-pages_build_output_dir = "../web/dist"
+pages_build_output_dir = "frontend/dist"
