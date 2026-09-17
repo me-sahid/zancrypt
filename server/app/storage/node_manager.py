@@ -29,8 +29,7 @@ required_supabase_vars = [
 ]
 missing_supabase_vars = [name for name, val in required_supabase_vars if not val or str(val).strip() == ""]
 if missing_supabase_vars:
-    print(f"[CRITICAL] Missing Supabase env vars: {', '.join(missing_supabase_vars)}", file=sys.stderr)
-    sys.exit(1)
+    print(f"[WARNING] Missing Supabase env vars: {', '.join(missing_supabase_vars)} — Supabase node will be disabled", file=sys.stderr)
 
 # ─── Startup validation: Storj S3 (Node 3) ───────────────────────────────────
 required_storj_vars = [
@@ -42,8 +41,7 @@ required_storj_vars = [
 ]
 missing_storj_vars = [name for name, val in required_storj_vars if not val or str(val).strip() == ""]
 if missing_storj_vars:
-    print(f"[CRITICAL] Missing Storj env vars: {', '.join(missing_storj_vars)}", file=sys.stderr)
-    sys.exit(1)
+    print(f"[WARNING] Missing Storj env vars: {', '.join(missing_storj_vars)} — Storj node will be disabled", file=sys.stderr)
 
 try:
     import aioboto3

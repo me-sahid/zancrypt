@@ -8,7 +8,7 @@ async def test_register_start(client: AsyncClient):
         "email": "newuser@example.com",
         "full_name": "New User",
         "region": "us-west",
-        "access_key": "some-access-key-xyz",
+        "recovery_key": "some-recovery-key-xyz",
         "master_key_salt": "some-salt",
         "encrypted_recovery_metadata": "some-recovery"
     })
@@ -28,29 +28,10 @@ async def test_register_start_already_registered(client: AsyncClient, test_user:
     assert response.status_code == 400
 
 @pytest.mark.asyncio
-async def test_login_fallback_success(client: AsyncClient, test_user: User):
+async def test_login_fallback_removed(client: AsyncClient):
+    # Fallback login endpoint has been removed; passkeys are the exclusive authentication method
     response = await client.post("/auth/login/fallback", json={
         "email": "testuser@example.com",
-        "access_key": "test-access-key-123"
+        "recovery_key": "any-key"
     })
-    assert response.status_code == 200
-    res_data = response.json()
-    assert "access_token" in res_data
-    assert "refresh_token" in res_data
-    assert res_data["user"]["email"] == "testuser@example.com"
-
-@pytest.mark.asyncio
-async def test_login_fallback_invalid_key(client: AsyncClient, test_user: User):
-    response = await client.post("/auth/login/fallback", json={
-        "email": "testuser@example.com",
-        "access_key": "wrong-access-key"
-    })
-    assert response.status_code == 401
-
-@pytest.mark.asyncio
-async def test_login_fallback_unregistered(client: AsyncClient):
-    response = await client.post("/auth/login/fallback", json={
-        "email": "unregistered@example.com",
-        "access_key": "any-key"
-    })
-    assert response.status_code == 401
+    assert response.status_code in (404, 405)

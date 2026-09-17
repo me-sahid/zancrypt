@@ -11,9 +11,10 @@ When the server server is running, FastAPI automatically generates comprehensive
 
 ### Authentication (`/auth`)
 Handles zero-knowledge registration and login via FIDO2 / WebAuthn, as well as JWT issuance.
-- `POST /auth/register/start`: Generates FIDO2 credential challenges.
-- `POST /auth/register/verify`: Verifies the signed attestation and stores public keys.
-- `POST /auth/login/fallback`: Fallback authentication using the hashed access key.
+- `POST /auth/register/start`: Generates FIDO2 credential creation options.
+- `POST /auth/register/verify`: Verifies signed attestation, saves public key, and stores recovery key hash.
+- `POST /auth/login/start`: Generates FIDO2 passkey authentication assertion options.
+- `POST /auth/login/verify`: Verifies the signed passkey assertion and issues JWT tokens.
 - `POST /auth/refresh`: Refresh JWT tokens.
 
 ### File Management (`/files`)

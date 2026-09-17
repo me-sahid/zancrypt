@@ -133,10 +133,10 @@ async def test_user(db_session: AsyncSession) -> User:
     if existing:
         return existing
 
-    access_key = "test-access-key-123"
-    hashed_input = hashlib.sha256(access_key.encode()).hexdigest()
+    recovery_key = "test-recovery-key-123"
+    hashed_input = hashlib.sha256(recovery_key.encode()).hexdigest()
     salt = bcrypt_lib.gensalt()
-    identity_verifier = bcrypt_lib.hashpw(hashed_input.encode(), salt).decode()
+    recovery_key_hash = bcrypt_lib.hashpw(hashed_input.encode(), salt).decode()
 
     user = User(
         email="testuser@example.com",
@@ -144,7 +144,7 @@ async def test_user(db_session: AsyncSession) -> User:
         full_name="Test User",
         region="us-east",
         master_key_salt="mock-salt-123",
-        identity_verifier=identity_verifier,
+        recovery_key_hash=recovery_key_hash,
         encrypted_recovery_metadata="mock-recovery-metadata",
         role=UserRole.user,
         is_active=True

@@ -14,6 +14,10 @@ from app.models.notification import Notification
 from app.models.wrapper_destruction import WrapperDestruction
 from app.models.folder import Folder
 from app.models.payment_order import PaymentOrder, PaymentStatus
+from app.models.recovery_session import RecoverySession
+from app.models.api_key import ApiKey
+from app.models.device import DeviceRegistry
+from app.models.challenge import AuthChallenge
 
 __all__ = [
     "Base",
@@ -35,4 +39,8 @@ __all__ = [
     "Folder",
     "PaymentOrder",
     "PaymentStatus",
+    "RecoverySession",
+    "ApiKey",
+    "DeviceRegistry",
+    "AuthChallenge",
 ]

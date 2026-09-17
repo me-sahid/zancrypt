@@ -25,13 +25,24 @@ RP_ID = settings.RP_ID
 RP_NAME = settings.RP_NAME
 ORIGIN = os.environ.get("WEBAUTHN_ORIGIN", "https://zancrypt.in")
 
-ALLOWED_ORIGINS = settings.CORS_ORIGINS + [
-    "https://zancrypt.in",
-    "https://www.zancrypt.in",
-    "https://vault.zancrypt.in",
-    "https://drive.zancrypt.in",
-    "https://zancrypt-front.pages.dev",
-]
+ALLOWED_ORIGINS = list(dict.fromkeys(
+    settings.CORS_ORIGINS + [
+        "https://zancrypt.in",
+        "https://www.zancrypt.in",
+        "https://vault.zancrypt.in",
+        "https://drive.zancrypt.in",
+        "https://zancrypt-front.pages.dev",
+        "http://localhost",
+        "http://localhost:80",
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1",
+        "http://127.0.0.1:80",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:8000",
+    ]
+))
 
 
 def _to_bytes(value) -> bytes:
@@ -52,7 +63,18 @@ def _to_bytes(value) -> bytes:
 
 class WebAuthnService:
 
-    def generate_registration_options(self, user_id: bytes, username: str, display_name: str):
+    def generate_registration_options(self, user_id: bytes, username: str, display_name: str, existing_credentials=None):
+        exclude_credentials = []
+        if existing_credentials:
+            for c in existing_credentials:
+                exclude_credentials.append(
+                    PublicKeyCredentialDescriptor(
+                        id=bytes(c.credential_id),
+                        type=PublicKeyCredentialType.PUBLIC_KEY,
+                        transports=[AuthenticatorTransport.INTERNAL],
+                    )
+                )
+
         options = generate_registration_options(
             rp_id=RP_ID,
             rp_name=RP_NAME,
@@ -64,6 +86,7 @@ class WebAuthnService:
                 resident_key=ResidentKeyRequirement.REQUIRED,
                 user_verification=UserVerificationRequirement.REQUIRED,
             ),
+            exclude_credentials=exclude_credentials if exclude_credentials else None,
         )
         # store challenge as base64url string for safe Redis serialization
         state = {

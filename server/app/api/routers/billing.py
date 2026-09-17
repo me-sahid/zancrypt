@@ -1,5 +1,4 @@
 import logging
-import razorpay
 from fastapi import APIRouter, Depends, HTTPException, Request, Security, status
 from pydantic import BaseModel
 
@@ -10,17 +9,27 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.payment_order import PaymentOrder, PaymentStatus
 
+try:
+    import razorpay as razorpay_lib
+except ImportError:
+    razorpay_lib = None
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 def get_razorpay_client():
+    if not razorpay_lib:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Payment gateway not available (razorpay not installed)"
+        )
     if not settings.RAZORPAY_KEY_ID or not settings.RAZORPAY_KEY_SECRET:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Payment gateway not configured"
         )
-    return razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+    return razorpay_lib.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
 class OrderRequest(BaseModel):
     plan: str  # 'Free', 'Pro', 'Enterprise'

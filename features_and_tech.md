@@ -51,7 +51,7 @@ Zancrypt is designed to resolve traditional cloud storage concerns (single point
 ## 3. Cryptographic Security & Zero-Knowledge System
 
 ### A. Zero-Knowledge Hardware Identity (FIDO2 / WebAuthn)
-Rather than relying on usernames and passwords sent over the network, Zancrypt implements hardware-bound biometric authentication:
+Rather than relying on usernames and passwords sent over the network, Zancrypt implements hardware-bound passwordless authentication:
 1.  **Registration Initiation (`/auth/register/start`)**:
     *   The server retrieves FIDO2 credential descriptors and challenges via the Python `fido2` library.
     *   A state payload containing the email, display name, and generated challenge is stored in Redis under a short-lived `session_id`.
@@ -59,13 +59,13 @@ Rather than relying on usernames and passwords sent over the network, Zancrypt i
     *   The web uses `@github/webauthn-json` to call the browser's native `navigator.credentials.create()`.
     *   The user authorizes using FaceID, TouchID, Windows Hello, or a YubiKey.
 3.  **Registration Verification (`/auth/register/verify`)**:
-    *   The client sends the signed attestation back along with an `access_key` and a client-side generated `master_key_salt`.
+    *   The client sends the signed attestation back along with a `recovery_key` and a client-side generated `master_key_salt`.
     *   The server verifies the challenge signature.
-    *   The `access_key` is hashed using SHA-256 (to bypass bcrypt's 72-byte restriction) and then hashed using `bcrypt` to be stored in the database under `identity_verifier` for fallback authentication.
+    *   The `recovery_key` is hashed using SHA-256 (to bypass bcrypt's 72-byte restriction) and then hashed using `bcrypt` to be stored in the database under `recovery_key_hash` strictly for emergency recovery.
     *   A `WebAuthnCredential` model stores the public key and sign count.
-4.  **Fallback Login (`/auth/login/fallback`)**:
-    *   If biometric authentication is unavailable, the user can type their `access_key`.
-    *   The client sends the key, and the server validates it against `identity_verifier` via `bcrypt.checkpw()`.
+4.  **Passwordless Passkey Authentication (`/auth/login/start` & `/auth/login/verify`)**:
+    *   User authenticates exclusively through their registered hardware-bound passkey.
+    *   The server generates an authentication challenge and verifies the cryptographic assertion signature against the stored public key and counter.
 
 ### B. Client-Side Cryptography (Web Crypto API)
 To enforce absolute privacy, file contents are processed using the browser's Web Crypto API:

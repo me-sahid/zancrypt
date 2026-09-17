@@ -12,10 +12,18 @@ from pydantic_settings import BaseSettings
 ALLOWED_ORIGINS = [
     "https://zancrypt.in",
     "https://www.zancrypt.in",
+    "https://vault.zancrypt.in",
     "https://drive.zancrypt.in",
     "https://zancrypt-front.pages.dev",
-    "http://localhost:5173",
+    "http://localhost",
     "http://localhost:80",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1",
+    "http://127.0.0.1:80",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:8000",
 ]
 
 class Settings(BaseSettings):
@@ -88,12 +96,17 @@ class Settings(BaseSettings):
 
     @property
     def CORS_ORIGINS(self) -> List[str]:
-        if not self.CORS_ORIGINS_STR:
-            return ALLOWED_ORIGINS
-        v = self.CORS_ORIGINS_STR.strip()
-        if v.startswith("["):
-            return json.loads(v)
-        return [i.strip() for i in v.split(",") if i.strip()]
+        origins = list(ALLOWED_ORIGINS)
+        if self.CORS_ORIGINS_STR:
+            v = self.CORS_ORIGINS_STR.strip()
+            if v.startswith("["):
+                try:
+                    origins.extend(json.loads(v))
+                except Exception:
+                    pass
+            else:
+                origins.extend([i.strip() for i in v.split(",") if i.strip()])
+        return list(dict.fromkeys(origins))
 
     class Config:
         env_file = Path(__file__).resolve().parent.parent.parent / ".env"

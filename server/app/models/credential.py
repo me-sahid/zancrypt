@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, LargeBinary, ForeignKey, DateTime, JSON
+from sqlalchemy import Column, Integer, String, LargeBinary, ForeignKey, DateTime, JSON, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.models.base import Base, TimestampMixin
@@ -15,6 +15,9 @@ class WebAuthnCredential(Base, TimestampMixin):
     authenticator_type = Column(String(50), nullable=True) # e.g., 'platform', 'cross-platform'
     transports = Column(JSON, nullable=True) # e.g., ['usb', 'nfc', 'ble', 'internal']
     
-    last_used_at = Column(DateTime, nullable=True)
+    device_name = Column(String(100), nullable=True)
+    added_via = Column(String(50), default="registration", nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    last_used_at = Column(DateTime(timezone=True), nullable=True)
     
     user = relationship("User")

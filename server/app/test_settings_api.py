@@ -11,6 +11,8 @@ import bcrypt as bcrypt_lib
 BASE_URL = "http://localhost:8000"
 DATABASE_URL = "postgresql+asyncpg://user:password@db:5432/vault"
 
+from app.security.jwt import create_access_token
+
 async def setup_db():
     engine = create_async_engine(DATABASE_URL, echo=False)
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -19,10 +21,10 @@ async def setup_db():
         res = await session.execute(select(User).where(User.email == "settings_tester@example.com"))
         user = res.scalar_one_or_none()
         if not user:
-            access_key = "SettingsTest123!"
-            hashed_input = hashlib.sha256(access_key.encode()).hexdigest()
+            recovery_key = "SettingsTest123!"
+            hashed_input = hashlib.sha256(recovery_key.encode()).hexdigest()
             salt = bcrypt_lib.gensalt()
-            identity_verifier = bcrypt_lib.hashpw(hashed_input.encode(), salt).decode()
+            recovery_key_hash = bcrypt_lib.hashpw(hashed_input.encode(), salt).decode()
             
             user = User(
                 email="settings_tester@example.com",
@@ -30,24 +32,19 @@ async def setup_db():
                 full_name="Original Name",
                 region="us-east",
                 master_key_salt="mock_salt",
-                identity_verifier=identity_verifier,
+                recovery_key_hash=recovery_key_hash,
                 role=UserRole.user,
                 is_active=True
             )
             session.add(user)
             await session.commit()
-        return user.email, "SettingsTest123!"
+            await session.refresh(user)
+        return user.id
 
 def test_settings():
-    email, access_key = asyncio.run(setup_db())
+    user_id = asyncio.run(setup_db())
     print("User ready")
-    
-    login_res = requests.post(f"{BASE_URL}/auth/login/fallback", json={
-        "email": email,
-        "access_key": access_key
-    }, timeout=10)
-    assert login_res.status_code == 200, f"Login failed: {login_res.text}"
-    token = login_res.json()["access_token"]
+    token = create_access_token(subject=str(user_id))
     headers = {"Authorization": f"Bearer {token}"}
     
     # Test PUT Profile

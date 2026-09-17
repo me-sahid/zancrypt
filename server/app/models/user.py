@@ -20,10 +20,22 @@ class User(Base, TimestampMixin):
     region = Column(String(128), nullable=True)
     storage_used = Column(BigInteger, default=0, nullable=False)
     
-    # Zero-Knowledge / Identity Verification
+    # Zero-Knowledge / Identity Verification & Vault Recovery
     master_key_salt = Column(String(255), nullable=True) # Used for local key derivation
-    identity_verifier = Column(String(255), nullable=True) # Hashed access key for fallback
+    recovery_key_hash = Column(String(255), nullable=True) # Cryptographic hash of recovery key for vault recovery
+    recovery_key_used_at = Column(DateTime(timezone=True), nullable=True)
+    recovery_attempts = Column(Integer, default=0, nullable=False)
+    recovery_locked_until = Column(DateTime(timezone=True), nullable=True)
+    passkey_count = Column(Integer, default=0, nullable=False)
     encrypted_recovery_metadata = Column(String(1024), nullable=True)
+
+    @property
+    def identity_verifier(self):
+        return self.recovery_key_hash
+
+    @identity_verifier.setter
+    def identity_verifier(self, value):
+        self.recovery_key_hash = value
     
     role = Column(SqlEnum(UserRole), default=UserRole.user, nullable=False)
     plan = Column(String(50), default="free", nullable=False)
