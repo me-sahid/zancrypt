@@ -3,8 +3,26 @@ import { useAuthStore } from '../store/useStore';
 import { useNetworkStore } from '../store/useNetworkStore';
 import { getAuthHeader } from '../utils/auth';
 
+const resolveApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host.includes('zancrypt.in') || host.includes('pages.dev')) {
+      return 'https://api.zancrypt.in';
+    }
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://localhost:8000';
+    }
+  }
+  return '';
+};
+
+export const API_BASE_URL = resolveApiBaseUrl();
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/',
+  baseURL: API_BASE_URL || '/',
   withCredentials: true,
 });
 
@@ -57,7 +75,7 @@ api.interceptors.response.use(
 
       try {
         const { data } = await axios.post(
-          `${import.meta.env.VITE_API_URL || ''}/auth/refresh`,
+          `${API_BASE_URL}/auth/refresh`,
           {},
           { withCredentials: true }
         );
@@ -110,7 +128,7 @@ async function _runSilentRefresh() {
 
   try {
     const { data } = await axios.post(
-      `${import.meta.env.VITE_API_URL || ''}/auth/refresh`,
+      `${API_BASE_URL}/auth/refresh`,
       {},
       { withCredentials: true }
     );
