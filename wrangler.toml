@@ -1,6 +1,2 @@
 name = "zancrypt"
 pages_build_output_dir = "web/dist"
-
-[build]
-command = "npm install && npm run build"
-cwd = "web"
