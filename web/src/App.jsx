@@ -24,6 +24,7 @@ import GlobalUpgradeModal from './components/GlobalUpgradeModal';
 // Lazy loading other pages
 const Login = lazy(() => import('./pages/Auth/Login'));
 const Register = lazy(() => import('./pages/Auth/Register'));
+const Recover = lazy(() => import('./pages/Auth/Recover'));
 const Files = lazy(() => import('./pages/Files/Files'));
 const Upload = lazy(() => import('./pages/Upload/Upload'));
 const Nodes = lazy(() => import('./pages/Nodes/Nodes'));
@@ -46,6 +47,13 @@ const PrivacyPolicy = lazy(() => import('./pages/Static/PrivacyPolicy'));
 const CloudAlternative = lazy(() => import('./pages/Static/CloudAlternative'));
 const Product = lazy(() => import('./pages/Product/Product'));
 
+const ExternalRedirect = ({ to }) => {
+  useEffect(() => {
+    window.location.replace(to);
+  }, [to]);
+  return null;
+};
+
 // Loading Placeholder
 const PageLoader = () => (
   <div className="p-4 sm:p-6 lg:p-10 max-w-[1600px] mx-auto w-full" style={{ minHeight: '100vh' }}>
@@ -58,7 +66,7 @@ function App() {
   const workspace = useWorkspace();
   const hostname = window.location.hostname;
   const isDriveDomain = hostname === 'drive.zancrypt.in';
-  const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+  const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.endsWith('.local');
   const isAppDomain = isDriveDomain || isLocal;
 
   return (
@@ -71,19 +79,25 @@ function App() {
           {/* ── Landing (main domain only) ──────────────────────── */}
           <Route path="/" element={isDriveDomain ? <Navigate to={workspace.home} replace /> : <Landing />} />
 
-          {/* ── Auth routes (drive domain) ───────────────────────── */}
-          {/* On drive domain: /auth/login and /auth/register are the canonical paths */}
-          {/* On main domain: /login and /register redirect to drive */}
+          {/* ── Auth routes (drive domain & local) ───────────────── */}
+          {/* On drive domain and localhost: /auth/login and /auth/register are canonical */}
+          {/* On production main domain: /login and /register redirect to drive */}
           <Route path="/auth/login"    element={<Login />} />
           <Route path="/auth/register" element={<Register />} />
+          <Route path="/recover"       element={<Recover />} />
+          <Route path="/auth/recover"  element={<Recover />} />
           <Route
             path="/login"
-            element={isAppDomain ? <Navigate to="/auth/login" replace /> : <Navigate to="https://drive.zancrypt.in/auth/login" replace />}
+            element={isAppDomain ? <Navigate to="/auth/login" replace /> : <ExternalRedirect to="https://drive.zancrypt.in/login" />}
           />
           <Route
             path="/register"
-            element={isAppDomain ? <Navigate to="/auth/register" replace /> : <Navigate to="https://drive.zancrypt.in/auth/register" replace />}
+            element={isAppDomain ? <Navigate to="/auth/register" replace /> : <ExternalRedirect to="https://drive.zancrypt.in/register" />}
           />
+
+          {/* Direct navigation shortcuts for /drive and /home */}
+          <Route path="/drive" element={<Navigate to={workspace.drive} replace />} />
+          <Route path="/home"  element={<Navigate to={workspace.home} replace />} />
 
           {/* ── Public share + download ─────────────────────────── */}
           {/* Short clean URLs: /s/{token} and /dl */}
@@ -141,6 +155,7 @@ function App() {
 
             {/* Workspace settings area */}
             <Route path="/workspace/:wid/settings"   element={<Suspense fallback={<SettingsPageSkeleton />}><Settings /></Suspense>} />
+            <Route path="/workspace/:wid/security"   element={<Navigate to={`${workspace.settings}?tab=Security`} replace />} />
             <Route path="/workspace/:wid/profile"    element={<Suspense fallback={<SettingsPageSkeleton />}><Profile /></Suspense>} />
 
             <Route path="/workspace/:wid/nodes"      element={<Nodes />} />
@@ -148,14 +163,18 @@ function App() {
             <Route path="/workspace/:wid/analytics"  element={<Analytics />} />
             <Route path="/workspace/:wid/audit"      element={<Audit />} />
 
-            {/* Legacy path redirects → new UUID routes */}
-            <Route path="/dashboard"  element={<Navigate to={workspace.home} replace />} />
-            <Route path="/vault"      element={<Navigate to={workspace.drive} replace />} />
-            <Route path="/bin"        element={<Navigate to={workspace.bin} replace />} />
-            <Route path="/shares"     element={<Navigate to={workspace.shared} replace />} />
-            <Route path="/uploads"    element={<Navigate to={workspace.upload} replace />} />
-            <Route path="/settings"   element={<Navigate to={workspace.settings} replace />} />
-            <Route path="/profile"    element={<Navigate to={workspace.profile} replace />} />
+            {/* Legacy path redirects & shortcuts → new UUID routes */}
+            <Route path="/drive"             element={<Navigate to={workspace.drive} replace />} />
+            <Route path="/home"              element={<Navigate to={workspace.home} replace />} />
+            <Route path="/dashboard"         element={<Navigate to={workspace.home} replace />} />
+            <Route path="/vault"             element={<Navigate to={workspace.drive} replace />} />
+            <Route path="/bin"               element={<Navigate to={workspace.bin} replace />} />
+            <Route path="/shares"            element={<Navigate to={workspace.shared} replace />} />
+            <Route path="/uploads"           element={<Navigate to={workspace.upload} replace />} />
+            <Route path="/settings"          element={<Navigate to={workspace.settings} replace />} />
+            <Route path="/settings/security" element={<Navigate to={`${workspace.settings}?tab=Security`} replace />} />
+            <Route path="/security"          element={<Navigate to={`${workspace.settings}?tab=Security`} replace />} />
+            <Route path="/profile"           element={<Navigate to={workspace.profile} replace />} />
 
             <Route path="/nodes"      element={<Navigate to={workspace.nodes} replace />} />
             <Route path="/monitoring" element={<Navigate to={workspace.monitor} replace />} />

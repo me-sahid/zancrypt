@@ -1,8 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ShieldCheck, Lock } from 'lucide-react';
+import { useAuthStore } from '../../../store/useStore';
+import { useWorkspace, getAuthLinks } from '../../../hooks/useWorkspace';
 
 const CTASection = () => {
+  const { isAuthenticated } = useAuthStore();
+  const workspace = useWorkspace();
+  const authLinks = getAuthLinks();
 
   return (
     <section className="relative py-40 px-8 overflow-hidden bg-void">
@@ -43,21 +48,38 @@ const CTASection = () => {
           Zero passwords. Zero keys on servers. No trust required. Start encrypting today — your first vault is completely free.
         </p>
 
-
-
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          {/* Always point to drive subdomain — auth state not reflected on landing page */}
-          <a
-            href="https://drive.zancrypt.in/register"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group relative flex items-center gap-2.5 px-10 py-4 bg-accent text-void font-mono text-sm uppercase tracking-widest rounded-xl hover:brightness-110 transition-all shadow-[0_0_30px_rgba(79,255,176,0.2)] overflow-hidden"
-          >
-            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500 ease-in-out" />
-            <span className="relative">[ Start Encrypting — Free ]</span>
-            <ArrowRight className="w-4 h-4 relative group-hover:translate-x-0.5 transition-transform" />
-          </a>
+          {isAuthenticated ? (
+            <Link
+              to={workspace.drive}
+              className="group relative flex items-center gap-2.5 px-10 py-4 bg-accent text-void font-mono text-sm uppercase tracking-widest rounded-xl hover:brightness-110 transition-all shadow-[0_0_30px_rgba(79,255,176,0.2)] overflow-hidden"
+            >
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500 ease-in-out" />
+              <span className="relative">[ Open Your Vault ]</span>
+              <ArrowRight className="w-4 h-4 relative group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          ) : authLinks.isExternal ? (
+            <a
+              href={authLinks.register}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative flex items-center gap-2.5 px-10 py-4 bg-accent text-void font-mono text-sm uppercase tracking-widest rounded-xl hover:brightness-110 transition-all shadow-[0_0_30px_rgba(79,255,176,0.2)] overflow-hidden"
+            >
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500 ease-in-out" />
+              <span className="relative">[ Start Encrypting — Free ]</span>
+              <ArrowRight className="w-4 h-4 relative group-hover:translate-x-0.5 transition-transform" />
+            </a>
+          ) : (
+            <Link
+              to={authLinks.register}
+              className="group relative flex items-center gap-2.5 px-10 py-4 bg-accent text-void font-mono text-sm uppercase tracking-widest rounded-xl hover:brightness-110 transition-all shadow-[0_0_30px_rgba(79,255,176,0.2)] overflow-hidden"
+            >
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500 ease-in-out" />
+              <span className="relative">[ Start Encrypting — Free ]</span>
+              <ArrowRight className="w-4 h-4 relative group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          )}
 
           <a
             href="#architecture"

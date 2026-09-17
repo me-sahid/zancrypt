@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Lock, Mail, AlertCircle, ScanFace, Check } from 'lucide-react';
+import { Mail, AlertCircle, ScanFace, Check } from 'lucide-react';
 
 import Button from '../../components/ui/Button';
 import SecureInput from '../../components/ui/SecureInput';
@@ -15,8 +15,7 @@ const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 const Login = () => {
   const [status, setStatus] = useState('idle'); // 'idle' | 'loading' | 'success'
   const [email, setEmail] = useState('');
-  const [accessKey, setAccessKey] = useState('');
-  const [showFallback, setShowFallback] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const { isAuthenticated, isInitializing, setAuth } = useAuthStore();
   const workspace = useWorkspace();
@@ -33,65 +32,41 @@ const Login = () => {
     e.preventDefault();
     if (status !== 'idle') return;
 
-    if (!showFallback) {
-      try {
-        setStatus('loading');
+    try {
+      setStatus('loading');
+      setError('');
 
-        const res = await api.post('/auth/login/start', { email });
-        const { options, session_id } = res.data;
+      const res = await api.post('/auth/login/start', { email });
+      const { options, session_id } = res.data;
 
-        // pass options directly — backend already returns { publicKey: {...} }
-        const assertion = await authenticatePasskey(options);
+      // pass options directly — backend already returns { publicKey: {...} }
+      const assertion = await authenticatePasskey(options);
 
-        const verifyResponse = await api.post('/auth/login/verify', {
-          session_id,
-          response: assertion,
-        });
+      const verifyResponse = await api.post('/auth/login/verify', {
+        session_id,
+        response: assertion,
+      });
 
-        const { access_token, user } = verifyResponse.data;
-        
-        const keyMatRes = await api.get('/auth/key-material', {
-          headers: { Authorization: `Bearer ${access_token}` }
-        });
-        useAuthStore.getState().setKeyMaterial(keyMatRes.data.master_key_salt);
+      const { access_token, user } = verifyResponse.data;
+      
+      const keyMatRes = await api.get('/auth/key-material', {
+        headers: { Authorization: `Bearer ${access_token}` }
+      });
+      useAuthStore.getState().setKeyMaterial(keyMatRes.data.master_key_salt);
 
-        setStatus('success');
-        setTimeout(() => {
-          setAuth(user, access_token);
-        }, 800);
+      setStatus('success');
+      setTimeout(() => {
+        setAuth(user, access_token);
+      }, 800);
 
-      } catch (error) {
-        setStatus('idle');
-        console.error('Auth error:', error.name, error.message);
-        if (error.name === 'NotAllowedError') {
-          setShowFallback(true);
-        } else {
-          setShowFallback(true);
-        }
-      }
-
-    } else {
-      // Access Key fallback
-      try {
-        setStatus('loading');
-        const response = await api.post('/auth/login/fallback', {
-          email,
-          access_key: accessKey,
-        });
-        const { access_token, user } = response.data;
-
-        const keyMatRes = await api.get('/auth/key-material', {
-          headers: { Authorization: `Bearer ${access_token}` }
-        });
-        useAuthStore.getState().setKeyMaterial(keyMatRes.data.master_key_salt);
-
-        setStatus('success');
-        setTimeout(() => {
-          setAuth(user, access_token);
-        }, 800);
-      } catch (error) {
-        setStatus('idle');
-      }
+    } catch (err) {
+      setStatus('idle');
+      console.error('Auth error:', err.name, err.message);
+      const msg = err?.response?.data?.detail 
+        || (err.name === 'NotAllowedError' 
+            ? 'Passkey authentication was cancelled or timed out.' 
+            : 'Passkey verification failed. Please try again.');
+      setError(msg);
     }
   };
 
@@ -125,47 +100,33 @@ const Login = () => {
               name="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (error) setError('');
+              }}
               placeholder="operator@system.io"
               required
               leftIcon={<Mail className="w-4 h-4" />}
             />
 
-            <AnimatePresence>
-              {showFallback && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="space-y-4 overflow-hidden"
-                >
-                  <SecureInput
-                    label="Access Key"
-                    name="accessKey"
-                    type="password"
-                    value={accessKey}
-                    onChange={(e) => setAccessKey(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    leftIcon={<Lock className="w-4 h-4" />}
-                  />
-                  <div className="flex items-start space-x-2 text-xs text-warning bg-warning/10 p-3 rounded-md border border-warning/20 font-mono uppercase tracking-wider">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                    <span>Biometric challenge failed. Fallback to access key required.</span>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {!showFallback && (
-              <div className="flex flex-col items-center justify-center p-6 sm:p-8 border border-border border-dashed rounded-md bg-surface-raised mb-6">
-                <ScanFace className="w-10 h-10 sm:w-12 sm:h-12 text-accent mb-3 sm:mb-4" strokeWidth={1} />
-                <p className="font-mono text-xs sm:text-sm text-text-primary uppercase tracking-widest mb-1 text-center">Passkey Ready</p>
-                <p className="font-sans text-xs sm:text-sm text-text-secondary text-center leading-relaxed">
-                  Use Touch ID, Face ID, or YubiKey for zero-knowledge authentication.
-                </p>
-              </div>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-start space-x-2 text-xs text-danger bg-danger/10 p-3 rounded-md border border-danger/20 font-mono tracking-wide"
+              >
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-danger" />
+                <span>{error}</span>
+              </motion.div>
             )}
+
+            <div className="flex flex-col items-center justify-center p-6 sm:p-8 border border-border border-dashed rounded-md bg-surface-raised mb-6">
+              <ScanFace className="w-10 h-10 sm:w-12 sm:h-12 text-accent mb-3 sm:mb-4" strokeWidth={1} />
+              <p className="font-mono text-xs sm:text-sm text-text-primary uppercase tracking-widest mb-1 text-center">Passkey Ready</p>
+              <p className="font-sans text-xs sm:text-sm text-text-secondary text-center leading-relaxed">
+                Use Touch ID, Face ID, or YubiKey for zero-knowledge authentication.
+              </p>
+            </div>
 
             <Button
               type="submit"
@@ -231,19 +192,12 @@ const Login = () => {
                 </motion.span>
               </div>
             </Button>
-
-            {showFallback && (
-              <button
-                type="button"
-                onClick={() => setShowFallback(false)}
-                className="w-full font-mono text-xs text-text-muted hover:text-accent uppercase tracking-widest transition-colors mt-4"
-              >
-                Retry Passkey
-              </button>
-            )}
           </form>
 
-          <div className="mt-12 text-center">
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <Link to="/recover" className="text-text-muted hover:text-accent font-mono text-xs uppercase tracking-wider transition-colors">
+              [ Lost access? ]
+            </Link>
             <p className="font-sans text-xs text-text-secondary">
               No vault assigned?{' '}
               <Link to="/auth/register" className="text-accent hover:underline font-mono uppercase tracking-widest text-xs">

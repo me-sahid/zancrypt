@@ -4,6 +4,8 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Shield, Key, HardDrive, Layers, Activity, Lock, Database, ArrowRight, Server, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Navbar from '../Landing/components/Navbar';
+import { useAuthStore } from '../../store/useStore';
+import { useWorkspace, getAuthLinks } from '../../hooks/useWorkspace';
 
 const Footer = lazy(() => import('../Landing/components/Footer'));
 
@@ -20,6 +22,9 @@ const HoverImage = ({ src, alt, position = "bottom" }) => (
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Product() {
+  const { isAuthenticated } = useAuthStore();
+  const workspace = useWorkspace();
+  const authLinks = getAuthLinks();
   const containerRef = useRef(null);
 
   // GSAP References
@@ -169,9 +174,19 @@ export default function Product() {
           </div>
           
           <div className="hero-anim flex flex-wrap items-center justify-center gap-4 pt-8">
-            <a href="https://drive.zancrypt.in/register" className="product-btn-primary h-14 px-8 flex items-center justify-center rounded-lg font-normal text-base shadow-lg">
-              Start Storing Securely
-            </a>
+            {isAuthenticated ? (
+              <Link to={workspace.drive} className="product-btn-primary h-14 px-8 flex items-center justify-center rounded-lg font-normal text-base shadow-lg">
+                Go to Drive
+              </Link>
+            ) : authLinks.isExternal ? (
+              <a href={authLinks.register} className="product-btn-primary h-14 px-8 flex items-center justify-center rounded-lg font-normal text-base shadow-lg">
+                Start Storing Securely
+              </a>
+            ) : (
+              <Link to={authLinks.register} className="product-btn-primary h-14 px-8 flex items-center justify-center rounded-lg font-normal text-base shadow-lg">
+                Start Storing Securely
+              </Link>
+            )}
             <Link to="/architecture" className="h-14 px-8 flex items-center justify-center border border-border bg-surface-raised/50 hover:bg-surface-raised transition-colors rounded-lg font-normal text-base text-text-primary">
               View Architecture
             </Link>
@@ -428,9 +443,19 @@ export default function Product() {
           <p className="text-xl text-text-secondary mb-10">
             Your files should remain yours. Start using a cloud vault designed for privacy from the beginning.
           </p>
-          <a href="https://drive.zancrypt.in/register" className="product-btn-primary inline-flex h-14 px-8 items-center justify-center rounded-lg font-normal text-lg shadow-lg">
-            Create Free Vault
-          </a>
+          {isAuthenticated ? (
+            <Link to={workspace.drive} className="product-btn-primary inline-flex h-14 px-8 items-center justify-center rounded-lg font-normal text-lg shadow-lg">
+              Open Your Vault
+            </Link>
+          ) : authLinks.isExternal ? (
+            <a href={authLinks.register} className="product-btn-primary inline-flex h-14 px-8 items-center justify-center rounded-lg font-normal text-lg shadow-lg">
+              Create Free Vault
+            </a>
+          ) : (
+            <Link to={authLinks.register} className="product-btn-primary inline-flex h-14 px-8 items-center justify-center rounded-lg font-normal text-lg shadow-lg">
+              Create Free Vault
+            </Link>
+          )}
         </div>
       </section>
 

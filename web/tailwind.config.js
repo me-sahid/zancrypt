@@ -44,7 +44,9 @@ export default {
         '2xl': ['20px', { lineHeight: 'normal', fontWeight: '600' }],
         '3xl': ['24px', { lineHeight: 'normal', fontWeight: '600' }],
         '4xl': ['28px', { lineHeight: 'normal', fontWeight: '700' }],
-        '5xl': ['32px', { lineHeight: 'normal', fontWeight: '700' }],
+        '5xl': ['3rem', { lineHeight: '1' }],
+        '6xl': ['3.75rem', { lineHeight: '1' }],
+        '7xl': ['4.5rem', { lineHeight: '1' }],
       },
       fontWeight: {
         thin: '100',

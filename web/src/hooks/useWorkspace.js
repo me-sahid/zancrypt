@@ -79,3 +79,25 @@ export function useWorkspace() {
     register: '/auth/register',
   };
 }
+
+export function isLocalEnvironment() {
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname;
+  return host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local');
+}
+
+export function isAppDomain() {
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname;
+  return host === 'drive.zancrypt.in' || isLocalEnvironment();
+}
+
+export function getAuthLinks() {
+  const isApp = isAppDomain();
+  return {
+    login: isApp ? '/auth/login' : 'https://drive.zancrypt.in/login',
+    register: isApp ? '/auth/register' : 'https://drive.zancrypt.in/register',
+    isExternal: !isApp,
+  };
+}
+

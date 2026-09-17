@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Shield, User, Fingerprint, Check } from 'lucide-react';
+import { Mail, User, Fingerprint, Check, Key, Copy, AlertTriangle, AlertCircle, RefreshCw } from 'lucide-react';
 
 import Button from '../../components/ui/Button';
 import SecureInput from '../../components/ui/SecureInput';
@@ -9,49 +9,69 @@ import { useAuthStore } from '../../store/useStore';
 import api from '../../services/api';
 import { isWebAuthnSupported, registerPasskey } from '../../utils/webauthn';
 import { generateSalt } from '../../utils/crypto';
+import { generateRecoveryKey } from '../../utils/recoveryKey';
 import { useWorkspace } from '../../hooks/useWorkspace';
+import toast from 'react-hot-toast';
 
 const Register = () => {
   const [status, setStatus] = useState('idle');
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    accessKey: '',
-    confirmAccessKey: '',
   });
+  const [recoveryKey, setRecoveryKey] = useState(() => generateRecoveryKey());
+  const [isAcknowledged, setIsAcknowledged] = useState(false);
+  const [hasCopiedKey, setHasCopiedKey] = useState(false);
+  const [error, setError] = useState('');
+
   const navigate = useNavigate();
-  const { isAuthenticated, setAuth } = useAuthStore();
+  const { setAuth } = useAuthStore();
   const workspace = useWorkspace();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (error) setError('');
+  };
+
+  const handleRegenerateKey = () => {
+    setRecoveryKey(generateRecoveryKey());
+    setIsAcknowledged(false);
+    setHasCopiedKey(false);
+  };
+
+  const handleCopyKey = () => {
+    navigator.clipboard.writeText(recoveryKey);
+    setHasCopiedKey(true);
+    toast.success('Recovery key copied to clipboard');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!isWebAuthnSupported()) {
+    if (!isAcknowledged) {
+      setError('You must confirm that you have saved your recovery key before continuing.');
       return;
     }
 
-    if (formData.accessKey !== formData.confirmAccessKey) {
+    if (!isWebAuthnSupported()) {
+      setError('WebAuthn is not supported in this browser. Please use a modern browser with biometric or security key support.');
       return;
     }
 
     setStatus('loading');
+    setError('');
 
     try {
       const masterSalt = generateSalt();
 
       const startResponse = await api.post('/auth/register/start', {
         email: formData.email,
-        full_name: formData.fullName
+        full_name: formData.fullName,
       });
 
       const { options, session_id } = startResponse.data;
-      
-      // Fix — wrap options in publicKey if not already wrapped
+
+      // Wrap options in publicKey if not already wrapped
       const passkeyOptions = options.publicKey ? options : { publicKey: options };
       const credential = await registerPasskey(passkeyOptions);
 
@@ -59,14 +79,14 @@ const Register = () => {
         session_id,
         response: credential,
         master_key_salt: masterSalt,
-        access_key: formData.accessKey,
-        encrypted_recovery_metadata: null
+        recovery_key: recoveryKey,
+        encrypted_recovery_metadata: null,
       });
 
       const { access_token, user } = verifyResponse.data;
 
       const keyMatRes = await api.get('/auth/key-material', {
-        headers: { Authorization: `Bearer ${access_token}` }
+        headers: { Authorization: `Bearer ${access_token}` },
       });
       useAuthStore.getState().setKeyMaterial(keyMatRes.data.master_key_salt);
 
@@ -75,8 +95,14 @@ const Register = () => {
         setAuth(user, access_token);
         navigate(workspace.drive);
       }, 800);
-    } catch (error) {
+    } catch (err) {
       setStatus('idle');
+      console.error('Registration failed:', err);
+      const msg = err?.response?.data?.detail 
+        || (err.name === 'NotAllowedError' 
+            ? 'Passkey ceremony was cancelled or timed out. Please try again.' 
+            : 'Failed to initialize identity setup. Please try again.');
+      setError(msg);
     }
   };
 
@@ -100,9 +126,20 @@ const Register = () => {
           <div className="text-center">
             <h1 className="text-2xl sm:text-3xl font-display text-text-primary mb-1.5">Initialize Vault</h1>
             <p className="font-mono text-xs sm:text-sm text-text-muted uppercase tracking-widest mb-4 sm:mb-5">
-              Create Your Secure Identity
+              Create Your Zero-Knowledge Identity
             </p>
           </div>
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-start space-x-2 text-xs text-danger bg-danger/10 p-3 rounded-md border border-danger/20 font-mono tracking-wide mb-4"
+            >
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-danger" />
+              <span>{error}</span>
+            </motion.div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <SecureInput
@@ -126,35 +163,74 @@ const Register = () => {
               leftIcon={<Mail className="w-4 h-4" />}
             />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <SecureInput
-                label="Access Key"
-                name="accessKey"
-                type="password"
-                value={formData.accessKey}
-                onChange={handleChange}
-                placeholder="••••••••"
-                required
-                leftIcon={<Shield className="w-4 h-4" />}
-              />
-              <SecureInput
-                label="Confirm Key"
-                name="confirmAccessKey"
-                type="password"
-                value={formData.confirmAccessKey}
-                onChange={handleChange}
-                placeholder="••••••••"
-                required
-                leftIcon={<Shield className="w-4 h-4" />}
-                error={formData.accessKey !== formData.confirmAccessKey && formData.confirmAccessKey ? "Mismatch" : ""}
-              />
+            {/* Recovery Key Generator & Acknowledgment Step */}
+            <div className="p-4 bg-void border border-accent/30 rounded space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Key className="w-4 h-4 text-accent" />
+                  <span className="font-mono text-xs text-text-primary uppercase tracking-wider font-semibold">
+                    Emergency Recovery Key
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRegenerateKey}
+                  title="Generate alternative key"
+                  className="flex items-center space-x-1 text-[11px] font-mono text-text-muted hover:text-accent transition-colors"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Regenerate</span>
+                </button>
+              </div>
+
+              <p className="font-mono text-[11px] text-text-muted leading-relaxed">
+                Save this one-time recovery key in a safe place. You will need it to recover access if you lose your hardware device.
+              </p>
+
+              <div className="flex items-center justify-between p-3 bg-surface border border-border rounded">
+                <span className="font-mono text-sm sm:text-base text-text-primary tracking-widest font-bold select-all">
+                  {recoveryKey}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyKey}
+                  className="flex items-center space-x-1 px-2.5 py-1 bg-surface-raised border border-border hover:border-accent text-text-primary font-mono text-xs uppercase rounded transition-colors shrink-0"
+                >
+                  {hasCopiedKey ? (
+                    <>
+                      <Check className="w-3 h-3 text-emerald-400" />
+                      <span className="text-emerald-400">Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <label className="flex items-start space-x-2.5 cursor-pointer select-none pt-1">
+                <input
+                  type="checkbox"
+                  checked={isAcknowledged}
+                  onChange={(e) => {
+                    setIsAcknowledged(e.target.checked);
+                    if (error) setError('');
+                  }}
+                  className="w-4 h-4 mt-0.5 accent-accent rounded cursor-pointer shrink-0"
+                />
+                <span className="font-mono text-[11px] text-text-primary leading-tight">
+                  I have copied and saved this recovery key somewhere safe. (Required to register)
+                </span>
+              </label>
             </div>
 
             <div className="flex flex-col items-center justify-center p-3 sm:p-4 border border-border border-dashed rounded-md bg-surface-raised mb-2 mt-1 text-center">
               <Fingerprint className="w-7 h-7 sm:w-8 sm:h-8 text-accent mb-1.5" strokeWidth={1} />
               <p className="font-mono text-xs text-text-primary uppercase tracking-widest mb-0.5">Biometric Protocol</p>
               <p className="font-sans text-xs text-text-secondary leading-relaxed">
-                Registration requires WebAuthn confirmation.
+                Registration requires WebAuthn biometric confirmation.
               </p>
             </div>
 
@@ -162,7 +238,7 @@ const Register = () => {
               type="submit"
               variant="primary"
               className="w-full h-12 overflow-hidden"
-              disabled={status !== 'idle'}
+              disabled={status !== 'idle' || !isAcknowledged}
             >
               <div className="flex items-center justify-center gap-2">
                 <motion.span
@@ -198,7 +274,7 @@ const Register = () => {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Authenticating
+                      Authenticating Passkey
                     </motion.div>
                   )}
                   {status === 'success' && (

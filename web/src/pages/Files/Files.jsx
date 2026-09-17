@@ -835,11 +835,10 @@ const Files = () => {
 
 
 
-      {/* Vault Table */}
-      {/* Vault Table */}
-      <div className="overflow-hidden border border-border rounded-xl">
+      {/* Vault Content */}
+      <div className="overflow-hidden">
         {viewMode === 'list' ? (
-          <div className="overflow-x-auto bg-surface">
+          <div className="overflow-x-auto bg-surface border border-border rounded-xl">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-border text-sm text-text-muted bg-transparent">

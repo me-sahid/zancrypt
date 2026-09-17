@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, User, Bell, Shield, Server, Cpu, Key, LogOut, CheckCircle2 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Settings as SettingsIcon, User, Bell, Shield, Server, Cpu, CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from '../../store/useStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import SecuritySection from './components/SecuritySection';
 
 const Settings = () => {
-  const [activeTab, setActiveTab] = useState('Profile');
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || (searchParams.get('setup-recovery') === 'true' ? 'Security' : 'Profile');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const { user, setAuth, token, logout, keyMaterial } = useAuthStore();
   const settings = useSettingsStore();
   
@@ -166,90 +170,52 @@ const Settings = () => {
            )}
 
            {activeTab === 'Security' && (
-             <div className="space-y-6">
-               <div className="bg-surface border border-accent">
-                  <div className="p-4 border-b border-accent bg-accent/5">
-                     <h3 className="font-mono text-xs text-accent uppercase tracking-widest flex items-center">
-                       <Shield className="w-4 h-4 mr-2" />
-                       Zero-Knowledge Identity
-                     </h3>
-                  </div>
-                  <div className="p-6 space-y-4">
-                    <p className="font-mono text-xs text-text-muted leading-relaxed">
-                      Your master decryption keys are never stored on Zancrypt servers. Recovery requires your original device passkey.
-                    </p>
-                    <div className="flex items-center space-x-3 p-4 bg-void border border-border">
-                      <Key className="w-5 h-5 text-accent" />
-                      <div className="text-xs font-mono">
-                        <p className="text-text-primary uppercase tracking-widest mb-1">Identity Verifier Salt</p>
-                        <p className="text-text-muted">{keyMaterial || 'N/A'}</p>
-                      </div>
-                    </div>
-                  </div>
-               </div>
-
-               <div className="bg-surface border border-danger">
-                  <div className="p-4 border-b border-danger bg-danger/5">
-                     <h3 className="font-mono text-xs text-danger uppercase tracking-widest flex items-center">
-                       <LogOut className="w-4 h-4 mr-2" />
-                       Session Matrix
-                     </h3>
-                  </div>
-                  <div className="p-6 space-y-4">
-                    <p className="font-mono text-xs text-text-muted">
-                      Revoke all active sessions across all devices. This will invalidate all tokens instantly.
-                    </p>
-                    <button 
-                      onClick={handleRevokeSessions}
-                      className="px-6 py-2 bg-transparent border border-danger text-danger font-mono text-xs uppercase tracking-widest hover:bg-danger/10 transition-colors"
-                    >
-                      [ Revoke All Sessions ]
-                    </button>
-                  </div>
-               </div>
-             </div>
+             <SecuritySection
+               keyMaterial={keyMaterial}
+               onRevokeSessions={handleRevokeSessions}
+             />
            )}
 
            {activeTab === 'Alerts' && (
              <div className="space-y-6">
-               <div className="bg-surface border border-border">
-                  <div className="p-4 border-b border-border bg-surface-raised">
-                     <h3 className="font-mono text-xs text-text-primary uppercase tracking-widest">Notification Channels</h3>
-                  </div>
-                  <div className="p-0 font-mono text-xs">
-                     <div className="flex items-center justify-between p-4 hover:bg-void transition-colors">
-                        <div>
-                          <p className="text-text-primary uppercase tracking-widest">Email Notifications</p>
-                           <p className="text-text-muted text-xs mt-1">Security and share activity via email</p>
-                        </div>
-                        <button 
-                          onClick={() => settings.setSetting('emailNotifications', !settings.emailNotifications)}
-                          className={`w-8 h-4 border transition-colors ${settings.emailNotifications ? 'bg-accent/20 border-accent' : 'bg-void border-border'}`}
-                        >
-                          <div className={`h-full w-4 bg-accent transition-all ${settings.emailNotifications ? 'ml-auto' : 'mr-auto'}`} />
-                        </button>
-                     </div>
-                     <div className="flex items-center justify-between p-4 border-t border-border hover:bg-void transition-colors">
-                        <div>
-                          <p className="text-text-primary uppercase tracking-widest">In-App Push Alerts</p>
-                          <p className="text-text-muted text-xs mt-1">Live browser toasts for network events</p>
-                        </div>
-                        <button 
-                          onClick={() => settings.setSetting('inAppAlerts', !settings.inAppAlerts)}
-                          className={`w-8 h-4 border transition-colors ${settings.inAppAlerts ? 'bg-accent/20 border-accent' : 'bg-void border-border'}`}
-                        >
-                          <div className={`h-full w-4 bg-accent transition-all ${settings.inAppAlerts ? 'ml-auto' : 'mr-auto'}`} />
-                        </button>
-                     </div>
-                  </div>
-               </div>
+                <div className="bg-surface border border-border">
+                   <div className="p-4 border-b border-border bg-surface-raised">
+                      <h3 className="font-mono text-xs text-text-primary uppercase tracking-widest">Notification Channels</h3>
+                   </div>
+                   <div className="p-0 font-mono text-xs">
+                      <div className="flex items-center justify-between p-4 hover:bg-void transition-colors">
+                         <div>
+                           <p className="text-text-primary uppercase tracking-widest">Email Notifications</p>
+                            <p className="text-text-muted text-xs mt-1">Security and share activity via email</p>
+                         </div>
+                         <button 
+                           onClick={() => settings.setSetting('emailNotifications', !settings.emailNotifications)}
+                           className={`w-8 h-4 border transition-colors ${settings.emailNotifications ? 'bg-accent/20 border-accent' : 'bg-void border-border'}`}
+                         >
+                           <div className={`h-full w-4 bg-accent transition-all ${settings.emailNotifications ? 'ml-auto' : 'mr-auto'}`} />
+                         </button>
+                      </div>
+                      <div className="flex items-center justify-between p-4 border-t border-border hover:bg-void transition-colors">
+                         <div>
+                           <p className="text-text-primary uppercase tracking-widest">In-App Push Alerts</p>
+                           <p className="text-text-muted text-xs mt-1">Live browser toasts for network events</p>
+                         </div>
+                         <button 
+                           onClick={() => settings.setSetting('inAppAlerts', !settings.inAppAlerts)}
+                           className={`w-8 h-4 border transition-colors ${settings.inAppAlerts ? 'bg-accent/20 border-accent' : 'bg-void border-border'}`}
+                         >
+                           <div className={`h-full w-4 bg-accent transition-all ${settings.inAppAlerts ? 'ml-auto' : 'mr-auto'}`} />
+                         </button>
+                      </div>
+                   </div>
+                </div>
 
-               <button 
-                 onClick={handleMarkAlertsRead}
-                 className="w-full py-3 bg-surface border border-border text-text-muted font-mono text-xs uppercase tracking-widest hover:text-text-primary hover:border-text-primary transition-colors"
-               >
-                 [ Mark All Read ]
-               </button>
+                <button 
+                  onClick={handleMarkAlertsRead}
+                  className="w-full py-3 bg-surface border border-border text-text-muted font-mono text-xs uppercase tracking-widest hover:text-text-primary hover:border-text-primary transition-colors"
+                >
+                  [ Mark All Read ]
+                </button>
              </div>
            )}
 

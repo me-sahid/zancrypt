@@ -8,38 +8,29 @@ import { FeaturesGridSkeleton } from '../../pages/Landing/components/FeaturesGri
 const LandingPageSkeleton = () => {
   return (
     <div className="w-full animate-in fade-in duration-150">
-      {/* Hero Section Skeleton */}
-      <section className="relative min-h-screen pt-24 lg:pt-32 flex flex-col justify-between">
-        <div className="max-w-[1200px] mx-auto w-full px-6 grid lg:grid-cols-[55%_45%] gap-12 items-center flex-1">
-          {/* LEFT COLUMN: Copy & CTA */}
-          <div className="max-w-xl text-center lg:text-left mx-auto lg:mx-0 w-full">
-            <div className="mb-8">
-              <SkeletonText lines={1} width="80%" className="h-[72px] mb-2" />
-              <SkeletonText lines={1} width="90%" className="h-[72px] mb-2" />
-              <SkeletonText lines={1} width="60%" className="h-[72px]" />
-            </div>
-            
-            <div className="mb-8 lg:mb-10">
-              <SkeletonText lines={3} width="100%" className="max-w-lg mx-auto lg:mx-0" />
-            </div>
-            
-            <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 sm:gap-6 mb-8 lg:mb-6">
-              <SkeletonButton width="160px" height="48px" className="w-full sm:w-auto" />
-              <SkeletonButton width="160px" height="48px" className="w-full sm:w-auto" />
-            </div>
-            
-            <SkeletonText lines={1} width="300px" className="mx-auto lg:mx-0 h-4" />
+      {/* Hero Section Skeleton - Centered */}
+      <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 flex flex-col items-center">
+        <div className="max-w-4xl mx-auto w-full px-6 flex flex-col items-center text-center">
+          {/* Title Skeleton */}
+          <div className="w-full flex flex-col items-center gap-3 mb-6">
+            <div className="skeleton w-3/4 max-w-xl h-14 rounded-xl" />
+            <div className="skeleton w-2/3 max-w-lg h-14 rounded-xl" />
+          </div>
+          
+          {/* Subtitle Skeleton */}
+          <div className="w-full flex flex-col items-center gap-2 mb-8 max-w-xl">
+            <div className="skeleton w-full h-4 rounded" />
+            <div className="skeleton w-4/5 h-4 rounded" />
+          </div>
+          
+          {/* Buttons Skeleton */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 mb-12">
+            <SkeletonButton width="180px" height="48px" className="rounded-xl" />
+            <SkeletonButton width="180px" height="48px" className="rounded-xl" />
           </div>
 
-          {/* RIGHT COLUMN: Mockup Scene */}
-          <div className="relative w-full h-[400px] sm:h-[500px] lg:h-[620px] flex items-center justify-center">
-             <div className="skeleton w-full max-w-md h-[400px] rounded-xl" />
-          </div>
-        </div>
-
-        {/* Marquee Ticker */}
-        <div className="w-full border-t border-border py-4 mt-12 bg-void">
-          <SkeletonText lines={1} width="100%" className="h-4" />
+          {/* Product Mockup Window Skeleton */}
+          <div className="w-full max-w-[1060px] h-[460px] skeleton rounded-2xl" />
         </div>
       </section>
 

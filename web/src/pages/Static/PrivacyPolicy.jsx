@@ -222,7 +222,7 @@ const PrivacyPolicy = () => {
                     <li><strong>Full Name:</strong> Used for account personalization and user identification.</li>
                     <li><strong>Email Address:</strong> Used for account verification, system notifications, and critical account updates.</li>
                     <li><strong>WebAuthn Credential (Passkey):</strong> Stored strictly as a binary public key. Your private key never leaves your physical device/authenticator.</li>
-                    <li><strong>Access Key:</strong> We store only a bcrypt hash of a SHA-256 hash of your access credential. We never store or transmit the plaintext credential.</li>
+                    <li><strong>Recovery Key:</strong> We store only a cryptographic hash of your recovery credential for emergency vault recovery. We never store or transmit the plaintext credential.</li>
                     <li><strong>Master Key Salt:</strong> Random bytes stored to assist your browser in client-side key derivation via Argon2id.</li>
                     <li><strong>Encrypted Recovery Metadata (Optional):</strong> Completely encrypted client-side before submission; unreadable by our servers.</li>
                     <li><strong>Account Metadata:</strong> Account creation timestamp and your user role (user or admin).</li>

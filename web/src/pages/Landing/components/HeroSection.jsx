@@ -1,288 +1,185 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import gsap from 'gsap';
 import { motion } from 'framer-motion';
-import { 
-  Lock, FileText, FileVideo, FileImage, 
-  Database, Search, Eye, Download, Trash2 
-} from 'lucide-react';
-import { useLanguageStore } from '../../../store/useLanguageStore';
+import { ArrowRight, ShieldCheck } from 'lucide-react';
 import { useThemeStore } from '../../../store/useThemeStore';
+import { useAuthStore } from '../../../store/useStore';
+import { useWorkspace, getAuthLinks } from '../../../hooks/useWorkspace';
 
-const HeroSection = ({ isLoading }) => {
-  const containerRef = useRef(null);
-  const vizRef = useRef(null);
-  const { t } = useLanguageStore();
+const HeroSection = () => {
   const { theme } = useThemeStore();
+  const { isAuthenticated } = useAuthStore();
+  const workspace = useWorkspace();
+  const authLinks = getAuthLinks();
   const isDark = theme === 'dark';
 
-  useEffect(() => {
-    let ctx = gsap.context(() => {
-      // Headline Animation
-      gsap.fromTo('.hero-text-line', 
-        { y: 30, opacity: 0 }, 
-        { y: 0, opacity: 1, duration: 0.6, stagger: 0.1, ease: 'power3.out' }
-      );
-
-    }, containerRef);
-
-    return () => ctx.revert();
-  }, []);
-
   return (
-    <section ref={containerRef} className="relative min-h-screen pt-24 lg:pt-32 flex flex-col justify-between">
-      <div className="max-w-[1200px] mx-auto w-full px-6 grid lg:grid-cols-[55%_45%] gap-12 items-center flex-1">
-        
-        {/* LEFT COLUMN: Copy & CTA */}
-        <div className="max-w-xl text-center lg:text-left mx-auto lg:mx-0">
-          <h1 className="text-5xl sm:text-6xl lg:text-[72px] leading-[1.05] mb-8 text-text-primary tracking-tight font-display">
-            <div className="overflow-hidden"><div className="hero-text-line">{t('hero', 'files')}</div></div>
-            <div className="overflow-hidden"><div className="hero-text-line">{t('hero', 'encrypted')}</div></div>
-            <div className="overflow-hidden"><div className="hero-text-line italic"><span style={{color: isDark ? '#9ca3af' : '#d97757'}}>{t('hero', 'untouchable')}</span></div></div>
-          </h1>
-          
-          <div className="overflow-hidden mb-8 lg:mb-10">
-            <p className="hero-text-line text-base lg:text-[18px] text-text-secondary leading-relaxed max-w-lg font-sans mx-auto lg:mx-0">
-              {t('hero', 'desc')}
-            </p>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row justify-center lg:justify-start space-y-4 sm:space-y-0 sm:space-x-6 overflow-hidden">
-            <div className="hero-text-line w-full sm:w-auto">
-              <a href="https://drive.zancrypt.in/register" className="inline-flex items-center justify-center px-6 py-3 bg-accent border border-transparent text-void font-mono tracking-widest uppercase text-sm rounded-md hover:brightness-110 transition-all">
-                {t('hero', 'start')}
-              </a>
-            </div>
-            <div className="hero-text-line w-full sm:w-auto">
-              <Link to="/architecture" className="inline-flex items-center justify-center px-6 py-3 bg-transparent border border-border text-text-secondary font-mono tracking-widest uppercase text-sm rounded-md hover:text-text-primary hover:border-border-active transition-all">
-                {t('hero', 'readArch')}
-              </Link>
-            </div>
-          </div>
-          
-          <div className="overflow-hidden mt-8 lg:mt-6">
-            <p className="hero-text-line text-[10px] sm:text-xs font-sans text-text-secondary opacity-80 tracking-wider">
-              No passwords &middot; No keys on servers &middot; No trust required
-            </p>
-          </div>
-        </div>
+    <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
+      {/* Subtle ambient background radial glow */}
+      <div 
+        className={`absolute top-12 left-1/2 -translate-x-1/2 w-[850px] h-[450px] rounded-full blur-[140px] pointer-events-none transition-colors duration-500 ${
+          isDark ? 'bg-white/[0.03]' : 'bg-black/[0.02]'
+        }`} 
+      />
 
-        {/* RIGHT COLUMN: macOS Product Mockup Scene — hidden on mobile */}
-        <div className="hidden lg:flex relative w-full h-[620px] items-center justify-center select-none overflow-visible">
-          {isLoading ? (
-            <div className="w-full max-w-md h-[400px] bg-surface-raised border border-border/10 rounded-xl animate-pulse"></div>
-          ) : (
-            <motion.div 
-              initial={{ opacity: 0, x: 100 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="relative transform scale-[0.55] sm:scale-75 lg:scale-100 flex items-center justify-center mt-8 lg:mt-0"
+      <div className="max-w-6xl mx-auto px-6 relative z-10">
+        {/* ── TOP HERO COPY: Centered & Clean ── */}
+        <div className="text-center max-w-3xl mx-auto flex flex-col items-center">
+          
+          {/* Main Headline */}
+          <motion.h1
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="max-w-4xl text-center mx-auto mt-2"
+            style={{
+              fontSize: 'clamp(2.5rem, 5vw, 4.25rem)',
+              fontWeight: 900,
+              lineHeight: 1.0,
+              letterSpacing: '-0.03em',
+              fontFamily: "'DM Sans', 'Inter', system-ui, sans-serif",
+            }}
+          >
+            <span
+              className="block"
+              style={{
+                color: isDark ? '#e8e8f0' : '#0d0d1a',
+                fontWeight: 900,
+                fontFamily: "'DM Sans', 'Inter', system-ui, sans-serif",
+              }}
             >
-            {/* Subtle Glow Background */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[500px] bg-[#d97757]/4 rounded-full blur-[120px] pointer-events-none" />
+              Your files are yours.
+            </span>
+            <span
+              className="block mt-2"
+              style={{
+                color: isDark ? '#555566' : '#aaaabc',
+                fontWeight: 900,
+                fontFamily: "'DM Sans', 'Inter', system-ui, sans-serif",
+              }}
+            >
+              Even we can't open them.
+            </span>
+          </motion.h1>
 
-          {/* Style Tag for Animations */}
-          <style dangerouslySetInnerHTML={{ __html: `
-            @keyframes bob-slow {
-              0%, 100% { transform: translateY(0px) rotate(var(--rot)); }
-              50% { transform: translateY(-10px) rotate(var(--rot)); }
-            }
-            .bobbing-element {
-              animation: bob-slow 6s infinite ease-in-out;
-            }
-            .delay-1 { animation-delay: 1.5s; }
-            .delay-2 { animation-delay: 3s; }
-            .delay-3 { animation-delay: 4.5s; }
-          ` }} />
-
-          {/* Floating File Icons around the Main Window */}
-          {/* Top Left Floating PDF Card */}
-          <div 
-            className="absolute z-30 left-[-40px] top-[10px] w-44 bg-white/95 border border-border/10 p-3.5 rounded-xl shadow-lg bobbing-element flex items-center gap-3"
-            style={{ '--rot': '-10deg' }}
+          {/* Subtitle */}
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-text-secondary leading-relaxed mt-7 max-w-xl"
+            style={{
+              fontSize: '1.125rem',
+              fontWeight: 400,
+              fontFamily: "'DM Sans', 'Inter', system-ui, sans-serif",
+            }}
           >
-            <div className="w-12 h-12 rounded-lg bg-[#d97757]/10 flex items-center justify-center text-[#d97757]">
-              <FileText className="w-6 h-6" />
-            </div>
-            <div className="min-w-0">
-              <p className="font-mono text-[10px] font-bold text-void truncate">Q4 Report.pdf</p>
-              <p className="font-sans text-[9px] text-text-secondary/70">12.4 MB</p>
-            </div>
-          </div>
+            A private cloud drive that encrypts every file on your device before it leaves.
+            Store, sync, and share without giving up control.
+          </motion.p>
 
-          {/* Bottom Left Floating Audio/Video Card */}
-          <div 
-            className="absolute z-30 left-[-50px] bottom-[50px] w-48 bg-white/95 border border-border/10 p-3.5 rounded-xl shadow-lg bobbing-element delay-1 flex items-center gap-3"
-            style={{ '--rot': '8deg' }}
+          {/* Hero CTAs */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 w-full sm:w-auto"
           >
-            <div className="w-12 h-12 rounded-lg bg-[#d97757]/10 flex items-center justify-center text-[#d97757]">
-              <FileVideo className="w-6 h-6" />
-            </div>
-            <div className="min-w-0">
-              <p className="font-mono text-[10px] font-bold text-void truncate">Demo Reel.mp4</p>
-              <p className="font-sans text-[9px] text-text-secondary/70">64.8 MB</p>
-            </div>
-          </div>
+            {isAuthenticated ? (
+              <Link
+                to={workspace.drive}
+                className="w-full sm:w-auto h-12 px-7 rounded-xl inline-flex items-center justify-center gap-2 bg-text-primary text-primary-bg hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-200"
+                style={{ fontSize: '0.875rem', fontWeight: 600, fontFamily: "'DM Sans', 'Inter', system-ui, sans-serif" }}
+              >
+                <span style={{ fontWeight: 600 }}>Go to your vault</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            ) : authLinks.isExternal ? (
+              <a
+                href={authLinks.register}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto h-12 px-7 rounded-xl inline-flex items-center justify-center gap-2 bg-text-primary text-primary-bg hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-200"
+                style={{ fontSize: '0.875rem', fontWeight: 600, fontFamily: "'DM Sans', 'Inter', system-ui, sans-serif" }}
+              >
+                <span style={{ fontWeight: 600 }}>Create a secure vault</span>
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            ) : (
+              <Link
+                to={authLinks.register}
+                className="w-full sm:w-auto h-12 px-7 rounded-xl inline-flex items-center justify-center gap-2 bg-text-primary text-primary-bg hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-200"
+                style={{ fontSize: '0.875rem', fontWeight: 600, fontFamily: "'DM Sans', 'Inter', system-ui, sans-serif" }}
+              >
+                <span style={{ fontWeight: 600 }}>Create a secure vault</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            )}
 
-          {/* Top Right Floating Folder Icon */}
-          <div 
-            className="absolute z-0 right-[-25px] top-[30px] w-16 h-16 bg-white/90 border border-border/10 rounded-xl shadow-md bobbing-element delay-2 flex items-center justify-center"
-            style={{ '--rot': '12deg' }}
-          >
-            <Database className="w-7 h-7 text-[#d97757]" />
-          </div>
-
-          {/* Bottom Right Floating Image Card */}
-          <div 
-            className="absolute z-30 right-[-40px] bottom-[80px] w-44 bg-white/95 border border-border/10 p-3.5 rounded-xl shadow-lg bobbing-element delay-3 flex items-center gap-3"
-            style={{ '--rot': '-6deg' }}
-          >
-            <div className="w-12 h-12 rounded-lg bg-[#d97757]/10 flex items-center justify-center text-[#d97757]">
-              <FileImage className="w-6 h-6" />
-            </div>
-            <div className="min-w-0">
-              <p className="font-mono text-[10px] font-bold text-void truncate">Brand Assets.png</p>
-              <p className="font-sans text-[9px] text-text-secondary/70">3.7 MB</p>
-            </div>
-          </div>
-
-          {/* Main Product macOS Window */}
-          <div className="relative z-10 w-[560px] h-[420px] bg-white border border-[#d97757]/15 rounded-xl shadow-[0_24px_80px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden">
-            {/* macOS Window Top Header Bar */}
-            <div className="h-11 border-b border-border/10 bg-[#fafafa] px-5 flex items-center justify-between shrink-0 select-none">
-              {/* macOS Dots */}
-              <div className="flex items-center space-x-2 w-1/4">
-                <span className="w-3 h-3 rounded-full bg-[#ff5f56] opacity-90 inline-block" />
-                <span className="w-3 h-3 rounded-full bg-[#ffbd2e] opacity-90 inline-block" />
-                <span className="w-3 h-3 rounded-full bg-[#27c93f] opacity-90 inline-block" />
-              </div>
-              
-              {/* Window Title with Zancrypt Lock Logo Mark */}
-              <div className="flex items-center justify-center space-x-1.5 w-2/4 text-center">
-                <Lock className="w-4 h-4 text-[#d97757]" />
-                <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-void">Zancrypt Vault</span>
-              </div>
-              
-              {/* Empty Spacer */}
-              <div className="w-1/4" />
-            </div>
-
-            {/* Window Interior */}
-            <div className="flex-1 p-6 flex flex-col min-h-0 bg-white">
-              {/* Vault heading */}
-              <div className="flex justify-between items-end border-b border-border/10 pb-3 shrink-0">
-                <div>
-                  <h3 className="font-mono text-lg font-bold text-void tracking-widest uppercase flex items-center leading-none">
-                    <Database className="w-5 h-5 mr-2 text-[#d97757]" />
-                    Vault
-                  </h3>
-                  <p className="text-text-secondary/70 mt-1 font-mono text-[9px] uppercase tracking-widest leading-none">
-                    Encrypted Storage Matrix
-                  </p>
-                </div>
-                
-                {/* Simulated Upload Button */}
-                <div className="px-4 py-2 border border-[#d97757] text-[#d97757] font-mono text-[9px] uppercase tracking-widest leading-none">
-                  [ Upload ]
-                </div>
-              </div>
-
-              {/* Simulated Search bar */}
-              <div className="mt-3 relative shrink-0">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-secondary/60" />
-                <input 
-                  type="text" 
-                  disabled
-                  placeholder="Search Decrypted Names..."
-                  className="w-full bg-[#fcfcfc] border border-border/10 text-void font-mono text-[9px] py-2.5 pl-8 pr-3 outline-none select-none cursor-default"
-                />
-              </div>
-
-              {/* Simulated Table */}
-              <div className="mt-3 border border-border/10 flex-1 overflow-hidden flex flex-col min-h-0">
-                {/* Table Header */}
-                <div className="flex items-center text-[8px] font-mono text-text-secondary/70 uppercase tracking-widest bg-[#fafafa] border-b border-border/10 py-3 px-4 shrink-0">
-                  <div className="w-6 text-center">
-                    <input type="checkbox" disabled className="accent-[#d97757] scale-75" />
-                  </div>
-                  <div className="flex-1 pl-1">Filename</div>
-                  <div className="w-14">Size</div>
-                  <div className="w-16">Timestamp</div>
-                  <div className="w-16 text-right">Actions</div>
-                </div>
-
-                {/* Table Body rows */}
-                <div className="divide-y divide-border/10 font-mono text-[9px] text-text-secondary/95 overflow-hidden flex-1 select-none">
-                  
-                  {/* Row 1 */}
-                  <div className="flex items-center py-3 px-4 bg-white">
-                    <div className="w-6 text-center">
-                      <input type="checkbox" disabled className="accent-[#d97757] scale-75" />
-                    </div>
-                    <div className="flex-1 flex items-center space-x-2 min-w-0">
-                      <div className="w-6 h-6 flex items-center justify-center border border-border/10 bg-[#fafafa] shrink-0">
-                        <Lock className="w-2.5 h-2.5 text-[#d97757]" />
-                      </div>
-                      <span className="truncate font-bold text-void">Q4 Report.pdf</span>
-                    </div>
-                    <div className="w-14 text-text-secondary/80">12.4 MB</div>
-                    <div className="w-16 text-text-secondary/80">5/18/2026</div>
-                    <div className="w-16 flex items-center justify-end space-x-2">
-                      <Eye className="w-3 h-3 text-text-secondary/50" />
-                      <Download className="w-3 h-3 text-text-secondary/50" />
-                      <Trash2 className="w-3 h-3 text-text-secondary/50" />
-                    </div>
-                  </div>
-
-                  {/* Row 2 */}
-                  <div className="flex items-center py-3 px-4 bg-white">
-                    <div className="w-6 text-center">
-                      <input type="checkbox" disabled className="accent-[#d97757] scale-75" />
-                    </div>
-                    <div className="flex-1 flex items-center space-x-2 min-w-0">
-                      <div className="w-6 h-6 flex items-center justify-center border border-border/10 bg-[#fafafa] shrink-0">
-                        <Lock className="w-2.5 h-2.5 text-[#d97757]" />
-                      </div>
-                      <span className="truncate font-bold text-void">Demo Reel.mp4</span>
-                    </div>
-                    <div className="w-14 text-text-secondary/80">64.8 MB</div>
-                    <div className="w-16 text-text-secondary/80">5/17/2026</div>
-                    <div className="w-16 flex items-center justify-end space-x-2">
-                      <Eye className="w-3 h-3 text-text-secondary/50" />
-                      <Download className="w-3 h-3 text-text-secondary/50" />
-                      <Trash2 className="w-3 h-3 text-text-secondary/50" />
-                    </div>
-                  </div>
-
-                  {/* Row 3 */}
-                  <div className="flex items-center py-3 px-4 bg-white">
-                    <div className="w-6 text-center">
-                      <input type="checkbox" disabled className="accent-[#d97757] scale-75" />
-                    </div>
-                    <div className="flex-1 flex items-center space-x-2 min-w-0">
-                      <div className="w-6 h-6 flex items-center justify-center border border-border/10 bg-[#fafafa] shrink-0">
-                        <Lock className="w-2.5 h-2.5 text-[#d97757]" />
-                      </div>
-                      <span className="truncate font-bold text-void">Brand Assets.png</span>
-                    </div>
-                    <div className="w-14 text-text-secondary/80">3.7 MB</div>
-                    <div className="w-16 text-text-secondary/80">5/15/2026</div>
-                    <div className="w-16 flex items-center justify-end space-x-2">
-                      <Eye className="w-3 h-3 text-text-secondary/50" />
-                      <Download className="w-3 h-3 text-text-secondary/50" />
-                      <Trash2 className="w-3 h-3 text-text-secondary/50" />
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-            </div>
-          </div>
-            </motion.div>
-          )}
+            <Link
+              to="/architecture"
+              className="w-full sm:w-auto h-12 px-6 rounded-xl inline-flex items-center justify-center border border-border bg-surface hover:bg-surface-raised text-text-primary transition-all duration-200"
+              style={{ fontSize: '0.875rem', fontWeight: 500, fontFamily: "'DM Sans', 'Inter', system-ui, sans-serif" }}
+            >
+              How your privacy works
+            </Link>
+          </motion.div>
         </div>
-      </div>
 
+        {/* ── REAL DRIVE SCREENSHOT SHOWCASE ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.4 }}
+          className="mt-12 sm:mt-16 w-full max-w-[1080px] mx-auto select-none"
+        >
+          {/* Framed window container showcasing the real screenshot */}
+          <div className={`relative rounded-2xl overflow-hidden shadow-2xl ${
+            isDark 
+              ? 'bg-[#0d0d10] shadow-[0_25px_70px_-15px_rgba(0,0,0,0.85)]' 
+              : 'bg-white shadow-[0_25px_70px_-15px_rgba(0,0,0,0.12)] ring-1 ring-black/5'
+          }`}>
+            {/* Window Top Bar */}
+            <div className={`h-11 px-4 sm:px-5 flex items-center justify-between border-b transition-colors ${
+              isDark ? 'bg-[#121215] border-[#222227]' : 'bg-[#f8f8fa] border-[#ebebef]'
+            }`}>
+              {/* macOS Window Controls */}
+              <div className="flex items-center gap-2 w-24">
+                <span className="w-3 h-3 rounded-full bg-[#ff5f56] inline-block opacity-90" />
+                <span className="w-3 h-3 rounded-full bg-[#ffbd2e] inline-block opacity-90" />
+                <span className="w-3 h-3 rounded-full bg-[#27c93f] inline-block opacity-90" />
+              </div>
+
+              {/* Window Status Pill */}
+              <div
+                className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-surface-raised/70 border border-border/50"
+                style={{ fontSize: '10px', fontWeight: 600, fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-secondary)' }}
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Vault Protected</span>
+              </div>
+
+              {/* Spacer */}
+              <div className="w-24" />
+            </div>
+
+            {/* High-Resolution Real Screenshot Image */}
+            <div className="relative w-full overflow-hidden">
+              <img 
+                src="/asset/drive-screenshot-hd.jpg" 
+                alt="ZanCrypt Vault Drive Screenshot" 
+                width="1344"
+                height="768"
+                className="w-full h-auto block select-none"
+                style={{ imageRendering: 'auto' }}
+                loading="eager"
+                decoding="async"
+              />
+            </div>
+          </div>
+        </motion.div>
+
+      </div>
     </section>
   );
 };

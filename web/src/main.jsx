@@ -170,11 +170,14 @@ async function init() {
   if (ON_DRIVE) {
     const { getWorkspaceId } = await import('./hooks/useWorkspace.js');
     const wid = getWorkspaceId();
-    const path = window.location.pathname;
+    const rawPath = window.location.pathname;
+    const path = rawPath.length > 1 && rawPath.endsWith('/') ? rawPath.slice(0, -1) : rawPath;
 
     // Map of old paths → new UUID-based paths
     // history.replaceState rewrites URL without a full page reload
     const LEGACY_REDIRECTS = {
+      '/drive':       `/drive/${wid}`,
+      '/home':        `/home/${wid}`,
       '/dashboard':   `/home/${wid}`,
       '/vault':       `/drive/${wid}`,
       '/uploads':     `/drive/${wid}/upload`,
@@ -196,7 +199,7 @@ async function init() {
     }
 
     const newPath = LEGACY_REDIRECTS[path];
-    if (newPath && newPath !== path) {
+    if (newPath && newPath !== rawPath) {
       window.history.replaceState(null, '', newPath + window.location.search);
     }
   }

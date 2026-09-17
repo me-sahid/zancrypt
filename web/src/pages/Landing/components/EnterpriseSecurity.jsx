@@ -8,8 +8,8 @@ const faqData = [
   },
   {
     "id": "q2",
-    "question": "How securely are my access keys and credentials stored?",
-    "answer": "We utilize the OPAQUE protocol along with hardware-bound FIDO2/WebAuthn passkeys. Your raw passwords never leave your browser, and we only retain a secure bcrypt hash of a SHA-256 hash of your credential registry."
+    "question": "How securely are my credentials and passkeys stored?",
+    "answer": "We utilize hardware-bound FIDO2/WebAuthn passkeys for passwordless authentication. Private keys never leave your physical authenticator, and emergency recovery material is cryptographically hashed."
   },
   {
     "id": "q3",
