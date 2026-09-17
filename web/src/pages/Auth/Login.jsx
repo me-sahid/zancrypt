@@ -62,10 +62,17 @@ const Login = () => {
     } catch (err) {
       setStatus('idle');
       console.error('Auth error:', err.name, err.message);
-      const msg = err?.response?.data?.detail 
-        || (err.name === 'NotAllowedError' 
-            ? 'Passkey authentication was cancelled or timed out.' 
-            : 'Passkey verification failed. Please try again.');
+      let msg = '';
+      const detail = err?.response?.data?.detail;
+      if (typeof detail === 'string') {
+        msg = detail;
+      } else if (Array.isArray(detail)) {
+        msg = detail.map((d) => d.msg || JSON.stringify(d)).join(', ');
+      } else if (err?.name === 'NotAllowedError') {
+        msg = 'Passkey authentication was cancelled or timed out.';
+      } else {
+        msg = 'Passkey verification failed. Please try again.';
+      }
       setError(msg);
     }
   };

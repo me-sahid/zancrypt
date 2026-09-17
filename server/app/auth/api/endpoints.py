@@ -423,34 +423,45 @@ async def refresh_token(
 
     session_repo = SessionRepository(session)
 
-    user_session = await session_repo.get_by_token(old_token)
-    if not user_session:
-        raise HTTPException(status_code=401, detail="Invalid or expired session")
+    try:
+        user_session = await session_repo.get_by_token(old_token)
+        if not user_session:
+            _delete_refresh_cookie(response)
+            raise HTTPException(status_code=401, detail="Invalid or expired session")
 
-    await session_repo.delete_session(old_token)
-    new_access_token = create_access_token(subject=str(user_session.user_id))
-    new_refresh_token = await session_repo.create_session(user_session.user_id, previous_token=old_token)  # ← pass old token for 30s grace window
+        await session_repo.delete_session(old_token)
+        new_access_token = create_access_token(subject=str(user_session.user_id))
+        new_refresh_token = await session_repo.create_session(user_session.user_id, previous_token=old_token)
 
-    _set_refresh_cookie(response, new_refresh_token)
+        _set_refresh_cookie(response, new_refresh_token)
 
-    user_repo = UserRepository(session)
-    user = await user_repo.get_by_id(user_session.user_id)
+        user_repo = UserRepository(session)
+        user = await user_repo.get_by_id(user_session.user_id)
+        if not user or not user.is_active:
+            _delete_refresh_cookie(response)
+            raise HTTPException(status_code=401, detail="User account not found or inactive")
 
-    return TokenResponse(
-        access_token=new_access_token,
-        refresh_token=new_refresh_token,
-        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        user={
-            "id": user.id,
-            "email": user.email,
-            "username": user.username,
-            "full_name": user.full_name,
-            "role": user.role,
-            "region": user.region,
-            "has_recovery_key": user.recovery_key_hash is not None,
-            "passkey_count": user.passkey_count or 0,
-        }
-    )
+        return TokenResponse(
+            access_token=new_access_token,
+            refresh_token=new_refresh_token,
+            expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            user={
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+                "full_name": user.full_name,
+                "role": user.role,
+                "region": user.region,
+                "has_recovery_key": user.recovery_key_hash is not None,
+                "passkey_count": user.passkey_count or 0,
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error during refresh_token: {e}", exc_info=True)
+        _delete_refresh_cookie(response)
+        raise HTTPException(status_code=401, detail="Session refresh failed")
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 async def logout(

@@ -98,10 +98,17 @@ const Register = () => {
     } catch (err) {
       setStatus('idle');
       console.error('Registration failed:', err);
-      const msg = err?.response?.data?.detail 
-        || (err.name === 'NotAllowedError' 
-            ? 'Passkey ceremony was cancelled or timed out. Please try again.' 
-            : 'Failed to initialize identity setup. Please try again.');
+      let msg = '';
+      const detail = err?.response?.data?.detail;
+      if (typeof detail === 'string') {
+        msg = detail;
+      } else if (Array.isArray(detail)) {
+        msg = detail.map((d) => d.msg || JSON.stringify(d)).join(', ');
+      } else if (err?.name === 'NotAllowedError') {
+        msg = 'Passkey ceremony was cancelled or timed out. Please try again.';
+      } else {
+        msg = 'Failed to initialize identity setup. Please try again.';
+      }
       setError(msg);
     }
   };
@@ -137,7 +144,16 @@ const Register = () => {
               className="flex items-start space-x-2 text-xs text-danger bg-danger/10 p-3 rounded-md border border-danger/20 font-mono tracking-wide mb-4"
             >
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-danger" />
-              <span>{error}</span>
+              <div className="flex-1">
+                <span>{error}</span>
+                {typeof error === 'string' && error.toLowerCase().includes('already registered') && (
+                  <span className="block mt-1.5">
+                    <Link to="/auth/login" className="underline font-semibold text-accent hover:text-accent/80 transition-colors">
+                      Click here to Sign In →
+                    </Link>
+                  </span>
+                )}
+              </div>
             </motion.div>
           )}
 
